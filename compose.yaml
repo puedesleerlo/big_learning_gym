@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: gym
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gym-local-only}
+      POSTGRES_DB: gym
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gym -d gym"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      GYM_DATABASE_URL: postgresql+psycopg://gym:${POSTGRES_PASSWORD:-gym-local-only}@db:5432/gym
+      GYM_EMBEDDED_WORKER: "0"
+      MOONSHOT_API_KEY: ${MOONSHOT_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GYM_ACCESS_TOKEN: ${GYM_ACCESS_TOKEN:-}
+    volumes:
+      - gym-data:/app/data
+      - ./config:/app/config:ro
+    depends_on:
+      db:
+        condition: service_healthy
+  worker:
+    build: .
+    command: ["python", "-m", "gym.worker"]
+    environment:
+      GYM_DATABASE_URL: postgresql+psycopg://gym:${POSTGRES_PASSWORD:-gym-local-only}@db:5432/gym
+      GYM_EMBEDDED_WORKER: "0"
+      MOONSHOT_API_KEY: ${MOONSHOT_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    volumes:
+      - gym-data:/app/data
+      - ./config:/app/config:ro
+    depends_on:
+      app:
+        condition: service_started
+volumes:
+  postgres-data:
+  gym-data:

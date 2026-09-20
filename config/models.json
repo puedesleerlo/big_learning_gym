@@ -1,0 +1,18 @@
+{
+  "providers": {
+    "moonshot": {"adapter": "openai_chat", "base_url": "https://api.moonshot.ai/v1", "api_key_env": "MOONSHOT_API_KEY", "token_parameter": "max_completion_tokens"},
+    "openai": {"adapter": "openai_chat", "base_url": "https://api.openai.com/v1", "api_key_env": "OPENAI_API_KEY", "token_parameter": "max_completion_tokens"},
+    "anthropic": {"adapter": "anthropic", "base_url": "https://api.anthropic.com/v1", "api_key_env": "ANTHROPIC_API_KEY"},
+    "google": {"adapter": "openai_chat", "base_url": "https://generativelanguage.googleapis.com/v1beta/openai", "api_key_env": "GOOGLE_API_KEY", "token_parameter": "max_tokens"},
+    "local": {"adapter": "openai_chat", "base_url": "http://127.0.0.1:11434/v1", "api_key_env": null, "token_parameter": "max_tokens"}
+  },
+  "roles": {
+    "extractor": {"provider": "moonshot", "model": "kimi-k3", "reasoning_effort": "low", "max_tokens": 6000},
+    "designer": {"provider": "moonshot", "model": "kimi-k3", "reasoning_effort": "high", "max_tokens": 16000},
+    "tutor": {"provider": "moonshot", "model": "kimi-k3", "reasoning_effort": "low", "max_tokens": 6000},
+    "verifier": {"provider": "moonshot", "model": "kimi-k3", "reasoning_effort": "high", "max_tokens": 12000},
+    "assessor": {"provider": "moonshot", "model": "kimi-k3", "reasoning_effort": "high", "max_tokens": 10000},
+    "research_coach": {"provider": "moonshot", "model": "kimi-k3", "reasoning_effort": "high", "max_tokens": 12000}
+  },
+  "limits": {"timeout_seconds": 180, "max_calls_per_day": 100, "max_input_characters": 90000, "max_retries": 2}
+}
