@@ -1,6 +1,15 @@
 # Validation record
 
-Validation performed September 19–20, 2026. All browser and paid-model exercises used isolated workspaces or temporary databases. The delivered workspace contains the imported AI Strategy content and zero learner sessions or attempts.
+Validation performed September 19–20, 2026. All practice and paid-model exercises used isolated workspaces or temporary databases. The delivered workspace contains the imported AI Strategy and causality courses and zero learner sessions or attempts.
+
+## Causality lab and agent access
+
+- **75 tests passed on SQLite**, including content import, authoring revision conflicts, preserved question snapshots, MCP protocol operations, guided activity timing and linking, and assistance attribution. Ruff and the Vite production build passed. The PostgreSQL checks below predate these additions.
+- The browser exercise in a separate database completed an experiment, saved a reflection, linked practice, submitted a scored answer, and displayed its supported outcome alongside study time. It did not create learner evidence in the delivered database.
+- The live HTTP import installed 12 lessons, 13 confirmed source documents, 13 guides, 40 glossary terms, 36 practice items, and four assignments with a proposed rubric. The original AI Strategy course retains its 314 practice and 64 simulation items.
+- A real stdio MCP client initialized the installed server, discovered its five tools, and read the 12-lesson course through the running HTTP API. The local skill is installed and the MCP entry is registered in the host configuration.
+- Experiments are explicitly labeled exact toy models or idealized graph reasoning. They do not execute causal-learn or establish causal effects of teaching. Study time and exposure remain behavioral evidence; assessed attempts determine learning estimates.
+- The two books mentioned by the learner could not be located in the provided context or workspace roots. Public supplemental readings are identified separately and are not presented as those books.
 
 ## Automated checks
 

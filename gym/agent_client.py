@@ -16,11 +16,15 @@ def parser():
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument("method", help="GET, POST, PUT, PATCH, DELETE, or capabilities/schema")
     result.add_argument("path", nargs="?", help="API path, for example /api/overview")
-    result.add_argument("--base-url", default=os.getenv("GYM_BASE_URL", "http://127.0.0.1:8000"))
+    result.add_argument("--base-url", default=os.getenv("GYM_BASE_URL", "http://127.0.0.1:8787"))
     result.add_argument("--json", dest="json_file", metavar="FILE", help="JSON request file; '-' reads stdin")
-    result.add_argument("--field", action="append", default=[], metavar="KEY=VALUE", help="Multipart form field")
+    result.add_argument(
+        "--field", action="append", default=[], metavar="KEY=VALUE", help="Multipart form field"
+    )
     result.add_argument("--file", action="append", default=[], metavar="FIELD=PATH", help="Upload a file")
-    result.add_argument("--output", metavar="PATH", help="Save response bytes, e.g. schedule.ics or schema.json")
+    result.add_argument(
+        "--output", metavar="PATH", help="Save response bytes, e.g. schedule.ics or schema.json"
+    )
     result.add_argument("--timeout", type=float, default=60)
     return result
 
@@ -65,10 +69,14 @@ def main(argv=None):
                     (key, (Path(filename).name, stack.enter_context(Path(filename).open("rb"))))
                     for key, filename in (_pair(value) for value in args.file)
                 ]
-            client = stack.enter_context(httpx.Client(
-                base_url=args.base_url.rstrip("/"), timeout=args.timeout,
-                headers=headers, follow_redirects=False,
-            ))
+            client = stack.enter_context(
+                httpx.Client(
+                    base_url=args.base_url.rstrip("/"),
+                    timeout=args.timeout,
+                    headers=headers,
+                    follow_redirects=False,
+                )
+            )
             response = client.request(method, path, **kwargs)
         # Never log headers or credentials, including when reporting transport failures.
         if response.is_error or response.is_redirect:
@@ -77,13 +85,14 @@ def main(argv=None):
                 detail = detail.replace(token, "[redacted]")
             print(f"HTTP {response.status_code}: {detail}", file=sys.stderr)
             return 1
+        response_text = response.text.replace(token, "[redacted]") if token else response.text
         if args.output:
-            Path(args.output).write_bytes(response.content)
+            Path(args.output).write_bytes(response_text.encode() if token else response.content)
         else:
             try:
-                print(json.dumps(response.json(), indent=2, ensure_ascii=False))
+                print(json.dumps(json.loads(response_text), indent=2, ensure_ascii=False))
             except ValueError:
-                print(response.text)
+                print(response_text)
         return 0
     except (ValueError, OSError, httpx.HTTPError) as error:
         message = str(error)

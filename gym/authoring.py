@@ -108,6 +108,7 @@ class ItemWrite(GeneratedItem):
     module: str
     pool: Literal["practice", "transfer"] = "practice"
     rubric_version_id: str | None = None
+    term_ids: list[str] = Field(default_factory=list, max_length=100)
     provenance: Provenance
 
 
@@ -189,7 +190,9 @@ def _event(store, c, kind, result, previous=None):
             "record_revision": result["revision"],
             "previous_id": previous["id"] if previous else None,
             "previous_revision": previous["revision"] if previous else None,
-            "content_hash": digest({k: v for k, v in result.items() if k not in {"created_at", "updated_at"}}),
+            "content_hash": digest(
+                {k: v for k, v in result.items() if k not in {"created_at", "updated_at"}}
+            ),
             "source_fragment_ids": result.get("source_fragment_ids", []),
             "provenance": result["provenance"],
             "evidence_kind": "authored_content",
@@ -230,9 +233,11 @@ def _save_material(store, c, kind, ident, model):
     if kind == "guide":
         for block in data["blocks"]:
             block["html"] = bleach.clean(
-                block["html"], tags=SAFE_TAGS,
+                block["html"],
+                tags=SAFE_TAGS,
                 attributes={"a": ["href", "title"], "th": ["colspan"], "td": ["colspan"]},
-                protocols={"https", "http", "mailto"}, strip=True,
+                protocols={"https", "http", "mailto"},
+                strip=True,
             )
     result = store.put(c, kind, ident, {**data, "updated_at": now()})
     _event(store, c, kind + ".saved", result, old)
@@ -260,6 +265,11 @@ def _save_item(store, c, ident, model):
     _module(store, c, data["course_id"], data["module"])
     _references(store, c, data)
     rubric_id = data.get("rubric_version_id")
+    if len(set(data["term_ids"])) != len(data["term_ids"]):
+        raise ValueError("Glossary references must be unique")
+    for term_id in data["term_ids"]:
+        if store.get(c, "term", term_id)["course_id"] != data["course_id"]:
+            raise ValueError("Glossary references must belong to this course")
     if rubric_id:
         rubric = store.get(c, "rubric_version", rubric_id)
         if rubric.get("course_id") and rubric["course_id"] != data["course_id"]:
@@ -270,7 +280,9 @@ def _save_item(store, c, ident, model):
             raise ValueError("Item rubric must exactly match its pinned rubric version")
     created_id = uid("item_") if old else ident
     data.update(
-        status="active", verification="authored", created_at=now(),
+        status="active",
+        verification="authored",
+        created_at=now(),
         authored_version=(old.get("authored_version", 1) + 1 if old else 1),
         family_id=old.get("family_id", old["id"]) if old else ident,
         supersedes_item_id=old["id"] if old else None,
@@ -295,9 +307,16 @@ def retire_item(store, ident, data):
     with store.tx() as c:
         old = store.get(c, "item", ident)
         _check_revision(old, model.expected_revision)
-        result = store.put(c, "item", ident, {
-            **old, "status": "retired", "provenance": model.provenance.model_dump(mode="json"),
-        })
+        result = store.put(
+            c,
+            "item",
+            ident,
+            {
+                **old,
+                "status": "retired",
+                "provenance": model.provenance.model_dump(mode="json"),
+            },
+        )
         _event(store, c, "item.retired", result, old)
         return result
 
@@ -322,7 +341,14 @@ def import_materials(store, data):
                 result[kind + "s"].append(_save_material(store, c, kind, entry.id, entry))
         for entry in model.items:
             result["items"].append(_save_item(store, c, entry.id, entry))
-        store.put(c, "authoring_import", receipt_id, {
-            "payload_hash": payload_hash, "result": result, "created_at": now(),
-        })
+        store.put(
+            c,
+            "authoring_import",
+            receipt_id,
+            {
+                "payload_hash": payload_hash,
+                "result": result,
+                "created_at": now(),
+            },
+        )
         return {**result, "already_imported": False}

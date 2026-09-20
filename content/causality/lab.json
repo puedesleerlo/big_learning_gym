@@ -1,0 +1,2203 @@
+{
+  "id": "causality-lab",
+  "title": "Causality: from first questions to frontier research",
+  "description": "Twelve progressive lessons take a zero-prerequisite learner from everyday causal questions to critically reading causal discovery and current AI research. Each links original explanations, worked examples, a guided calculation or experiment, and assessable practice to verified sources. Plan about six hours of first-pass study, plus optional paper reading.",
+  "version": 1,
+  "sources": [
+    {
+      "id": "causal-learn",
+      "title": "Causal-learn: Causal Discovery in Python",
+      "url": "https://www.jmlr.org/papers/v25/23-0970.html",
+      "kind": "software-paper",
+      "year": 2024,
+      "authors": "Yujia Zheng, Biwei Huang, Wei Chen, Joseph Ramsey, Mingming Gong, Ruichu Cai, Shohei Shimizu, Peter Spirtes, Kun Zhang",
+      "summary": "Peer-reviewed description of the open-source causal discovery library that anchors this lab. Software implements methods with different assumptions; running a method does not establish those assumptions.",
+      "status": "Peer-reviewed JMLR paper; code and online platform may evolve."
+    },
+    {
+      "id": "causal-learn-repo",
+      "title": "py-why/causal-learn",
+      "url": "https://github.com/py-why/causal-learn",
+      "kind": "software",
+      "year": null,
+      "authors": "causal-learn contributors",
+      "summary": "Official code, installation instructions, documentation links, and supported discovery algorithms.",
+      "status": "Official living repository; source consulted September 2026."
+    },
+    {
+      "id": "tetrad-catalog",
+      "title": "Tetrad: Papers and Books",
+      "url": "https://tetrad-manual.readthedocs.io/en/latest/papers-and-books.html",
+      "kind": "research-catalog",
+      "year": null,
+      "authors": "Tetrad documentation contributors",
+      "summary": "Reading map for the research community. Use original publication pages for metadata and scientific claims; the catalog contains some bibliographic inconsistencies.",
+      "status": "Living secondary index; primary papers are cited separately."
+    },
+    {
+      "id": "cmu-course",
+      "title": "CMU 80-516: Causation, Machine Learning, and AI",
+      "url": "https://www.andrew.cmu.edu/course/80-516/",
+      "kind": "course",
+      "year": 2025,
+      "authors": "Kun Zhang",
+      "summary": "Public course spanning causal foundations, discovery, and connections to machine learning. Provides a structured companion to this lab's original explanations.",
+      "status": "University course page, Spring 2025; not itself a validation of every research claim."
+    },
+    {
+      "id": "oli-course",
+      "title": "CMU OLI: Causal and Statistical Reasoning",
+      "url": "https://www.oli.cmu.edu/courses/causal-and-statistical-reasoning/",
+      "kind": "course",
+      "year": null,
+      "authors": "Carnegie Mellon University Open Learning Initiative",
+      "summary": "Introductory course for reasoning about causal and statistical claims, suitable before the more technical research readings.",
+      "status": "Official university course page."
+    },
+    {
+      "id": "pc",
+      "title": "Estimating High-Dimensional Directed Acyclic Graphs with the PC-Algorithm",
+      "url": "https://www.jmlr.org/papers/v8/kalisch07a.html",
+      "kind": "paper",
+      "year": 2007,
+      "authors": "Markus Kalisch and Peter Bühlmann",
+      "summary": "Studies PC estimation and high-dimensional consistency under explicit sparsity, Gaussian, and regularity conditions. PC's population target under causal sufficiency is a Markov equivalence class.",
+      "status": "Peer-reviewed JMLR article."
+    },
+    {
+      "id": "ges",
+      "title": "Optimal Structure Identification With Greedy Search",
+      "url": "https://jmlr.csail.mit.edu/papers/v3/chickering02b.html",
+      "kind": "paper",
+      "year": 2002,
+      "authors": "David Maxwell Chickering",
+      "summary": "Foundational analysis of greedy equivalence search and asymptotic structure learning under appropriate model and score conditions.",
+      "status": "Peer-reviewed JMLR article; asymptotic results are not finite-sample guarantees."
+    },
+    {
+      "id": "boss",
+      "title": "Fast Scalable and Accurate Discovery of DAGs Using the Best Order Score Search and Grow Shrink Trees",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2023/hash/c9cde817d04811ba28e44071bd9f76a5-Abstract-Conference.html",
+      "kind": "paper",
+      "year": 2023,
+      "authors": "Bryan Andrews, Joseph Ramsey, Ruben Sanchez Romero, Jazmin Camchong, Erich Kummerfeld",
+      "summary": "Introduces efficient permutation-based score search with grow-shrink trees and reports strong benchmark performance.",
+      "status": "Peer-reviewed NeurIPS 2023 paper; empirical comparisons apply to the evaluated settings."
+    },
+    {
+      "id": "fci",
+      "title": "On the completeness of orientation rules for causal discovery in the presence of latent confounders and selection bias",
+      "url": "https://doi.org/10.1016/j.artint.2008.08.001",
+      "kind": "paper",
+      "year": 2008,
+      "authors": "Jiji Zhang",
+      "summary": "Establishes complete orientation rules for representing causal information shared by an equivalence class with latent confounding and selection.",
+      "status": "Peer-reviewed Artificial Intelligence article."
+    },
+    {
+      "id": "lingam",
+      "title": "A Linear Non-Gaussian Acyclic Model for Causal Discovery",
+      "url": "https://jmlr.org/papers/volume7/shimizu06a/shimizu06a.pdf",
+      "kind": "paper",
+      "year": 2006,
+      "authors": "Shohei Shimizu, Patrik O. Hoyer, Aapo Hyvärinen, Antti Kerminen",
+      "summary": "Shows how linearity, acyclicity, independent non-Gaussian disturbances, and absence of hidden confounding can identify causal direction beyond conditional-independence equivalence.",
+      "status": "Peer-reviewed JMLR article."
+    },
+    {
+      "id": "cdnod",
+      "title": "Causal Discovery from Heterogeneous/Nonstationary Data",
+      "url": "https://www.jmlr.org/papers/v21/19-232.html",
+      "kind": "paper",
+      "year": 2020,
+      "authors": "Biwei Huang, Kun Zhang, Jiji Zhang, Joseph Ramsey, Ruben Sanchez-Romero, Clark Glymour, Bernhard Schölkopf",
+      "summary": "Uses distribution changes across contexts to discover changing mechanisms and, under further conditions, causal orientation.",
+      "status": "Peer-reviewed JMLR article; cite 2020 metadata rather than the inconsistent catalog entry."
+    },
+    {
+      "id": "crl",
+      "title": "Causal Representation Learning from Multiple Distributions: A General Setting",
+      "url": "https://proceedings.mlr.press/v235/zhang24br.html",
+      "kind": "paper",
+      "year": 2024,
+      "authors": "Kun Zhang, Shaoan Xie, Ignavier Ng, Yujia Zheng",
+      "summary": "Studies latent causal representation learning from changing distributions. Under specified conditions it identifies a moralized graph; in some graph-dependent cases, latent variables are recoverable up to componentwise transformations.",
+      "status": "Peer-reviewed ICML 2024 paper; does not generally identify the full directed latent graph."
+    },
+    {
+      "id": "hybrid-latent",
+      "title": "Efficient Latent Variable Causal Discovery: Combining Score Search and Targeted Testing",
+      "url": "https://arxiv.org/abs/2510.04263v3",
+      "kind": "preprint",
+      "year": 2025,
+      "authors": "Joseph Ramsey, Bryan Andrews, Peter Spirtes",
+      "summary": "Explores BOSS-FCI, GRaSP-FCI, and targeted-testing approaches for efficient discovery with latent variables. Distinguishes FCI-style sound approaches from additional heuristics.",
+      "status": "arXiv preprint as verified for this lab; no claim of peer review or universal superiority."
+    },
+    {
+      "id": "causallearn-platform",
+      "title": "CausalLearn online platform",
+      "url": "https://causallearn.com",
+      "kind": "platform",
+      "year": null,
+      "authors": "CausalLearn",
+      "summary": "User-provided interactive platform, linked by the causal-learn repository. The public page required JavaScript and its underlying analyses were not inspected in this research pass.",
+      "status": "Interface not independently evaluated; treat outputs as hypotheses requiring assumption and evidence checks."
+    },
+    {
+      "id": "aether",
+      "title": "Causality and the Next AI Paradigm",
+      "url": "https://aetherlabs.ai/articles/causality-and-the-next-ai-paradigm",
+      "kind": "company",
+      "year": 2026,
+      "authors": "Aether",
+      "summary": "Company-authored essay, published May 17, 2026, arguing for causal approaches to AI. Useful as a claim-auditing exercise; not empirical validation of all product ambitions.",
+      "status": "Industry essay; evaluate its cited research separately from the company's broader claims."
+    },
+    {
+      "id": "what-if",
+      "title": "Causal Inference: What If",
+      "url": "https://miguelhernan.org/whatifbook",
+      "kind": "book",
+      "year": 2020,
+      "authors": "Miguel A. Hernán and James M. Robins",
+      "summary": "Author-hosted, freely available textbook explaining causal questions, potential outcomes, randomization, and assumptions for observational inference. Revisions are distributed from the author page.",
+      "status": "Verified public book resource; not represented as one of the user's unlocated local books."
+    },
+    {
+      "id": "discovery-overview",
+      "title": "Causal discovery and inference: concepts and recent methodological advances",
+      "url": "https://doi.org/10.1186/s40535-016-0018-x",
+      "kind": "review",
+      "year": 2016,
+      "authors": "Peter Spirtes and Kun Zhang",
+      "summary": "Research overview of causal discovery approaches and their differing assumptions, connecting basic graphical reasoning to discovery methods.",
+      "status": "Peer-reviewed review article."
+    },
+    {
+      "id": "cdlam",
+      "title": "CD-LAM: Causal Debiasing for Embodied World Models",
+      "url": "https://arxiv.org/abs/2607.09185",
+      "kind": "preprint",
+      "year": 2026,
+      "authors": "Yufan Wei et al.",
+      "summary": "Research preprint investigating causal debiasing and action following in video world models. Reported benchmark improvements concern the evaluated models and protocols.",
+      "status": "arXiv preprint, submitted July 10, 2026; benchmark evidence does not establish general causal understanding or deployed robot safety."
+    },
+    {
+      "id": "cdlam-article",
+      "title": "CD-LAM: Causal Debiasing Gives World Models Stronger Action Control with 10x Less Post-training",
+      "url": "https://aetherlabs.ai/articles/cd-lam-causal-debiasing-for-embodied-world-models",
+      "kind": "company",
+      "year": 2026,
+      "authors": "Aether",
+      "summary": "Company article published July 27, 2026 interpreting the CD-LAM preprint and its reported efficiency and action-following results. Compare the headline with the actual baseline, training budget, and evaluation protocol.",
+      "status": "Company interpretation of a preprint; not a peer-reviewed or independent replication."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "asking-causal-questions",
+      "title": "1. What would change if we acted?",
+      "stage": "Foundations",
+      "minutes": 20,
+      "prerequisites": [],
+      "question": "If people who use a study app get higher scores, does the app help?",
+      "objectives": [
+        "Separate a description, a prediction, and a causal question.",
+        "Name an intervention, outcome, population, and time horizon.",
+        "Explain why an observed difference may have several causes."
+      ],
+      "intuition": [
+        "Start with a decision you care about: should you spend twenty minutes using a study app tomorrow? An association describes what happened together: app users scored higher. A prediction estimates an outcome from information: knowing someone uses the app may help predict their score. A causal question compares what would happen under different actions: how would scores change if otherwise comparable learners were assigned to use the app rather than not use it?",
+        "The distinction matters because app users may already study harder. Their motivation can influence both app use and exam scores. The same observed pattern can fit a story in which the app helps, a story in which motivation explains everything, or a mixture. Causal reasoning does not mean rejecting observational data. It means making the target action and the assumptions connecting data to that action explicit.",
+        "A useful first habit is to finish this sentence: 'For this population, changing X from this alternative to that alternative would change Y over this period.' Different choices produce different causal questions. Starting an app, completing its lessons, and being offered free access are three different interventions, even if a dataset calls all of them 'app use'."
+      ],
+      "worked_example": {
+        "title": "Three questions about one dataset",
+        "body": "A school records whether 100 learners used an app and their final scores. 'What was the average score among app users?' is descriptive. 'Can app use predict a new learner's score?' is predictive. 'What is the average effect of assigning twenty minutes of app practice each day for four weeks among first-year learners?' is causal. Only the last question specifies a change we could try to make. The recorded user/non-user difference alone does not answer it."
+      },
+      "takeaways": [
+        "Association concerns observed groups; intervention concerns a change to the process generating outcomes.",
+        "Specify the action before choosing an algorithm.",
+        "A causal claim can be useful and still depend on assumptions that the data alone cannot verify."
+      ],
+      "pitfall": "Treating a very accurate prediction as proof that changing its input will change the outcome.",
+      "experiment": "intervention",
+      "experiment_task": "In the toy model H=M and Y=50+10H+20M, compare the observed H=1 versus H=0 score difference with the effect of assigning one additional hour at fixed M. Predict both before calculating. Lesson 2 explains the model in detail.",
+      "source_ids": [
+        "what-if",
+        "oli-course",
+        "discovery-overview"
+      ],
+      "paper_bridge": {
+        "source_id": "discovery-overview",
+        "why_it_matters": "Discovery papers infer aspects of causal structure from data. This overview helps you see why a useful graph must address an intervention question rather than only fit correlations.",
+        "read_first": "Read the introductory distinction between causal discovery and causal inference. Skip the technical method details on the first pass.",
+        "claim": "Different causal discovery approaches extract information using different assumptions; observational association by itself is not a universal route to causation.",
+        "assumptions": [
+          "The variables and causal question must be defined meaningfully.",
+          "Each discovery method adds assumptions beyond the observed associations."
+        ],
+        "limits": [
+          "A broad methodological overview is not evidence that a specific model or dataset satisfies those assumptions.",
+          "A discovered structure and an estimated treatment effect are different outputs."
+        ],
+        "exercise": "Write one prediction question and one intervention question about the same dataset. Explain what additional evidence would connect the prediction to the intervention."
+      },
+      "checkpoint": {
+        "question": "Which question asks about causation?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Do app users have higher average scores?",
+            "why": "This compares observed groups; their reasons for app use may differ."
+          },
+          {
+            "label": "B",
+            "text": "Would assigning daily app practice improve scores compared with not assigning it?",
+            "why": "This compares outcomes under two specified actions."
+          },
+          {
+            "label": "C",
+            "text": "Can app use help predict an unknown score?",
+            "why": "This is a prediction question even if its predictions are accurate."
+          }
+        ],
+        "key": "B",
+        "explanation": "A causal question asks how an outcome would differ if an action or mechanism changed. Observed group comparisons and predictions do not automatically identify that difference."
+      },
+      "reflection": "Name one decision in your work or life. Write the intervention, its alternative, the outcome, the population, and the time horizon.",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "Umbrella sales accurately predict wet pavement. Which conclusion is justified by this predictive accuracy alone?",
+          "options": [
+            {
+              "label": "A",
+              "text": "Selling more umbrellas would make the pavement wet.",
+              "why": "Changing sales does not necessarily change rain, the common cause."
+            },
+            {
+              "label": "B",
+              "text": "Sales carry information about pavement wetness, but their intervention effect is unresolved.",
+              "why": "Predictive information is supported; the effect of changing sales is a separate question."
+            },
+            {
+              "label": "C",
+              "text": "The data contain no useful information at all.",
+              "why": "The predictor may still be useful even without an identified causal effect."
+            }
+          ],
+          "key": "B",
+          "explanation": "Rain can cause both umbrella sales and wet pavement. A prediction can be valid while an intervention on the predictor has no effect.",
+          "hint": "Ask what might generate both measurements.",
+          "plain": "Umbrella sales accurately predict wet pavement. Which conclusion is justified by this predictive accuracy alone?",
+          "capabilities": [
+            "asking-causal-questions"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "A company says 'People who take our training are promoted twice as often, so the training doubles promotion chances.' Rewrite this as a precise causal question and explain one alternative explanation for the observed association.",
+          "options": [],
+          "key": "For eligible employees over the next year, what is the average effect on promotion of being assigned a specified training program versus usual practice? Ambition or manager support may affect both voluntary enrollment and promotion, so the observed difference does not identify the training effect.",
+          "explanation": "For eligible employees over the next year, what is the average effect on promotion of being assigned a specified training program versus usual practice? Ambition or manager support may affect both voluntary enrollment and promotion, so the observed difference does not identify the training effect.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "A company says 'People who take our training are promoted twice as often, so the training doubles promotion chances.' Rewrite this as a precise causal question and explain one alternative explanation for the observed association.",
+          "capabilities": [
+            "asking-causal-questions"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Clear causal question",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Names a specific training intervention, comparator, outcome, population, and time period."
+              ]
+            },
+            {
+              "name": "Alternative explanation",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Describes a plausible common cause of enrollment and promotion, rather than merely saying correlation is not causation."
+              ]
+            },
+            {
+              "name": "Bounded conclusion",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: States that the observed ratio alone does not establish an intervention effect."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "interventions-and-mechanisms",
+      "title": "2. A tiny world you can intervene on",
+      "stage": "Foundations",
+      "minutes": 25,
+      "prerequisites": [
+        "asking-causal-questions"
+      ],
+      "question": "What does it mean to change a cause while leaving a system's other mechanisms intact?",
+      "objectives": [
+        "Read a simple structural causal model as a recipe for generating data.",
+        "Distinguish observing X=x from doing X=x.",
+        "Explain a counterfactual using the same underlying individual circumstances."
+      ],
+      "intuition": [
+        "A structural causal model, or SCM, is a set of small recipes. One recipe says how much a person studies, another says how their score is produced. Each recipe uses its direct causes plus background factors we have not explicitly modeled. A diagram draws an arrow from an input to the recipe it enters. This is a proposed explanation of how the world works, not a picture automatically certified by the data.",
+        "An ideal intervention replaces one recipe. If study time normally depends on motivation, do(study=2) replaces that equation with 'study exactly two hours'. It breaks the usual influence of motivation on assigned study time. The score recipe still uses motivation and study. By contrast, observing study=2 selects people who naturally studied two hours; it does not erase the reasons they did so.",
+        "A counterfactual asks about an alternative outcome for the same unit: what would this learner have scored if their study time had been two hours? In a fully specified SCM, we use observed evidence to reason about that learner's background factors, replace the intervention equation, then compute the alternative outcome with those same background factors. Population intervention effects can sometimes be identified even when such individual counterfactuals cannot."
+      ],
+      "worked_example": {
+        "title": "Watching study time versus assigning it",
+        "body": "In a toy world, motivation M is 0 or 1, study hours H=M, and score Y=50+10H+20M. The naturally observed H=1 group has score 80; the H=0 group has score 50. That observed gap is 30 points. Increasing H by one through an intervention raises Y by 10 points at either motivation level. For a learner with M=1, do(H=0) gives Y=70. These answers follow from the stated toy recipes; real data do not automatically reveal them."
+      },
+      "takeaways": [
+        "An SCM states mechanisms and background variables.",
+        "do(X=x) replaces the equation for X; conditioning selects cases with X=x.",
+        "Individual counterfactuals require more information than a comparison of population averages."
+      ],
+      "pitfall": "Changing every correlated variable when simulating do(X=x). A surgical intervention changes the assigned mechanism; downstream consequences follow through the remaining equations.",
+      "experiment": "intervention",
+      "experiment_task": "Use H=M and Y=50+10H+20M. Calculate the observed score gap between H=1 and H=0, then the effect of do(H=1) versus do(H=0) at each M. Replace the coefficient of M with 40 and repeat: explain which comparison changes.",
+      "source_ids": [
+        "what-if",
+        "discovery-overview",
+        "cmu-course"
+      ],
+      "paper_bridge": {
+        "source_id": "discovery-overview",
+        "why_it_matters": "The arrows sought by discovery methods are useful because they encode claims about mechanisms and possible interventions.",
+        "read_first": "Look for the graphical-model discussion and the relationship between causal structure and intervention effects. Translate each unfamiliar symbol into 'which recipe uses which input?'",
+        "claim": "A causal model can connect a graph and distribution to intervention questions when the model's assumptions hold.",
+        "assumptions": [
+          "The stated structural equations represent the relevant mechanisms.",
+          "The ideal intervention is well defined and leaves the other mechanisms invariant for the question considered."
+        ],
+        "limits": [
+          "Real interventions can have side effects that a simple do(X=x) model omits.",
+          "Observational data may be compatible with several SCMs that imply different interventions or counterfactuals."
+        ],
+        "exercise": "Write two equations for a system you know, then show exactly which equation an intervention replaces."
+      },
+      "checkpoint": {
+        "question": "Under do(H=2), what happens to the equation that normally determines study hours H?",
+        "options": [
+          {
+            "label": "A",
+            "text": "It is replaced by H=2; the other mechanisms continue to operate.",
+            "why": "This is the definition of the ideal surgical intervention."
+          },
+          {
+            "label": "B",
+            "text": "It stays unchanged and we select people who happened to have H=2.",
+            "why": "That describes conditioning, not intervention."
+          },
+          {
+            "label": "C",
+            "text": "All the background factors are reset to zero.",
+            "why": "An intervention on H does not automatically reset the rest of the world."
+          }
+        ],
+        "key": "A",
+        "explanation": "An intervention replaces the targeted assignment mechanism. Conditioning instead restricts attention to units whose naturally produced value matches the condition."
+      },
+      "reflection": "Describe a realistic side effect that could make an actual intervention differ from the ideal do operation in your example.",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "In a toy model H=M and Y=50+10H+20M, a learner has M=1. What score does the model imply under do(H=0)?",
+          "options": [
+            {
+              "label": "A",
+              "text": "50",
+              "why": "This also resets motivation to zero, which the intervention did not do."
+            },
+            {
+              "label": "B",
+              "text": "70",
+              "why": "The learner retains M=1, while H is replaced by zero: 50+0+20=70."
+            },
+            {
+              "label": "C",
+              "text": "80",
+              "why": "This leaves H at its natural value instead of applying the intervention."
+            }
+          ],
+          "key": "B",
+          "explanation": "Keep the same learner's motivation and replace only study hours. The model gives 50+10×0+20×1=70.",
+          "hint": "Substitute H=0 into the score recipe while keeping M unchanged.",
+          "plain": "In a toy model H=M and Y=50+10H+20M, a learner has M=1. What score does the model imply under do(H=0)?",
+          "capabilities": [
+            "interventions-and-mechanisms"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "A thermometer reading T is produced by room temperature R, while plant growth G is also affected by R. Explain the difference between observing T=25 and an intervention that changes only the thermometer display to 25. State one assumption behind your answer.",
+          "options": [],
+          "key": "Observing T=25 provides information about room temperature and hence growth. Setting only the display to 25 breaks the link from room temperature to the reading and need not change growth. This assumes the display itself has no effect on temperature, light, watering decisions, or plant growth.",
+          "explanation": "Observing T=25 provides information about room temperature and hence growth. Setting only the display to 25 breaks the link from room temperature to the reading and need not change growth. This assumes the display itself has no effect on temperature, light, watering decisions, or plant growth.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "A thermometer reading T is produced by room temperature R, while plant growth G is also affected by R. Explain the difference between observing T=25 and an intervention that changes only the thermometer display to 25. State one assumption behind your answer.",
+          "capabilities": [
+            "interventions-and-mechanisms"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Mechanism change",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Identifies that the display-setting intervention changes T's mechanism while leaving R unchanged."
+              ]
+            },
+            {
+              "name": "Observation versus intervention",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Explains that observing the reading informs R but setting the display need not alter plant growth."
+              ]
+            },
+            {
+              "name": "Explicit scope",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: States a relevant assumption such as no downstream effect of the display through human responses."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "confounding-and-adjustment",
+      "title": "3. Why group averages can reverse",
+      "stage": "Foundations",
+      "minutes": 30,
+      "prerequisites": [
+        "interventions-and-mechanisms"
+      ],
+      "question": "How can a treatment look worse overall while looking better within each severity group?",
+      "objectives": [
+        "Recognize a common cause of treatment and outcome.",
+        "Compute a simple standardized comparison using common population weights.",
+        "Name exchangeability, positivity, and consistency in plain language."
+      ],
+      "intuition": [
+        "Suppose the sickest patients are most likely to receive a treatment. Severity influences both treatment and recovery, creating a backdoor route from treatment through severity to outcome. A comparison of treated and untreated patients then mixes the treatment effect with different starting conditions. The treatment can help within both severity groups and still look harmful in the pooled data because the groups contain different kinds of patients.",
+        "Adjustment tries to compare outcomes under the same mix of relevant starting conditions. First compare treated and untreated people within each severity group, then average those comparisons using one target population's severity weights. For a binary treatment A, outcome Y, and sufficient pre-treatment covariates Z, the adjustment formula is E[Y under do(A=a)] = sum over z of E[Y | A=a,Z=z] × P(Z=z). The weights represent the target population, rather than a treatment group's accidental composition.",
+        "This formula needs substantive assumptions. Conditional exchangeability says the adjusted groups are comparable with respect to their potential outcomes: no relevant residual confounding remains. Positivity says each treatment is possible in the covariate groups whose effects we want to learn. Consistency connects the recorded treatment to the intervention we mean, including a sufficiently clear treatment definition. Measuring a few covariates or obtaining a small p-value does not establish any of these."
+      ],
+      "worked_example": {
+        "title": "One treatment, two case mixes",
+        "body": "Among mild cases, 90 of 100 treated patients recover (90%), versus 720 of 900 untreated patients (80%). Among severe cases, 270 of 900 treated patients recover (30%), versus 20 of 100 untreated patients (20%). Overall, treated recovery is 36% and untreated recovery is 74%. Standardizing both to a population that is half mild and half severe gives treated recovery 0.5×90%+0.5×30%=60%, and untreated recovery 0.5×80%+0.5×20%=50%. The standardized difference is +10 percentage points, if severity is a sufficient adjustment set and the other assumptions hold."
+      },
+      "takeaways": [
+        "Different case mixes can reverse a pooled comparison.",
+        "Use one target population's weights for both treatment alternatives.",
+        "Adjustment identifies an effect only under an appropriate graph and substantive assumptions."
+      ],
+      "pitfall": "Adjusting for every available variable. A mediator changes the question, and a collider can introduce bias.",
+      "experiment": "simpson",
+      "experiment_task": "Use the within-severity rates in the worked example. Recalculate pooled rates if each treatment group is 50% mild and 50% severe, then compare with the original 10/90 and 90/10 compositions. Keep within-severity rates fixed and explain the reversal.",
+      "source_ids": [
+        "what-if",
+        "oli-course"
+      ],
+      "paper_bridge": {
+        "source_id": "what-if",
+        "why_it_matters": "Discovery is often a way to choose which variables could make an observational effect comparison meaningful. This book explains what identification requires after that choice.",
+        "read_first": "Begin with the freely available book's early discussions of causal effects, randomization, and observational studies. Use the current author-hosted version; no chapter or page number is assumed here.",
+        "claim": "Observational data can identify causal effects under consistency, exchangeability, and positivity, along with the relevant estimation conditions.",
+        "assumptions": [
+          "No residual confounding after the chosen adjustment for the effect under study.",
+          "Both treatment alternatives occur in each relevant covariate group.",
+          "Recorded treatment corresponds to a well-defined intervention; interference is absent or appropriately modeled."
+        ],
+        "limits": [
+          "A graph learned from the same data does not prove that all confounders were measured.",
+          "Finite-sample estimation may be unstable even when the identification formula is valid."
+        ],
+        "exercise": "Use the worked example to compute the standardized effect for a population with 80% mild cases. State why a common weighting distribution matters."
+      },
+      "checkpoint": {
+        "question": "Why does the treated group look worse overall in the worked example?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Because treatment has a negative effect in both severity groups.",
+            "why": "The treated recovery rate is ten points higher in each group."
+          },
+          {
+            "label": "B",
+            "text": "Because treated patients are disproportionately severe cases.",
+            "why": "The pooled comparison blends different severity mixes."
+          },
+          {
+            "label": "C",
+            "text": "Because averaging percentages is always invalid.",
+            "why": "Averaging can be valid with appropriate weights; the issue is which population is being compared."
+          }
+        ],
+        "key": "B",
+        "explanation": "Ninety percent of treated patients are severe, compared with ten percent of untreated patients. Their different starting conditions dominate the pooled comparison."
+      },
+      "reflection": "In a real decision you care about, which variables exist before treatment and could influence both treatment choice and the outcome?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "Using the worked example's within-group recovery rates, what is the standardized treated-minus-untreated difference for a population that is 80% mild and 20% severe?",
+          "options": [
+            {
+              "label": "A",
+              "text": "+10 percentage points",
+              "why": "Treated: 0.8×90+0.2×30=78%; untreated: 0.8×80+0.2×20=68%."
+            },
+            {
+              "label": "B",
+              "text": "−38 percentage points",
+              "why": "That is the pooled difference in the original, differently composed groups."
+            },
+            {
+              "label": "C",
+              "text": "+38 percentage points",
+              "why": "That number does not follow from the shared target weights."
+            }
+          ],
+          "key": "A",
+          "explanation": "With shared 80/20 weights, the standardized rates are 78% and 68%. The difference remains ten percentage points because the within-group differences are both ten.",
+          "hint": "Apply the same 80/20 weights to each treatment alternative.",
+          "plain": "Using the worked example's within-group recovery rates, what is the standardized treated-minus-untreated difference for a population that is 80% mild and 20% severe?",
+          "capabilities": [
+            "confounding-and-adjustment"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "Under a treatment policy, all patients in the most severe group always receive treatment, so no untreated severe cases can occur. You want the treatment effect for all severity levels. Explain the resulting problem and one responsible next step.",
+          "options": [],
+          "key": "Positivity is absent in the severe group, so its untreated outcome cannot be learned directly from observed comparable patients. Obtain data containing an appropriate comparison, narrow the target population to supported groups, or clearly state and investigate additional extrapolation assumptions. An algorithm cannot recover the missing comparison without assumptions.",
+          "explanation": "Positivity is absent in the severe group, so its untreated outcome cannot be learned directly from observed comparable patients. Obtain data containing an appropriate comparison, narrow the target population to supported groups, or clearly state and investigate additional extrapolation assumptions. An algorithm cannot recover the missing comparison without assumptions.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "Under a treatment policy, all patients in the most severe group always receive treatment, so no untreated severe cases can occur. You want the treatment effect for all severity levels. Explain the resulting problem and one responsible next step.",
+          "capabilities": [
+            "confounding-and-adjustment"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Identifies missing comparison",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Names that the policy rules out untreated severe cases and connects this to a positivity violation for the target effect."
+              ]
+            },
+            {
+              "name": "Explains consequence",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: States that the severe-group effect is not nonparametrically identified by the available comparison."
+              ]
+            },
+            {
+              "name": "Responsible next step",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Proposes more suitable data, a narrower target, or explicit justified extrapolation without claiming adjustment alone solves it."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "chains-forks-and-colliders",
+      "title": "4. Three little graphs that change everything",
+      "stage": "Foundations",
+      "minutes": 30,
+      "prerequisites": [
+        "confounding-and-adjustment"
+      ],
+      "question": "When does controlling for another variable help, and when can it manufacture an association?",
+      "objectives": [
+        "Recognize chains, forks, and colliders.",
+        "Predict how conditioning changes whether a path is open.",
+        "Distinguish estimating a total effect from conditioning on a mediator."
+      ],
+      "intuition": [
+        "A chain looks like X → M → Y: exercise changes fitness, which changes endurance. A fork looks like X ← Z → Y: hot weather increases both ice cream sales and swimming. In each case, the middle variable is a noncollider on the path. Conditioning on that middle variable blocks that path. Blocking a confounding fork can help estimate an effect. Blocking a causal chain removes part of the total effect we may want to count.",
+        "A collider looks like X → S ← Y. Imagine two independent abilities, sports skill and academic skill, either of which can help a student win a scholarship. In the full population the abilities need not be related. Among scholarship winners, a student with less of one skill may tend to have more of the other, because either can explain selection. Conditioning on their common effect creates an association. Conditioning on a descendant of a collider can also open its path.",
+        "D-separation is the graph rule that generalizes these three patterns. Relative to a conditioning set, a path is blocked if it contains a conditioned noncollider, or a collider for which neither the collider nor any descendant is conditioned on. A path can run along or against arrow directions; it is the local collider pattern that matters. Under the causal Markov assumption, d-separation implies a corresponding conditional independence in the distribution."
+      ],
+      "worked_example": {
+        "title": "A scholarship makes independent skills look opposed",
+        "body": "Suppose sports skill X and academic skill Y are independent binary variables, each equally likely to be high. A scholarship S is awarded if at least one skill is high. Before selection, P(Y=high | X=high)=P(Y=high | X=low)=1/2. Among winners, if X is low then Y must be high; if X is high, Y is high only half the time. Conditioning on S created a negative association, although changing sports skill does not change academic skill in this toy model."
+      },
+      "takeaways": [
+        "Conditioning blocks a chain or fork at its middle noncollider.",
+        "Conditioning on a collider or its descendant can open a previously blocked path.",
+        "Whether to adjust depends on the graph, conditioning set, and target effect."
+      ],
+      "pitfall": "Calling a variable 'good to control for' based only on its predictive power. Its position in the causal graph matters.",
+      "experiment": "collider",
+      "experiment_task": "List the four equally likely combinations of high/low sports and academic skill. Compare P(academic=high | sports=high) with P(academic=high | sports=low) before selection. Remove the low/low combination to select scholarship winners, recalculate, and explain the induced association.",
+      "source_ids": [
+        "what-if",
+        "discovery-overview",
+        "pc"
+      ],
+      "paper_bridge": {
+        "source_id": "pc",
+        "why_it_matters": "PC uses conditional independence patterns to remove edges and identify unshielded colliders. The three-variable reasoning you just learned is its core intuition.",
+        "read_first": "Read the algorithm overview and its discussion of skeleton estimation. First identify what a separating set does; leave the high-dimensional proof for later.",
+        "claim": "In appropriate settings, conditional independence information constrains an equivalence class of DAGs, and collider information helps orient it.",
+        "assumptions": [
+          "Causal Markov connects graphical separation to independence.",
+          "Faithfulness excludes extra independences caused by special parameter cancellations.",
+          "The standard PC causal interpretation assumes no latent common causes among the measured variables and an acyclic model."
+        ],
+        "limits": [
+          "Statistical independence tests are imperfect at finite sample sizes.",
+          "A dependence or an independence alone does not label a variable as a mediator or confounder."
+        ],
+        "exercise": "Compare X → M → Y with X → M ← Y. Predict whether X and Y are independent before and after conditioning on M, assuming faithfulness and no other paths."
+      },
+      "checkpoint": {
+        "question": "Which conditioning operation can open an otherwise blocked path?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Conditioning on the middle variable in X ← Z → Y.",
+            "why": "Z is a noncollider and conditioning blocks this fork."
+          },
+          {
+            "label": "B",
+            "text": "Conditioning on S in X → S ← Y.",
+            "why": "S is a collider, so conditioning can open the path."
+          },
+          {
+            "label": "C",
+            "text": "Conditioning on M in X → M → Y.",
+            "why": "M is a noncollider and conditioning blocks this chain."
+          }
+        ],
+        "key": "B",
+        "explanation": "A collider is blocked until it or a descendant is conditioned on. This differs from a chain or fork, whose middle noncollider blocks the path when conditioned on."
+      },
+      "reflection": "Think of a dataset assembled only from successful applicants, hospitalized patients, or published papers. Could its inclusion rule be a collider?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "Exercise X affects fitness M, and fitness affects endurance Y, with no other paths. You want the total effect of exercise. What happens if you condition on fitness?",
+          "options": [
+            {
+              "label": "A",
+              "text": "You block the pathway carrying the total effect in this graph.",
+              "why": "Fitness is the mediator through which exercise affects endurance."
+            },
+            {
+              "label": "B",
+              "text": "You necessarily remove confounding.",
+              "why": "This graph contains a causal chain, not a common-cause fork."
+            },
+            {
+              "label": "C",
+              "text": "You necessarily create a collider bias.",
+              "why": "The middle node in the stated graph is a noncollider."
+            }
+          ],
+          "key": "A",
+          "explanation": "Fitness lies on the causal path X → M → Y. Conditioning on it blocks that path, changing the target from the total effect; it is not routine confounder adjustment.",
+          "hint": "The requested total effect includes consequences that pass through intermediate variables.",
+          "plain": "Exercise X affects fitness M, and fitness affects endurance Y, with no other paths. You want the total effect of exercise. What happens if you condition on fitness?",
+          "capabilities": [
+            "chains-forks-and-colliders"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "A study compares two initially independent abilities only among scholarship winners. Awards depend on either ability. Explain why a negative association among winners need not mean one ability harms the other, and draw or describe the relevant graph.",
+          "options": [],
+          "key": "Both abilities cause scholarship selection: X → S ← Y. Conditioning on S=winner opens the collider path. Among selected people, a low value of one ability must be compensated by the other, so they can become negatively associated without an effect of one ability on the other.",
+          "explanation": "Both abilities cause scholarship selection: X → S ← Y. Conditioning on S=winner opens the collider path. Among selected people, a low value of one ability must be compensated by the other, so they can become negatively associated without an effect of one ability on the other.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "A study compares two initially independent abilities only among scholarship winners. Awards depend on either ability. Explain why a negative association among winners need not mean one ability harms the other, and draw or describe the relevant graph.",
+          "capabilities": [
+            "chains-forks-and-colliders"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Correct graph",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Specifies two arrows into scholarship selection and no assumed causal arrow between the abilities."
+              ]
+            },
+            {
+              "name": "Selection mechanism",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Explains how restricting to winners opens the collider path or creates compensating skills."
+              ]
+            },
+            {
+              "name": "Bounded interpretation",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Separates the selected association from evidence that changing one ability changes the other."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "independence-and-pc",
+      "title": "5. Learning what a graph cannot yet tell you",
+      "stage": "Discovery",
+      "minutes": 30,
+      "prerequisites": [
+        "chains-forks-and-colliders"
+      ],
+      "question": "How can an algorithm learn useful causal structure without choosing every arrow?",
+      "objectives": [
+        "Explain the distinct roles of Markov, faithfulness, and causal sufficiency.",
+        "Read a CPDAG as a set of compatible DAGs.",
+        "Describe PC's skeleton, collider, and orientation steps."
+      ],
+      "intuition": [
+        "PC starts with candidate connections and asks whether pairs of variables become independent after conditioning on other variables. If it finds a separating set, it removes the connection. It then looks for unshielded triples: X and Y are each connected to M, but X and Y are not connected. If M is absent from their separating set, this supports the collider X → M ← Y under the algorithm's assumptions. Further orientation rules propagate what follows without introducing forbidden colliders or cycles.",
+        "Three assumptions do different jobs. The causal Markov condition says graphically separated variables are independent in the distribution. Faithfulness says the distribution does not contain extra independences caused by special cancellations or other coincidences. Causal sufficiency says the modeled measured variables have no unmeasured common causes. Standard causal PC also uses an acyclic causal graph. These are substantive claims about the data-generating process, not interchangeable names for a good statistical fit.",
+        "Even perfect independence information cannot always choose a unique DAG. X → M → Y, X ← M → Y, and X ← M ← Y have the same skeleton and no unshielded collider, so they imply the same conditional independences. A completed partially directed acyclic graph, or CPDAG, represents this Markov equivalence class. Directed edges are shared by all class members; undirected edges have different directions in different members. An undirected edge is a meaningful statement of unresolved direction."
+      ],
+      "worked_example": {
+        "title": "Three stories, one independence pattern",
+        "body": "Suppose X and Y are dependent, but independent given M, and both X–M and M–Y remain connected. The skeleton is X–M–Y. With no other variables or background constraints, the chain X → M → Y, the reverse chain, and the fork are compatible. The collider X → M ← Y is not compatible with this faithful pattern. The CPDAG keeps both edges undirected. More observational samples improve estimation of the pattern, but do not by themselves distinguish those three stories."
+      },
+      "takeaways": [
+        "A valid output may deliberately leave directions unresolved.",
+        "Markov, faithfulness, and causal sufficiency are different assumptions.",
+        "Failing to reject an independence-test null is not proof of independence."
+      ],
+      "pitfall": "Interpreting p>0.05 as proof of independence, or interpreting a CPDAG's undirected edge as no causal connection.",
+      "experiment": "discovery",
+      "experiment_task": "On paper, draw the three noncollider DAGs on X–M–Y. List their implied marginal and conditional independences. Then draw the collider and identify what changes. If you run PC later, compare its output with this known population target.",
+      "source_ids": [
+        "pc",
+        "causal-learn",
+        "causal-learn-repo",
+        "discovery-overview"
+      ],
+      "paper_bridge": {
+        "source_id": "pc",
+        "why_it_matters": "This paper links a concrete discovery procedure to conditions under which estimation can work even with many variables.",
+        "read_first": "Read the abstract, algorithm description, and assumptions. For each theorem, ask whether it concerns the population limit or a particular sample size.",
+        "claim": "PC can consistently estimate the relevant equivalence class under the paper's high-dimensional Gaussian, sparsity, and regularity conditions.",
+        "assumptions": [
+          "A DAG model, causal Markov, faithfulness, and appropriate no-hidden-common-cause interpretation.",
+          "For the cited consistency result: Gaussianity, sparsity, and additional quantitative regularity conditions.",
+          "Conditional independence tests and their settings must suit the data."
+        ],
+        "limits": [
+          "The theorem is not a guarantee that every finite-data output is correct.",
+          "Markov equivalence can remain even with unlimited observational data.",
+          "Small samples, weak associations, selection, or invalid tests can mislead the search."
+        ],
+        "exercise": "Explain why more samples and an intervention address two different sources of uncertainty: estimation error and equivalence-class ambiguity."
+      },
+      "checkpoint": {
+        "question": "In a CPDAG, what does an undirected X–Y edge mean?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Neither variable can cause the other.",
+            "why": "The edge indicates a connection whose orientation varies across compatible DAGs."
+          },
+          {
+            "label": "B",
+            "text": "Its direction differs across DAGs in the represented equivalence class.",
+            "why": "This is the meaning of an undirected CPDAG edge."
+          },
+          {
+            "label": "C",
+            "text": "There is a 50% probability that X causes Y.",
+            "why": "A CPDAG is not a calibrated probability distribution over directions."
+          }
+        ],
+        "key": "B",
+        "explanation": "A CPDAG encodes features shared across Markov-equivalent DAGs. Undirected edges express unresolved orientation, not absence of causation or a numerical probability."
+      },
+      "reflection": "Which ambiguity in your own problem might persist even if you collected ten times more observational data?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "A conditional independence test returns p=0.18 for X and Y given Z. What is the most defensible interpretation?",
+          "options": [
+            {
+              "label": "A",
+              "text": "X and Y are certainly independent given Z.",
+              "why": "Failure to reject does not establish the null; the test may have low power or be misspecified."
+            },
+            {
+              "label": "B",
+              "text": "This test did not reject independence at a 0.05 threshold; its assumptions and power still matter.",
+              "why": "This preserves the distinction between a testing decision and a proven population property."
+            },
+            {
+              "label": "C",
+              "text": "There is an 18% probability the independence statement is true.",
+              "why": "A p-value is not the posterior probability of the null hypothesis."
+            }
+          ],
+          "key": "B",
+          "explanation": "A p-value describes a test statistic's behavior under the null and test assumptions. It does not prove independence or assign a posterior probability to it.",
+          "hint": "Separate what the test did from what the population must be.",
+          "plain": "A conditional independence test returns p=0.18 for X and Y given Z. What is the most defensible interpretation?",
+          "capabilities": [
+            "independence-and-pc"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "PC returns X–M–Y with both edges undirected. A colleague orients it X → M → Y because that story sounds plausible. Explain what the CPDAG supports and propose one way to obtain additional direction information.",
+          "options": [],
+          "key": "The CPDAG supports an equivalence class including the forward chain, reverse chain, and fork. The preferred story is an additional assumption, not an orientation established by PC. A well-defined intervention, justified temporal or domain constraints, or a suitable additional identifiable functional model could supply direction information; each requires its own assumptions.",
+          "explanation": "The CPDAG supports an equivalence class including the forward chain, reverse chain, and fork. The preferred story is an additional assumption, not an orientation established by PC. A well-defined intervention, justified temporal or domain constraints, or a suitable additional identifiable functional model could supply direction information; each requires its own assumptions.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "PC returns X–M–Y with both edges undirected. A colleague orients it X → M → Y because that story sounds plausible. Explain what the CPDAG supports and propose one way to obtain additional direction information.",
+          "capabilities": [
+            "independence-and-pc"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Equivalence-class interpretation",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Explains that the undirected edges allow multiple noncollider DAGs and are not absent edges."
+              ]
+            },
+            {
+              "name": "Evidence versus added assumption",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Identifies the colleague's orientation as additional information or assumption beyond PC's output."
+              ]
+            },
+            {
+              "name": "Useful next evidence",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Proposes a concrete intervention, justified ordering constraint, or defensible additional model rather than simply more identical observational data."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "scores-and-search",
+      "title": "6. Searching for a good graph efficiently",
+      "stage": "Discovery",
+      "minutes": 30,
+      "prerequisites": [
+        "independence-and-pc"
+      ],
+      "question": "How do GES and BOSS search enormous spaces without mistaking a high score for truth?",
+      "objectives": [
+        "Explain why a graph score balances fit and complexity.",
+        "Distinguish equivalence-class search from ordering search.",
+        "Read asymptotic and empirical performance claims with their conditions."
+      ],
+      "intuition": [
+        "With many variables, listing every possible DAG is impractical. Score-based methods define a criterion that rewards explaining the data while penalizing unnecessary complexity, then search for a graph with a good score. A familiar example is BIC, which combines likelihood with a penalty that grows with the number of parameters and sample size. The likelihood family is part of the model: a linear Gaussian score is not automatically appropriate for every dataset.",
+        "Greedy equivalence search, or GES, searches over equivalence classes, adding and then deleting connections through valid operators. BOSS, best order score search, instead searches variable orderings. An ordering says which variables may precede others; a parent-selection procedure then builds a graph consistent with that ordering. Efficiently reusing computations makes exploring many orderings faster. These are different search strategies, not different definitions of causality.",
+        "A high score supports a model relative to the score, candidates, assumptions, and data. It is not a direct measurement of causal truth. Consistency theorems describe what happens as samples grow under stated conditions. Benchmarks describe performance in evaluated finite settings. For the cited BOSS paper, the asymptotic correctness argument uses an optional backward equivalence search step; the reported experiments omitted that step. It matters which algorithm configuration a theoretical statement actually covers."
+      ],
+      "worked_example": {
+        "title": "Fit improves, but the graph gets larger",
+        "body": "Imagine two candidate models for 500 independent observations. Model A has a log-likelihood advantage of only 1 over model B but uses two extra parameters. With the convention BIC score = log-likelihood − (number of parameters × log n)/2, A's score advantage is 1 − log(500), about −5.21. B wins this criterion despite fitting slightly better in-sample. The calculation selects a model under the chosen likelihood; it does not establish that the true process has no hidden common causes."
+      },
+      "takeaways": [
+        "The score, likelihood family, and search algorithm play different roles.",
+        "A method's theoretical guarantee can depend on a specific option or search step.",
+        "A strong benchmark result does not eliminate assumptions or Markov equivalence."
+      ],
+      "pitfall": "Reporting 'BOSS found the true graph' because one run had the best BIC or because the paper's simulations were accurate.",
+      "experiment": "discovery",
+      "experiment_task": "Calculate the BIC comparison in the worked example. Then write an experiment plan comparing GES and BOSS on one simulated DAG: same samples, suitable score, recorded settings, and both adjacency and orientation errors. A notebook is optional; the plan itself is the exercise.",
+      "source_ids": [
+        "ges",
+        "boss",
+        "causal-learn",
+        "causal-learn-repo"
+      ],
+      "paper_bridge": {
+        "source_id": "boss",
+        "why_it_matters": "It shows how changing the search machinery can make causal discovery scale while leaving the need for scientific assumptions intact.",
+        "read_first": "Read the search overview, then the statement of Proposition 2 and the experimental configuration. Locate where optional backward equivalence search is used or omitted.",
+        "claim": "BOSS uses order search and grow-shrink trees to obtain strong speed and accuracy in its evaluated settings; its cited asymptotic correctness result concerns a variant with optional BES enabled.",
+        "assumptions": [
+          "The relevant correctness statement assumes an acyclic causally sufficient setting, Markov and faithfulness, IID data, and a suitable exponential-family/BIC setup.",
+          "The theorem's BOSS configuration includes the optional backward equivalence search step."
+        ],
+        "limits": [
+          "The reported no-BES experiments and the theorem-covered configuration should not be conflated.",
+          "Benchmark performance is limited to evaluated graph families, sample sizes, and settings.",
+          "Score equivalence can leave causal directions unresolved."
+        ],
+        "exercise": "Write one sentence about the theorem-covered algorithm and a separate sentence about the empirically evaluated configuration, without making either stronger than the source."
+      },
+      "checkpoint": {
+        "question": "A graph receives the best score among the candidates searched. What follows?",
+        "options": [
+          {
+            "label": "A",
+            "text": "It is favored by that score within the search, subject to model and data assumptions.",
+            "why": "This is the conclusion the comparison directly supports."
+          },
+          {
+            "label": "B",
+            "text": "All of its edges are experimentally established.",
+            "why": "Score optimization is not intervention evidence."
+          },
+          {
+            "label": "C",
+            "text": "Hidden common causes have been ruled out.",
+            "why": "A high score does not prove causal sufficiency."
+          }
+        ],
+        "key": "A",
+        "explanation": "Scores rank candidates under modeling and scoring choices. They do not directly validate causal sufficiency or turn observational comparisons into interventions."
+      },
+      "reflection": "When reading a new algorithm paper, which is its main contribution: stronger identification, better search, better tests, or better empirical performance?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "A paper proves consistency for a search variant with an extra cleanup step but reports faster benchmarks with that step disabled. Which summary is accurate?",
+          "options": [
+            {
+              "label": "A",
+              "text": "Every configuration in the software inherits the theorem.",
+              "why": "A theorem applies to the algorithm and assumptions it actually specifies."
+            },
+            {
+              "label": "B",
+              "text": "The benchmark variant is automatically invalid.",
+              "why": "Lacking that theorem does not by itself show a variant fails empirically."
+            },
+            {
+              "label": "C",
+              "text": "Distinguish the theorem-covered variant from the evaluated faster variant.",
+              "why": "Theory and experiments support different, configuration-specific claims."
+            }
+          ],
+          "key": "C",
+          "explanation": "Configuration details can be part of a guarantee. Report both the theoretical scope and the empirical protocol instead of merging them into a blanket claim.",
+          "hint": "Check whether the implemented steps match the statement being cited.",
+          "plain": "A paper proves consistency for a search variant with an extra cleanup step but reports faster benchmarks with that step disabled. Which summary is accurate?",
+          "capabilities": [
+            "scores-and-search"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "Design a fair small comparison of GES and BOSS on synthetic data. State what you would hold fixed, what you would measure, and one limit on conclusions from the result.",
+          "options": [],
+          "key": "Generate data from recorded DAGs and mechanisms, use identical datasets and compatible scores, document each algorithm's configuration and search budget, and repeat over seeds. Measure runtime plus adjacency and orientation accuracy against the correct equivalence-class target where appropriate. Good results would apply to these tested settings, not prove that all real data satisfy the assumptions or that either method universally dominates.",
+          "explanation": "Generate data from recorded DAGs and mechanisms, use identical datasets and compatible scores, document each algorithm's configuration and search budget, and repeat over seeds. Measure runtime plus adjacency and orientation accuracy against the correct equivalence-class target where appropriate. Good results would apply to these tested settings, not prove that all real data satisfy the assumptions or that either method universally dominates.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "Design a fair small comparison of GES and BOSS on synthetic data. State what you would hold fixed, what you would measure, and one limit on conclusions from the result.",
+          "capabilities": [
+            "scores-and-search"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Comparable protocol",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Holds data and appropriate scoring conditions fixed, and records options or budgets rather than silently comparing different tasks."
+              ]
+            },
+            {
+              "name": "Relevant measurements",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Includes runtime and structural accuracy with an appropriate target, ideally across repeated samples or seeds."
+              ]
+            },
+            {
+              "name": "Scope of conclusion",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Limits the conclusion to tested settings and acknowledges assumptions or equivalence ambiguity."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "hidden-causes-and-fci",
+      "title": "7. When important causes are missing",
+      "stage": "Discovery",
+      "minutes": 30,
+      "prerequisites": [
+        "independence-and-pc"
+      ],
+      "question": "What can a causal graph say when the data do not contain every common cause?",
+      "objectives": [
+        "Explain why hidden confounding changes the discovery target.",
+        "Distinguish a PAG from a CPDAG.",
+        "Interpret arrowheads and circles without inventing probabilities."
+      ],
+      "intuition": [
+        "Imagine measuring coffee drinking and insomnia but not stressful work. Stress can cause both measured variables. A method that assumes all common causes are observed may try to explain their dependence with a direct connection between the measured variables. A latent-variable method allows that the observed relationship may be generated through unmeasured variables, so its output must represent a different kind of uncertainty.",
+        "FCI, fast causal inference, uses conditional-independence information while allowing latent common causes and, in its general formulation, selection effects. Its output is a partial ancestral graph, or PAG, which represents features shared by an equivalence class of maximal ancestral graphs over measured variables. You do not need the full mathematical machinery yet: the essential idea is that its edge marks encode ancestry constraints shared across compatible hidden-variable explanations.",
+        "An arrowhead at Y on an X–Y edge rules out Y being an ancestor of X in the represented ancestral-graph sense. A circle means that endpoint mark is unresolved across the class, not that it has a 50% chance of being an arrowhead. In a setting without selection, a bidirected X ↔ Y edge is compatible with latent common causes and rules out either endpoint being an ancestor of the other. It does not name, count, or measure the hidden causes, and a PAG is not a drawing of the full hidden DAG."
+      ],
+      "worked_example": {
+        "title": "Three explanations for two correlated measurements",
+        "body": "With only observed X and Y and no further information, dependence can be compatible with X causing Y, Y causing X, or an unmeasured cause U influencing both. Conditional-independence discovery cannot decide among these stories merely by increasing the sample size. In an appropriate FCI analysis the unresolved relation may be X o–o Y. The circles preserve uncertainty. Additional observed variables, interventions, or justified background constraints may narrow the compatible explanations."
+      },
+      "takeaways": [
+        "Allowing hidden common causes changes the class of causal models under consideration.",
+        "A PAG contains ancestral information and unresolved endpoint marks.",
+        "FCI can be sound under its assumptions without identifying every direction or hidden variable."
+      ],
+      "pitfall": "Reading every FCI connection as a direct causal arrow, or reading a bidirected edge as proof that there is exactly one hidden confounder.",
+      "experiment": "discovery",
+      "experiment_task": "Draw X → Y, Y → X, and X ← U → Y. Hide U and record why dependence between X and Y alone cannot distinguish them. Write what extra experiment or measurement could help.",
+      "source_ids": [
+        "fci",
+        "discovery-overview",
+        "causal-learn",
+        "causal-learn-repo"
+      ],
+      "paper_bridge": {
+        "source_id": "fci",
+        "why_it_matters": "The paper formalizes how to orient all the information that is identifiable from the relevant equivalence class, while preserving ambiguity caused by latent variables and selection.",
+        "read_first": "Read the abstract and the definitions of ancestral graphs and partial ancestral graphs. Inspect a small example of a circle endpoint before tackling the orientation rules.",
+        "claim": "Complete orientation rules characterize the invariant endpoint information for the equivalence-class target under the paper's framework.",
+        "assumptions": [
+          "An underlying acyclic causal framework with appropriate Markov and faithfulness assumptions.",
+          "Correct conditional-independence information for the population-level correctness claim.",
+          "Latent confounding and selection are represented by the specified ancestral-graph framework."
+        ],
+        "limits": [
+          "Finite-sample testing error can corrupt the learned PAG.",
+          "A PAG does not generally identify the complete latent DAG or every intervention effect.",
+          "Completeness of orientation rules does not mean every edge becomes fully oriented."
+        ],
+        "exercise": "Explain in plain language why an unresolved circle can be a correct and useful result."
+      },
+      "checkpoint": {
+        "question": "What does a circle endpoint in a PAG mean?",
+        "options": [
+          {
+            "label": "A",
+            "text": "The variable has a 50% chance of being causal.",
+            "why": "PAG endpoints do not encode calibrated probabilities."
+          },
+          {
+            "label": "B",
+            "text": "That endpoint mark is not invariant across the represented equivalence class.",
+            "why": "The circle denotes unresolved orientation information."
+          },
+          {
+            "label": "C",
+            "text": "The variable is known to be unmeasured.",
+            "why": "PAG nodes ordinarily represent observed variables; circles are endpoint marks."
+          }
+        ],
+        "key": "B",
+        "explanation": "A circle preserves uncertainty about an endpoint across compatible ancestral graphs. It is neither a probability nor an explicit hidden-variable node."
+      },
+      "reflection": "Which plausible unmeasured common causes would make causal sufficiency a risky assumption for your dataset?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "In a no-selection setting, an FCI PAG contains X ↔ Y. Which interpretation is most careful?",
+          "options": [
+            {
+              "label": "A",
+              "text": "X and Y directly cause each other.",
+              "why": "Bidirected edges in this framework do not represent feedback cycles."
+            },
+            {
+              "label": "B",
+              "text": "There is exactly one hidden variable U with a known effect size.",
+              "why": "The graph does not identify the number, identity, or effect sizes of hidden causes."
+            },
+            {
+              "label": "C",
+              "text": "The arrowheads exclude ancestry in either direction; latent-common-cause explanations are compatible.",
+              "why": "This preserves the ancestral meaning without inventing a specific hidden DAG."
+            }
+          ],
+          "key": "C",
+          "explanation": "In this setting, the two arrowheads rule out either observed endpoint being an ancestor of the other. The edge can summarize latent common-cause paths without identifying their internal structure.",
+          "hint": "An endpoint mark is a constraint on ancestry, not the identity of a missing variable.",
+          "plain": "In a no-selection setting, an FCI PAG contains X ↔ Y. Which interpretation is most careful?",
+          "capabilities": [
+            "hidden-causes-and-fci"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "A colleague says 'FCI handles hidden confounding, so its graph proves the treatment effect in our observational study.' Explain two reasons this conclusion is too strong and identify one next step.",
+          "options": [],
+          "key": "FCI still relies on structural assumptions and accurate independence testing; finite samples can yield incorrect edges. Even a correct PAG may leave several causal models and may not identify the desired treatment effect. Specify the effect, assess whether it is identifiable across the compatible models, and seek suitable measurements or interventions if it is not.",
+          "explanation": "FCI still relies on structural assumptions and accurate independence testing; finite samples can yield incorrect edges. Even a correct PAG may leave several causal models and may not identify the desired treatment effect. Specify the effect, assess whether it is identifiable across the compatible models, and seek suitable measurements or interventions if it is not.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "A colleague says 'FCI handles hidden confounding, so its graph proves the treatment effect in our observational study.' Explain two reasons this conclusion is too strong and identify one next step.",
+          "capabilities": [
+            "hidden-causes-and-fci"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Method assumptions",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Names a substantive assumption or finite-sample test limitation that remains despite allowing hidden confounding."
+              ]
+            },
+            {
+              "name": "Identification boundary",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Distinguishes a correct PAG from identification of the particular treatment effect."
+              ]
+            },
+            {
+              "name": "Actionable next step",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Specifies the effect and proposes an identification analysis or additional evidence addressing remaining ambiguity."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "non-gaussian-direction",
+      "title": "8. Extra structure can reveal direction",
+      "stage": "Discovery",
+      "minutes": 30,
+      "prerequisites": [
+        "independence-and-pc",
+        "hidden-causes-and-fci"
+      ],
+      "question": "Can assumptions about how effects are generated reveal arrows that independence alone leaves ambiguous?",
+      "objectives": [
+        "Explain LiNGAM's linear, acyclic, independent non-Gaussian noise assumptions.",
+        "Distinguish residual independence from zero residual correlation.",
+        "Identify why hidden confounding threatens the basic LiNGAM model."
+      ],
+      "intuition": [
+        "Conditional-independence methods use one kind of information: which variables separate after conditioning. Functional-model methods use additional information about the shape of the generating process. In a simple model Y=aX+N, the noise N represents influences on Y that are independent of X. If a reverse model X=bY+R cannot make R independent of Y under the same model class, the two directions are statistically distinguishable.",
+        "LiNGAM uses linear equations, an acyclic graph, mutually independent non-Gaussian disturbances, and no hidden confounding in its basic model. Non-Gaussian means the disturbances are not described by the usual bell-shaped normal distribution. Under these assumptions, information in the full distribution can identify directions that covariance or conditional-independence patterns alone cannot. The gain comes from stronger assumptions, not from bypassing the need for assumptions.",
+        "Regression residuals require careful interpretation. Ordinary least squares makes residuals uncorrelated with the fitted predictor in the sample under its usual construction. That algebraic fact does not make them independent. Independence excludes all statistical dependence, including nonlinear dependence. In a joint Gaussian setting, covariance-based relationships lack the non-Gaussian information exploited here; simply fitting two regressions and comparing residual correlations will not reproduce LiNGAM's identification argument."
+      ],
+      "worked_example": {
+        "title": "A bell-shaped special case hides direction",
+        "body": "Consider X=Nx and Y=2X+Ny with independent non-Gaussian disturbances. The correct-direction residual Y−2X is Ny and is independent of X by construction. Regressing X on Y generally does not produce a residual independent of Y in this model. If both disturbances instead are Gaussian, linear Gaussian models can admit independent residual descriptions in both directions. The difference explains why the noise assumption matters, rather than serving as a minor implementation detail."
+      },
+      "takeaways": [
+        "Stronger functional assumptions can distinguish observationally equivalent causal directions.",
+        "The basic LiNGAM model excludes hidden confounding and feedback.",
+        "Uncorrelated residuals are weaker evidence than independent residuals."
+      ],
+      "pitfall": "Using a normality test on the observed columns as a complete validation of LiNGAM. Its assumptions concern the structural disturbances and the joint generating model.",
+      "experiment": "discovery",
+      "experiment_task": "Write Y=2X+N and identify what would make N independent of X. Contrast this with a hidden variable U that affects both X and Y. If using a notebook, compare residual dependence in both directions under non-Gaussian and Gaussian simulated noise; record the generating assumptions.",
+      "source_ids": [
+        "lingam",
+        "causal-learn",
+        "discovery-overview"
+      ],
+      "paper_bridge": {
+        "source_id": "lingam",
+        "why_it_matters": "This classic paper demonstrates that identification can improve when we move beyond independence patterns and specify a functional and noise model.",
+        "read_first": "Read the model assumptions and the two-variable motivation before the ICA-based estimation details.",
+        "claim": "A linear acyclic model with independent non-Gaussian disturbances and no hidden confounding can be identifiable beyond the usual conditional-independence equivalence class.",
+        "assumptions": [
+          "Linear structural relations and acyclicity.",
+          "Mutually independent non-Gaussian disturbances under the model's identifiability conditions.",
+          "No unmeasured common causes in the basic model."
+        ],
+        "limits": [
+          "Misspecified nonlinear relations, dependent noise, latent confounding, or cycles can invalidate the interpretation.",
+          "Finite-data estimation remains imperfect.",
+          "Residual noncorrelation does not validate noise independence."
+        ],
+        "exercise": "Name the additional assumptions that buy direction information compared with ordinary PC, and describe a domain where one of them is doubtful."
+      },
+      "checkpoint": {
+        "question": "Why can LiNGAM sometimes orient an edge that a CPDAG leaves undirected?",
+        "options": [
+          {
+            "label": "A",
+            "text": "It uses extra linearity and non-Gaussian independent-noise structure.",
+            "why": "Those assumptions provide distributional information beyond conditional independences."
+          },
+          {
+            "label": "B",
+            "text": "It uses no causal assumptions.",
+            "why": "LiNGAM depends on several strong structural assumptions."
+          },
+          {
+            "label": "C",
+            "text": "Any regression slope is automatically a causal effect.",
+            "why": "Regression coefficients need a valid causal model to have that interpretation."
+          }
+        ],
+        "key": "A",
+        "explanation": "Additional functional and disturbance assumptions can break an ambiguity that conditional-independence information alone cannot resolve."
+      },
+      "reflection": "Would you trust linear relations and independent structural disturbances in your setting? State one reason for and one reason against.",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "You fit Y on X by ordinary least squares and find the residual is uncorrelated with X. Does that establish the LiNGAM independent-noise assumption?",
+          "options": [
+            {
+              "label": "A",
+              "text": "Yes, because zero correlation always implies independence.",
+              "why": "Zero correlation can coexist with nonlinear dependence."
+            },
+            {
+              "label": "B",
+              "text": "No; residual orthogonality is a regression property and is weaker than independence.",
+              "why": "The model requires more than the lack of a linear association."
+            },
+            {
+              "label": "C",
+              "text": "Yes, provided the fitted slope is statistically significant.",
+              "why": "Slope significance does not establish the disturbance independence or causal assumptions."
+            }
+          ],
+          "key": "B",
+          "explanation": "Ordinary least squares constructs orthogonal residuals under its usual setup. Independence is a property of the full joint distribution and is not certified by that orthogonality.",
+          "hint": "Think of dependence that a straight line would miss.",
+          "plain": "You fit Y on X by ordinary least squares and find the residual is uncorrelated with X. Does that establish the LiNGAM independent-noise assumption?",
+          "capabilities": [
+            "non-gaussian-direction"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "A LiNGAM analysis of advertising spend and revenue suggests advertising → revenue, but unrecorded seasonal demand influences both. Explain which assumption is threatened and what would make a more responsible analysis.",
+          "options": [],
+          "key": "Seasonal demand is an unmeasured common cause, threatening causal sufficiency and the independent-disturbance interpretation of the basic LiNGAM model. Measure and appropriately model demand or use a method/design suited to the remaining confounding, while checking linearity, acyclicity, and noise assumptions. An advertising intervention can provide separate evidence; the LiNGAM arrow alone does not settle the effect.",
+          "explanation": "Seasonal demand is an unmeasured common cause, threatening causal sufficiency and the independent-disturbance interpretation of the basic LiNGAM model. Measure and appropriately model demand or use a method/design suited to the remaining confounding, while checking linearity, acyclicity, and noise assumptions. An advertising intervention can provide separate evidence; the LiNGAM arrow alone does not settle the effect.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "A LiNGAM analysis of advertising spend and revenue suggests advertising → revenue, but unrecorded seasonal demand influences both. Explain which assumption is threatened and what would make a more responsible analysis.",
+          "capabilities": [
+            "non-gaussian-direction"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Specific assumption failure",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Connects seasonal demand to unmeasured common causes and the basic model's independence or sufficiency assumptions."
+              ]
+            },
+            {
+              "name": "Reasoned remedy",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Proposes appropriate measurement, a confounding-aware design or method, or an intervention while retaining other needed assumptions."
+              ]
+            },
+            {
+              "name": "Bounded interpretation",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Avoids treating the reported arrow as a proven advertising effect."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "changing-environments",
+      "title": "9. Learning from a world that changes",
+      "stage": "Frontier",
+      "minutes": 30,
+      "prerequisites": [
+        "scores-and-search",
+        "non-gaussian-direction"
+      ],
+      "question": "Can distribution shift become evidence about mechanisms instead of just a modeling problem?",
+      "objectives": [
+        "Distinguish a changing cause distribution from a changing causal mechanism.",
+        "Explain how context or time can enter a discovery model.",
+        "State why distribution shifts require assumptions before they can orient arrows."
+      ],
+      "intuition": [
+        "Suppose several shops use different prices, but customers respond to a given price in the same way everywhere. The distribution of price changes across shops, while the relationship that generates demand from price stays stable. Now imagine a heat wave changes how strongly customers respond to price. That is a change in the demand mechanism. Both situations can change observed demand, but for different reasons.",
+        "CD-NOD studies heterogeneous or nonstationary data: data from different domains, conditions, or times whose distributions are not constant. A context or time index helps detect which variables' generating mechanisms change. Under additional assumptions, patterns of mechanism changes can also provide direction information. The central idea is that cause and effect mechanisms can have a different pattern of changes than the factors in an incorrect reversed description.",
+        "Context is not automatically an intervention variable. A hospital label could stand for differences in treatment policy, patient severity, measurement equipment, and selection all at once. Calendar time can accompany autocorrelation, feedback, or several simultaneous changes. A method must specify how those changes relate to its causal model. The claim 'the distribution shifted' is much weaker than 'this shift identifies the direction'."
+      ],
+      "worked_example": {
+        "title": "A new customer mix versus a new response rule",
+        "body": "Write demand D=100−2P+N, where P is price and N is independent demand noise. Across two shops, the price distribution differs but the coefficient −2 and noise distribution stay the same. P(D | P) remains stable under this toy model even while average demand changes. If the second shop instead has D=100−5P+N, the response mechanism changed too. Real shops may also differ in unmeasured customer preferences, so their labels alone do not prove these equations."
+      },
+      "takeaways": [
+        "A marginal distribution can change because inputs change or because its own mechanism changes.",
+        "Multiple environments can add causal information under explicit structure and change assumptions.",
+        "Time order and predictive advantage alone do not remove confounding."
+      ],
+      "pitfall": "Calling any distribution difference a natural experiment, or assuming a time index captures every relevant change.",
+      "experiment": "intervention",
+      "experiment_task": "For D=100−2P+N with mean-zero independent N, compare a shop with mean price 10 to a shop with mean price 20. Compute expected demand, then explain whether P(D | P) changed. Repeat conceptually after changing the coefficient from −2 to −5.",
+      "source_ids": [
+        "cdnod",
+        "causal-learn",
+        "cmu-course"
+      ],
+      "paper_bridge": {
+        "source_id": "cdnod",
+        "why_it_matters": "The paper turns changes across domains or time into a potential source of discovery information, connecting causality to practical distribution shift.",
+        "read_first": "Read the motivating examples and the distinction between changing distributions and changing causal modules. Then examine what the context index represents.",
+        "claim": "Under specified structural and change assumptions, heterogeneous/nonstationary data can help detect changing mechanisms and orient some causal relations.",
+        "assumptions": [
+          "A suitable causal graph augmented with context or time, plus the paper's Markov/faithfulness and regularity conditions.",
+          "The orientation procedure needs appropriate assumptions about how causal modules change, including independence-of-change conditions where used.",
+          "The context variable and test procedure must fit the heterogeneity in the data."
+        ],
+        "limits": [
+          "Arbitrary shifts do not identify a unique causal graph.",
+          "Unmodeled selection, hidden context effects, or simultaneous dependent mechanism changes can undermine interpretation.",
+          "Time-dependent prediction such as Granger predictability is not by itself an identified intervention effect."
+        ],
+        "exercise": "For a proposed multi-environment dataset, list what the environment label could change and distinguish measured changes from assumptions about stable mechanisms."
+      },
+      "checkpoint": {
+        "question": "P(X) differs across environments while P(Y | X) stays the same. What is one compatible causal story?",
+        "options": [
+          {
+            "label": "A",
+            "text": "The distribution of X changed while the Y-from-X mechanism stayed stable.",
+            "why": "This is a compatible story under X → Y and the stated invariant conditional."
+          },
+          {
+            "label": "B",
+            "text": "Y must cause X in every compatible model.",
+            "why": "The distribution pattern alone does not universally prove that direction."
+          },
+          {
+            "label": "C",
+            "text": "Neither variable's marginal distribution can change.",
+            "why": "A changed input distribution can change the output's marginal distribution."
+          }
+        ],
+        "key": "A",
+        "explanation": "A stable conditional can accompany a changing input distribution. This is useful evidence within an appropriate model, but does not by itself prove a unique causal explanation."
+      },
+      "reflection": "What are the environments in a problem you know: locations, policies, seasons, people, or devices? Which mechanisms might remain stable?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "A model predicts Y better when past X is included, so X Granger-predicts Y under the chosen variables and lags. What further claim is justified by that result alone?",
+          "options": [
+            {
+              "label": "A",
+              "text": "Intervening on X is proven to change Y.",
+              "why": "Predictive temporal information can reflect hidden common causes or other modeling omissions."
+            },
+            {
+              "label": "B",
+              "text": "Past X adds predictive information in the specified model; a causal intervention interpretation needs more assumptions.",
+              "why": "This states the predictive result without importing unverified causal conditions."
+            },
+            {
+              "label": "C",
+              "text": "No hidden common cause can exist because X occurred earlier.",
+              "why": "A prior common cause can influence both time series."
+            }
+          ],
+          "key": "B",
+          "explanation": "Granger predictability is defined relative to the information set and model. A causal interpretation requires additional assumptions about confounding, timing, measurement, and system dynamics.",
+          "hint": "Temporal precedence and predictive information do not measure the result of changing a variable.",
+          "plain": "A model predicts Y better when past X is included, so X Granger-predicts Y under the chosen variables and lags. What further claim is justified by that result alone?",
+          "capabilities": [
+            "changing-environments"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "Two hospitals have different treatment rates and recovery rates. Propose a shift-based causal investigation, and explain why treating the hospital label as a randomized treatment is unjustified.",
+          "options": [],
+          "key": "Record patient case mix, policies, measurement practices, and outcomes across hospitals. Form hypotheses about which treatment and recovery mechanisms change, then evaluate invariances using a model that represents relevant context effects. Hospital membership can affect or select many factors, including severity and resources, so it is not randomized and cannot automatically serve as an intervention or valid instrument.",
+          "explanation": "Record patient case mix, policies, measurement practices, and outcomes across hospitals. Form hypotheses about which treatment and recovery mechanisms change, then evaluate invariances using a model that represents relevant context effects. Hospital membership can affect or select many factors, including severity and resources, so it is not randomized and cannot automatically serve as an intervention or valid instrument.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "Two hospitals have different treatment rates and recovery rates. Propose a shift-based causal investigation, and explain why treating the hospital label as a randomized treatment is unjustified.",
+          "capabilities": [
+            "changing-environments"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Mechanism-focused investigation",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Specifies measured variables and hypotheses about which distributions or conditional mechanisms change."
+              ]
+            },
+            {
+              "name": "Confounding and context",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Explains concrete hospital differences that threaten a randomized interpretation."
+              ]
+            },
+            {
+              "name": "Bounded conclusion",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Treats shifts as evidence conditional on assumptions rather than proof of a treatment effect."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "learning-causal-variables",
+      "title": "10. Before the arrows: what are the variables?",
+      "stage": "Frontier",
+      "minutes": 35,
+      "prerequisites": [
+        "changing-environments",
+        "hidden-causes-and-fci"
+      ],
+      "question": "If your data are images or embeddings, where do the causal variables come from?",
+      "objectives": [
+        "Distinguish observed measurements from latent causal factors.",
+        "Explain why reconstructing data does not identify a causal representation.",
+        "Interpret moralized-graph recovery and identification up to transformations."
+      ],
+      "intuition": [
+        "So far our columns had clear names: treatment, severity, price, recovery. In an image, the columns are pixels. The variables we might want to intervene on—lighting, object position, material, camera angle—are hidden factors that combine to generate the pixels. Causal representation learning tries to recover useful causal factors and their structure from such observations. This adds a problem before graph discovery: choosing the right variables.",
+        "Reconstructing the image accurately is not enough. Many different hidden coordinate systems can generate the same observed images. One representation may mix lighting and material into each coordinate, while another separates them. Both can predict pixels well. Identification means proving that the data and assumptions distinguish the desired representation, perhaps only up to a limited ambiguity. 'Up to a componentwise transformation' means each recovered factor can be individually rescaled or transformed; it is weaker than recovering the physical units exactly.",
+        "The cited multiple-distribution paper uses information from changing environments and structural restrictions. Its general result includes recovery of a moralized graph, not unrestricted recovery of every directed latent edge. Moralization drops arrow directions and connects parents that share a child. Thus distinct directed structures can have the same moralized graph. A frontier result can be substantial precisely because it states which part of the problem becomes identifiable and which part remains unresolved."
+      ],
+      "worked_example": {
+        "title": "A collider becomes a triangle after moralization",
+        "body": "Consider latent factors A → C ← B with no A–B edge. Moralization drops the arrowheads on A–C and B–C, then adds A–B because A and B are parents of the same child. The result is an undirected triangle. Recovering this triangle alone does not show that A directly causes B; that edge may have been added by moralization. Likewise, a recovered factor related monotonically to brightness need not equal brightness measured in physical units."
+      },
+      "takeaways": [
+        "Causal discovery assumes variables; causal representation learning also tries to recover them.",
+        "Prediction and reconstruction accuracy do not by themselves identify causal factors.",
+        "A moralized graph and a full directed latent DAG are different targets."
+      ],
+      "pitfall": "Reading 'identifiable causal representation' as 'all true variables, arrows, and intervention effects are recovered without assumptions'.",
+      "experiment": "discovery",
+      "experiment_task": "Draw A → C ← B and moralize it by removing directions and joining co-parents. Draw a second DAG with the same moralized triangle. State what the shared undirected graph cannot tell you.",
+      "source_ids": [
+        "crl",
+        "cmu-course",
+        "discovery-overview"
+      ],
+      "paper_bridge": {
+        "source_id": "crl",
+        "why_it_matters": "It connects causal discovery to representation learning while making the identifiability target explicit.",
+        "read_first": "Read the problem setup, the main identifiability claims, and the assumptions. Circle every phrase specifying which graph or variables are recovered.",
+        "claim": "Under the paper's sparsity, sufficiently rich distribution changes, and other structural conditions, its general setting identifies the moralized graph; under additional graph-dependent conditions, some latent variables can be recovered up to componentwise transformations.",
+        "assumptions": [
+          "The observation/mixing model meets the stated smoothness and invertibility conditions.",
+          "Changes across distributions are sufficiently rich for the relevant identification result.",
+          "The latent structure satisfies the specified sparsity and appropriate weaker-faithfulness conditions."
+        ],
+        "limits": [
+          "The general result is narrower than full recovery of the directed latent DAG.",
+          "Recovering some factors up to transformations does not recover physical units or every factor exactly.",
+          "Real environments may not supply the diversity or structural conditions required."
+        ],
+        "exercise": "Translate the paper's recovery target into a three-item list: what is recovered, what equivalences remain, and what is not generally promised."
+      },
+      "checkpoint": {
+        "question": "What does recovering a moralized graph generally provide?",
+        "options": [
+          {
+            "label": "A",
+            "text": "The complete directed latent DAG, including every arrow.",
+            "why": "Moralization removes arrow direction information."
+          },
+          {
+            "label": "B",
+            "text": "An undirected structure that also connects co-parents, leaving causal directions ambiguous.",
+            "why": "This is the relevant graph transformation and its information limit."
+          },
+          {
+            "label": "C",
+            "text": "Proof that each recovered factor is expressed in its original physical units.",
+            "why": "Graph recovery does not establish exact factor units; componentwise transformation ambiguities may remain."
+          }
+        ],
+        "key": "B",
+        "explanation": "A moralized graph forgets directions and can add edges between parents of a shared child. It is a valuable but coarser target than a full causal DAG."
+      },
+      "reflection": "If a model gives you a hidden variable called 'risk', what evidence would make you believe that changing it corresponds to a coherent real-world intervention?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "You moralize A → C ← B. Why does the resulting graph contain an A–B edge even though the original DAG had no direct A–B arrow?",
+          "options": [
+            {
+              "label": "A",
+              "text": "Moralization joins parents of a shared child.",
+              "why": "A and B both parent C, so moralization adds their undirected connection."
+            },
+            {
+              "label": "B",
+              "text": "The procedure discovered an experimentally confirmed direct effect.",
+              "why": "This is a graphical transformation, not new experimental evidence."
+            },
+            {
+              "label": "C",
+              "text": "Every pair of variables must have a direct causal relation.",
+              "why": "An undirected edge added by moralization does not imply a direct causal relation."
+            }
+          ],
+          "key": "A",
+          "explanation": "The co-parent edge is part of the definition of moralization. It must not be interpreted as a newly identified direct causal effect.",
+          "hint": "Find the two variables that point into the same child.",
+          "plain": "You moralize A → C ← B. Why does the resulting graph contain an A–B edge even though the original DAG had no direct A–B arrow?",
+          "capabilities": [
+            "learning-causal-variables"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "A representation-learning model reconstructs images nearly perfectly and its authors claim it recovered 'the causal variables'. Name two additional questions you would ask about identification, and explain why reconstruction accuracy does not settle them.",
+          "options": [],
+          "key": "Ask which latent factors or graph are identifiable, up to what transformations, under which mixing, sparsity, and environment-change assumptions. Ask what interventions or controlled ground truth evaluate the factor interpretation. Many entangled coordinate systems can reconstruct the same observations, so reconstruction accuracy alone cannot distinguish the intended causal factors.",
+          "explanation": "Ask which latent factors or graph are identifiable, up to what transformations, under which mixing, sparsity, and environment-change assumptions. Ask what interventions or controlled ground truth evaluate the factor interpretation. Many entangled coordinate systems can reconstruct the same observations, so reconstruction accuracy alone cannot distinguish the intended causal factors.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "A representation-learning model reconstructs images nearly perfectly and its authors claim it recovered 'the causal variables'. Name two additional questions you would ask about identification, and explain why reconstruction accuracy does not settle them.",
+          "capabilities": [
+            "learning-causal-variables"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Identifiability questions",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Asks about the exact recovery target and remaining equivalences or transformations."
+              ]
+            },
+            {
+              "name": "Assumptions and evidence",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Asks about concrete mixing/change/structure conditions or an evaluation of causal factor meaning."
+              ]
+            },
+            {
+              "name": "Reconstruction limitation",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Explains that several representations can reconstruct the same data while differing causally."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "hybrid-latent-frontier",
+      "title": "11. Reading a new discovery algorithm",
+      "stage": "Frontier",
+      "minutes": 35,
+      "prerequisites": [
+        "scores-and-search",
+        "hidden-causes-and-fci"
+      ],
+      "question": "How can search and targeted tests make discovery faster without making claims stronger than the evidence?",
+      "objectives": [
+        "Explain the purpose of a score-search plus independence-testing pipeline.",
+        "Distinguish correctness claims from heuristic performance claims.",
+        "Check whether a benchmark's target matches the algorithm's output."
+      ],
+      "intuition": [
+        "An algorithm that asks every possible conditional-independence question can become expensive as the number of variables grows. A hybrid approach first uses an efficient score search to propose useful structure, then applies tests and orientation rules designed for the latent-variable setting. The first stage can focus effort; the later stages determine which conclusions remain justified. You should ask whether an early mistake can be corrected and which theoretical conditions cover the whole pipeline.",
+        "The 2025 preprint studied here develops BOSS-FCI, GRaSP-FCI, and targeted-testing approaches such as FCIT, alongside explicitly heuristic variants. This is active research, so method names are less important than the logic: what work is avoided, what information is preserved, and what assumptions make that safe? A variant can perform well empirically without sharing an FCI-style soundness guarantee. Keep each variant's theory attached to that variant.",
+        "Benchmark interpretation is another causal reasoning skill. A method may output a PAG, while a performance figure evaluates a property of the generating DAG. Adjacency accuracy, endpoint accuracy, ancestry accuracy, and runtime measure different things. In this preprint's 100-node experiment, some path-related metrics use the generating DAG rather than the true PAG. That distinction should inform your reading, because compatibility with a data-generating graph and recovery of the identifiable equivalence-class target are not identical questions."
+      ],
+      "worked_example": {
+        "title": "The faster answer may answer a different scoring question",
+        "body": "Suppose a hybrid method takes 10 seconds and an FCI baseline takes 40 seconds on the same simulated data. The hybrid has better adjacency precision but worse endpoint recall. This supports a speed/structure tradeoff in that protocol, not a universal win. If an endpoint remains unidentifiable in the population PAG, scoring against one fully oriented generating DAG can also penalize an appropriately unresolved result. Always inspect the target graph and metric definition before ranking methods."
+      },
+      "takeaways": [
+        "Separate the proposed speedup from the scientific information it preserves.",
+        "Sound variants and heuristic variants need different claims.",
+        "The metric, target graph, and protocol are part of the result."
+      ],
+      "pitfall": "Merging several algorithms in one paper into a single claim that all are faster, more accurate, and guaranteed to be correct.",
+      "experiment": "discovery",
+      "experiment_task": "Create a four-line evaluation card for one algorithm: input assumptions, output graph type, runtime/accuracy metrics, and theoretical status. Use the linked preprint to fill it, then mark which statements are theorem claims and which are experimental observations.",
+      "source_ids": [
+        "hybrid-latent",
+        "boss",
+        "fci",
+        "tetrad-catalog"
+      ],
+      "paper_bridge": {
+        "source_id": "hybrid-latent",
+        "why_it_matters": "It is a concrete bridge from the classic PC/FCI and score-search ideas to current attempts at scalable latent-variable discovery.",
+        "read_first": "Read the algorithm comparison and theoretical-status discussion before the benchmark plots. Inspect the experimental definitions of path metrics and their target graphs.",
+        "claim": "The preprint combines score-search proposals and targeted testing to improve efficiency in evaluated latent-variable discovery settings while distinguishing FCI-style sound methods from heuristic variants.",
+        "assumptions": [
+          "Soundness claims depend on the specific algorithm, graph model, and valid independence information.",
+          "Finite-sample experiments use their documented scores, test settings, depth limits, and data-generating families."
+        ],
+        "limits": [
+          "This source is an arXiv preprint, version 3; peer review is not asserted.",
+          "LV-Dumb (also called BOSS-POD) should not inherit an FCI-soundness claim merely because it appears in the same paper.",
+          "In the 100-node section, path metrics evaluated against the generating DAG should not be mistaken for full true-PAG recovery.",
+          "Empirical speed/accuracy does not establish universal superiority or validate assumptions on a new dataset."
+        ],
+        "exercise": "Choose one method and write a 120-word review stating its input, output, promise, assumptions, empirical evidence, and one unresolved question."
+      },
+      "checkpoint": {
+        "question": "A paper includes sound methods and heuristic variants. What should your summary do?",
+        "options": [
+          {
+            "label": "A",
+            "text": "Give every method the strongest guarantee mentioned anywhere in the paper.",
+            "why": "Guarantees apply to specified algorithms under specified conditions."
+          },
+          {
+            "label": "B",
+            "text": "Attach each guarantee and result to the actual variant and assumptions.",
+            "why": "This preserves the scope of theoretical and empirical evidence."
+          },
+          {
+            "label": "C",
+            "text": "Ignore every empirical result for methods without a theorem.",
+            "why": "Empirical evidence is useful even when it is not a general correctness proof."
+          }
+        ],
+        "key": "B",
+        "explanation": "A method family can contain variants with different theoretical status. Precise reading keeps algorithms, assumptions, settings, and evidence connected."
+      },
+      "reflection": "When does it make sense to use a heuristic in your work? What validation would make its limitations visible?",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "An FCI-style algorithm outputs a PAG, but a benchmark scores some orientations against one generating DAG. What should a reader check?",
+          "options": [
+            {
+              "label": "A",
+              "text": "Whether the metric distinguishes recoverable invariant information from directions unresolved in the PAG.",
+              "why": "The identifiable target may contain less direction information than the generating DAG."
+            },
+            {
+              "label": "B",
+              "text": "Only which algorithm has the largest headline score.",
+              "why": "The target and metric definition determine what a score means."
+            },
+            {
+              "label": "C",
+              "text": "Whether the PAG has been assigned a probability of 0.5 for each circle.",
+              "why": "Circles do not encode such probabilities."
+            }
+          ],
+          "key": "A",
+          "explanation": "The generating DAG is one underlying model, while a PAG expresses the equivalence-class information identifiable under the assumptions. A benchmark must be interpreted with that distinction in mind.",
+          "hint": "Compare what the method is meant to recover with what the metric rewards.",
+          "plain": "An FCI-style algorithm outputs a PAG, but a benchmark scores some orientations against one generating DAG. What should a reader check?",
+          "capabilities": [
+            "hybrid-latent-frontier"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "Write a short review of a hybrid discovery benchmark that is faster than FCI but uses a different conditioning-depth limit. Identify the comparison issue and propose a more informative evaluation.",
+          "options": [],
+          "key": "The observed runtime and accuracy differences may reflect both algorithm design and different search/test limits. Report those settings, compare under matched feasible limits or clearly specified compute budgets, and plot accuracy versus runtime across settings and seeds. Include graph size, density, hidden-variable structure, score/test choices, and the appropriate equivalence-class target. The result would remain specific to the tested regimes.",
+          "explanation": "The observed runtime and accuracy differences may reflect both algorithm design and different search/test limits. Report those settings, compare under matched feasible limits or clearly specified compute budgets, and plot accuracy versus runtime across settings and seeds. Include graph size, density, hidden-variable structure, score/test choices, and the appropriate equivalence-class target. The result would remain specific to the tested regimes.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "Write a short review of a hybrid discovery benchmark that is faster than FCI but uses a different conditioning-depth limit. Identify the comparison issue and propose a more informative evaluation.",
+          "capabilities": [
+            "hybrid-latent-frontier"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Identifies comparison issue",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Explains how different conditioning-depth limits can change runtime and statistical/structural recovery."
+              ]
+            },
+            {
+              "name": "Improved evaluation",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Proposes matched limits or transparent budget tradeoffs with both runtime and appropriate accuracy metrics."
+              ]
+            },
+            {
+              "name": "Scope and uncertainty",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Documents relevant data/settings and avoids universal-superiority claims from one protocol."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "auditing-causal-ai",
+      "title": "12. From impressive claim to evidence you can inspect",
+      "stage": "Frontier",
+      "minutes": 40,
+      "prerequisites": [
+        "learning-causal-variables",
+        "hybrid-latent-frontier"
+      ],
+      "question": "When a company or AI agent says it understands causality, what would count as evidence?",
+      "objectives": [
+        "Separate a company claim, a paper's measured result, and an independent replication.",
+        "Translate action-following metrics into a bounded scientific conclusion.",
+        "Design an audit that records assumptions, interventions, comparisons, and uncertainty."
+      ],
+      "intuition": [
+        "A causal discovery library, an agentic interface, and a company research essay serve different roles. causal-learn implements methods; CausalLearn offers an online interface; Aether's writing presents a research and product perspective. A polished interface can make a procedure easier to run, but it cannot establish the scientific assumptions for your dataset. Your task as a reader is to connect each claim to an actual method, measurement, comparison, and stated scope.",
+        "Consider a world model that predicts future video given an action. Better action following means its predictions respond more appropriately to the tested action inputs according to the evaluation. That is potentially useful evidence. It does not automatically establish that the model recovered the real-world causal graph, can answer every counterfactual, or will safely control a physical robot. Changing an action token in a simulator or video predictor is an evaluation intervention on that model, whose relation to real-world interventions needs its own evidence.",
+        "The CD-LAM preprint offers a concrete case. It reports improvements for action-conditioned world-model video prediction, and a company article summarizes efficiency gains. Inspect the training and evaluation protocol before attributing gains solely to causal reasoning: the paper's debiasing procedure uses foreground masks and coarse action labels that the baseline does not use in the described setup. This raises a testable question about auxiliary supervision and training budgets. A good critique proposes a fair comparison; it neither accepts the headline uncritically nor dismisses the research because it is a preprint."
+      ],
+      "worked_example": {
+        "title": "Make the headline testable",
+        "body": "Rewrite 'causal world models need ten times less post-training' as a bounded claim: 'For the specified model backbones, datasets, auxiliary inputs, training-budget definition, baseline, and action-following metrics, the authors report the stated efficiency improvement.' Then propose a matched-supervision ablation: give a comparison method the same masks and action labels, match or sweep training compute, and test on held-out actions and environments. Report where performance improves, where it does not, and whether independent evaluation reproduces it."
+      },
+      "takeaways": [
+        "An agent can automate an analysis; the data and assumptions still determine its scientific meaning.",
+        "Ask what intervention was tested and what outcome was actually measured.",
+        "A useful review states the strongest supported conclusion and the next experiment that could change it."
+      ],
+      "pitfall": "Treating company ambition, a preprint benchmark, and independently replicated real-world capability as the same level of evidence.",
+      "experiment": "intervention",
+      "experiment_task": "Choose one statement from the linked Aether article. Fill an evidence card with exact claim in your own words, evaluated system, action/intervention, measured outcome, comparison baseline, assumptions, and a missing test. Compare your card with the original preprint.",
+      "source_ids": [
+        "aether",
+        "cdlam",
+        "cdlam-article",
+        "causallearn-platform",
+        "causal-learn-repo",
+        "what-if"
+      ],
+      "paper_bridge": {
+        "source_id": "cdlam",
+        "why_it_matters": "It provides a current AI research example where foundational distinctions—intervention, confounding, comparison, and scope—help interpret a frontier result.",
+        "read_first": "Read the abstract, experimental setup, baseline definitions, ablations, and limitations. Then compare the company headline with the paper's specific tasks and training resources.",
+        "claim": "The preprint reports improved action-following and training efficiency for its evaluated video world-model settings.",
+        "assumptions": [
+          "The chosen action-following metrics validly capture the intended behavior in these tests.",
+          "A causal interpretation of gains needs an appropriate comparison and a justified relationship between the training intervention and measured outcome."
+        ],
+        "limits": [
+          "This is a July 2026 research preprint; broad causal understanding and physical-robot safety are not established by these benchmarks.",
+          "The debiasing setup uses foreground masks and coarse action labels not used by the described baseline, motivating matched-supervision comparisons.",
+          "Reported gains are conditional on model backbones, data, training budgets, and evaluation protocol; the company headline should retain that scope."
+        ],
+        "exercise": "Write a 200-word evidence audit ending with one falsifiable follow-up test and a concrete result that would lower your confidence."
+      },
+      "checkpoint": {
+        "question": "What is the most defensible conclusion from better action-following scores in a video world-model benchmark?",
+        "options": [
+          {
+            "label": "A",
+            "text": "The model has recovered every real-world causal mechanism.",
+            "why": "The benchmark does not test or identify every mechanism."
+          },
+          {
+            "label": "B",
+            "text": "The evaluated model performs better on that action-following protocol; broader claims need additional evidence.",
+            "why": "This conclusion matches the measurement and scope."
+          },
+          {
+            "label": "C",
+            "text": "The model is proven safe for physical deployment.",
+            "why": "Video prediction metrics are not a complete deployed-system safety evaluation."
+          }
+        ],
+        "key": "B",
+        "explanation": "Evidence should be interpreted at the level of the evaluated system, intervention, outcome, and baseline. A useful benchmark result does not automatically settle broader capability claims."
+      },
+      "reflection": "Write your current confidence in one causal AI claim, name the evidence behind it, and state an observation that would change your mind.",
+      "practice": [
+        {
+          "type": "mcq",
+          "stem": "A new causal debiasing method receives foreground masks and action labels that its baseline does not. What evaluation would help isolate the contribution of the proposed method?",
+          "options": [
+            {
+              "label": "A",
+              "text": "A comparison with matched auxiliary supervision and documented training budgets, plus relevant ablations.",
+              "why": "This reduces alternative explanations from extra information or resources."
+            },
+            {
+              "label": "B",
+              "text": "Only more examples of successful outputs from the new method.",
+              "why": "Selected successes do not isolate why the method improved."
+            },
+            {
+              "label": "C",
+              "text": "A more confident description of the same headline.",
+              "why": "Stronger wording adds no empirical evidence."
+            }
+          ],
+          "key": "A",
+          "explanation": "Different supervision and budgets can contribute to performance differences. Matched comparisons and ablations clarify what the proposed mechanism adds.",
+          "hint": "Ask whether the two systems had access to comparable information and resources.",
+          "plain": "A new causal debiasing method receives foreground masks and action labels that its baseline does not. What evaluation would help isolate the contribution of the proposed method?",
+          "capabilities": [
+            "auditing-causal-ai"
+          ],
+          "cognitive_operation": "application",
+          "rubric": [],
+          "points": 5
+        },
+        {
+          "type": "open",
+          "stem": "Audit the claim 'Our causal AI learns what actions will work in new environments.' Write a precise target claim, identify one kind of supporting evidence, state two important limits, and propose one result that would reduce your confidence.",
+          "options": [],
+          "key": "A precise target might be improved action-conditioned prediction for specified actions in held-out environments, measured against a named baseline at comparable training resources. Supporting evidence would include preregistered or transparent held-out interventions with appropriate metrics, ablations, and independent replication. Limits include untested environments, remaining confounding or unequal auxiliary supervision, and the gap between prediction and deployed action effects. Confidence should fall if matched-supervision comparisons remove the gain or performance fails under a specified plausible environment shift.",
+          "explanation": "A precise target might be improved action-conditioned prediction for specified actions in held-out environments, measured against a named baseline at comparable training resources. Supporting evidence would include preregistered or transparent held-out interventions with appropriate metrics, ablations, and independent replication. Limits include untested environments, remaining confounding or unequal auxiliary supervision, and the gap between prediction and deployed action effects. Confidence should fall if matched-supervision comparisons remove the gain or performance fails under a specified plausible environment shift.",
+          "hint": "Specify the relevant mechanism, then state what the evidence can and cannot establish.",
+          "plain": "Audit the claim 'Our causal AI learns what actions will work in new environments.' Write a precise target claim, identify one kind of supporting evidence, state two important limits, and propose one result that would reduce your confidence.",
+          "capabilities": [
+            "auditing-causal-ai"
+          ],
+          "cognitive_operation": "transfer",
+          "rubric": [
+            {
+              "name": "Testable claim and evidence",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Specifies an action, outcome, environment scope, and comparison with evidence that could assess them."
+              ]
+            },
+            {
+              "name": "Substantive limits",
+              "weight": 0.4,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Explains at least two concrete limits such as unequal supervision, untested shifts, identification assumptions, or prediction-to-deployment gaps."
+              ]
+            },
+            {
+              "name": "Falsifiable revision",
+              "weight": 0.2,
+              "anchors": [
+                "0: Missing, incorrect, or contradicted by the response.",
+                "0.5: Partly correct but incomplete or not connected to this case.",
+                "1: Names a concrete evaluation result that would lower confidence, rather than merely requesting more data."
+              ]
+            }
+          ],
+          "points": 10
+        }
+      ]
+    }
+  ],
+  "glossary": [
+    {
+      "term": "Association",
+      "definition": "A statistical relationship between observed variables. It does not alone establish what an intervention would change."
+    },
+    {
+      "term": "Intervention",
+      "definition": "A specified action that changes a variable's generating mechanism. Its alternatives and side effects must be defined."
+    },
+    {
+      "term": "do(X=x)",
+      "definition": "An ideal intervention that replaces the structural equation for X with X=x while retaining the other mechanisms."
+    },
+    {
+      "term": "Conditioning",
+      "definition": "Restricting a distribution to cases with specified observed values, such as comparing people who naturally received a treatment."
+    },
+    {
+      "term": "Counterfactual",
+      "definition": "An outcome under an alternative action for a unit or population, defined by a causal model or potential-outcome framework."
+    },
+    {
+      "term": "Estimand",
+      "definition": "The exact quantity a study aims to learn, such as an average treatment effect for a defined population and period."
+    },
+    {
+      "term": "SCM",
+      "definition": "Structural causal model: equations describing how variables are generated from their direct causes and background disturbances."
+    },
+    {
+      "term": "DAG",
+      "definition": "Directed acyclic graph: a graph with arrows and no directed cycle."
+    },
+    {
+      "term": "Confounder",
+      "definition": "A common cause relevant to the treatment-outcome comparison; confounding leaves noncausal routes in that comparison."
+    },
+    {
+      "term": "Mediator",
+      "definition": "A variable on a directed causal path between a cause and an outcome."
+    },
+    {
+      "term": "Collider",
+      "definition": "A variable with two incoming arrows along the path being considered, as in X → S ← Y."
+    },
+    {
+      "term": "Selection bias",
+      "definition": "Bias from the process determining which cases are observed or analyzed; conditioning on selection can open collider paths."
+    },
+    {
+      "term": "Adjustment",
+      "definition": "Using an appropriate set of variables to connect observational comparisons to a defined causal effect under assumptions."
+    },
+    {
+      "term": "Exchangeability",
+      "definition": "A condition under which treatment groups, perhaps after conditioning, are comparable with respect to the relevant potential outcomes."
+    },
+    {
+      "term": "Positivity",
+      "definition": "Each treatment alternative has nonzero probability in the covariate groups needed for the target comparison."
+    },
+    {
+      "term": "Consistency",
+      "definition": "A unit's observed outcome agrees with its potential outcome under the treatment version actually received, with the intervention clearly defined."
+    },
+    {
+      "term": "D-separation",
+      "definition": "A graph criterion for whether conditioning blocks all paths between variable sets. Under Markov, it implies conditional independence."
+    },
+    {
+      "term": "Conditional independence",
+      "definition": "Once specified variables are given, knowing one variable adds no distributional information about another."
+    },
+    {
+      "term": "Causal Markov condition",
+      "definition": "The causal graph's d-separations imply corresponding conditional independences in the distribution."
+    },
+    {
+      "term": "Faithfulness",
+      "definition": "The distribution has no additional conditional independences beyond those implied by the graph's d-separations."
+    },
+    {
+      "term": "Causal sufficiency",
+      "definition": "Within the modeled variable set, no common causes of measured variables are left unmeasured."
+    },
+    {
+      "term": "Markov equivalence",
+      "definition": "DAGs that imply the same conditional independence relations; their observational independence information cannot distinguish them."
+    },
+    {
+      "term": "CPDAG",
+      "definition": "Completed partially directed acyclic graph representing a Markov equivalence class of DAGs, with invariant arrows and unresolved undirected edges."
+    },
+    {
+      "term": "Latent variable",
+      "definition": "A variable in the causal system that is not directly observed in the analyzed data."
+    },
+    {
+      "term": "PAG",
+      "definition": "Partial ancestral graph representing invariant endpoint information across an equivalence class of ancestral graphs, allowing hidden causes and selection in the appropriate framework."
+    },
+    {
+      "term": "Circle endpoint",
+      "definition": "A PAG mark indicating an unresolved endpoint across the represented equivalence class, not a probability."
+    },
+    {
+      "term": "BIC",
+      "definition": "Bayesian information criterion: a model-comparison criterion combining likelihood and a parameter-count penalty; sign conventions vary."
+    },
+    {
+      "term": "Consistency of an estimator",
+      "definition": "Convergence to its target as sample size grows under specified conditions; different from treatment consistency."
+    },
+    {
+      "term": "Non-Gaussian disturbance",
+      "definition": "A structural error or background term whose distribution is not Gaussian; LiNGAM exploits this along with other assumptions."
+    },
+    {
+      "term": "Distribution shift",
+      "definition": "A change in the data distribution across settings or time; it need not mean a specific causal mechanism was intervened on."
+    },
+    {
+      "term": "Mechanism invariance",
+      "definition": "Stability of a specified causal generating rule across the environments being considered."
+    },
+    {
+      "term": "Granger predictability",
+      "definition": "Added predictive information from the past of one variable about another, relative to a specified information set and model; causal interpretation needs additional assumptions."
+    },
+    {
+      "term": "Identifiability",
+      "definition": "Whether the available distributional information and assumptions determine the target quantity or structure, potentially up to stated ambiguities."
+    },
+    {
+      "term": "Causal representation learning",
+      "definition": "Learning latent causal factors and aspects of their relationships from observations such as pixels or embeddings."
+    },
+    {
+      "term": "Moralized graph",
+      "definition": "An undirected graph formed from a DAG by joining co-parents and removing arrow directions."
+    },
+    {
+      "term": "Componentwise transformation",
+      "definition": "A separate transformation of each coordinate, such as an invertible rescaling; it does not freely mix different factors."
+    },
+    {
+      "term": "Ablation",
+      "definition": "An experiment removing or varying a component to assess its contribution, with comparisons interpreted under the changed conditions."
+    },
+    {
+      "term": "Preprint",
+      "definition": "A publicly shared research manuscript for which peer-reviewed publication is not implied by its preprint status."
+    },
+    {
+      "term": "Auxiliary supervision",
+      "definition": "Additional labels, masks, or other training information beyond the main inputs and targets; unequal access can affect comparisons."
+    },
+    {
+      "term": "Bootstrap edge frequency",
+      "definition": "How often an edge appears across resampled analyses under a procedure; not automatically the probability that the edge is causally true."
+    }
+  ],
+  "capstone": {
+    "title": "Audit a frontier causal AI claim",
+    "prompt": "Choose the linked CD-LAM preprint, the hybrid latent-discovery preprint, or another verified causal paper. Write an evidence audit in your own words: (1) define one precise causal or algorithmic claim and its target population/system; (2) sketch a graph or mechanism and identify what is observed, intervened on, or latent; (3) separate identification assumptions from estimation/search choices; (4) report what the evaluation measures, with baseline, data, resources, and output target; (5) explain two concrete limits and which conclusions remain ambiguous; (6) design a fair follow-up test with a result that would lower your confidence. Cite the original paper and distinguish any company interpretation from its evidence. Submit an initial answer, inspect criterion-level feedback, and revise the weakest part. Record what changed in your reasoning; time spent or clicking through readings alone is not evidence of mastery."
+  }
+}

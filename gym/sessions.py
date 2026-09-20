@@ -248,7 +248,9 @@ def submit_answer(store, session_id, request):
         if s["time_limit_seconds"] and elapsed(s["started_at"]) > s["time_limit_seconds"]:
             raise ValueError("Time is up. Finish the simulation to review your answers.")
         current = store.get(c, "item", item_id)
-        if current["status"] != "active":
+        # A retired item's already-open sessions retain their original snapshot;
+        # quarantine is different: its scoring evidence has been declared invalid.
+        if current["status"] not in {"active", "retired"}:
             raise ValueError("This item was quarantined; finish and start a new session")
         item = s["snapshots"][item_id]
         score = deterministic_score(item, request["answer"])
@@ -304,7 +306,8 @@ def assistance(store, session_id, item_id, kind):
             value = [
                 t
                 for t in store.list(c, "term")
-                if t.get("legacy_id") in item.get("gloss", []) and t["course_id"] == s["course_id"]
+                if t["course_id"] == s["course_id"]
+                and (t["id"] in item.get("term_ids", []) or t.get("legacy_id") in item.get("gloss", []))
             ]
         else:
             value = item.get(kind, "No aid is available for this item")

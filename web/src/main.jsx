@@ -25,6 +25,7 @@ import {
   Search,
 } from "lucide-react";
 import "./style.css";
+import GuidedLab from "./GuidedLab.jsx";
 
 async function api(path, data, method) {
   const options = {
@@ -83,6 +84,8 @@ const fmtDate = (s) =>
       })
     : "No deadline";
 const minutes = (s) => `${Math.round((s || 0) / 60)} min`;
+const activityDuration = (s) =>
+  (s || 0) < 60 ? `${Math.round(s || 0)} sec` : minutes(s);
 const percent = (x) => `${Math.round(x * 100)}%`;
 function Empty({ title, children }) {
   return (
@@ -189,6 +192,7 @@ function TokenGate({ reload }) {
 
 function App() {
   const [page, setPage] = useState("home"),
+    [labCourseId, setLabCourseId] = useState("causality-lab"),
     [sessionId, setSessionId] = useState(sessionStorage.getItem("gym-session")),
     [refresh, setRefresh] = useState(0),
     [error, setError] = useState(""),
@@ -206,7 +210,8 @@ function App() {
       setBusy(false);
     }
   };
-  const navigate = (p) => {
+  const navigate = (p, courseId) => {
+    if (courseId) setLabCourseId(courseId);
     setError("");
     setPage(p);
     setRefresh((x) => x + 1);
@@ -216,14 +221,39 @@ function App() {
     sessionStorage.setItem("gym-session", id);
     setPage("session");
   };
-  const start = (spec) =>
+  const start = (spec, labActivityId) =>
     act(async () => {
-      const s = await api("/sessions", spec);
+      const pendingKey = labActivityId
+        ? `gym-lab-pending:${labActivityId}`
+        : null;
+      const pendingId = pendingKey && sessionStorage.getItem(pendingKey);
+      const s = pendingId
+        ? await api(`/sessions/${pendingId}`)
+        : await api("/sessions", spec);
+      if (labActivityId) {
+        sessionStorage.setItem(pendingKey, s.id);
+        try {
+          await api(`/lab-activities/${labActivityId}/link-session`, {
+            session_id: s.id,
+          });
+          await api(`/sessions/${s.id}/timer`, { action: "resume" });
+          sessionStorage.removeItem(pendingKey);
+        } catch (error) {
+          await api(`/sessions/${s.id}/timer`, { action: "pause" }).catch(
+            () => {},
+          );
+          throw error;
+        }
+      }
       openSession(s.id);
       reload();
+      return s;
     });
   const nav = [
     ["home", Compass, "Workbench"],
+    ...(overview?.courses.some((c) => c.has_lab)
+      ? [["lab", FlaskConical, "Guided lab"]]
+      : []),
     ["create", Plus, "Sources & create"],
     ["coursework", FileText, "Coursework & rubrics"],
     ["plan", CalendarDays, "Plan my time"],
@@ -311,6 +341,14 @@ function App() {
                   navigate={navigate}
                   resume={openSession}
                   busy={busy}
+                />
+              )}
+              {page === "lab" && (
+                <GuidedLab
+                  courseId={labCourseId}
+                  api={api}
+                  start={start}
+                  navigate={navigate}
                 />
               )}
               {page === "session" && sessionId && (
@@ -485,6 +523,14 @@ function Home({ overview, start, navigate, resume, busy }) {
                       <strong>{course.counts.transfer}</strong> transfer items
                     </span>
                   </div>
+                  {course.has_lab && (
+                    <Action
+                      className="secondary"
+                      onClick={() => navigate("lab", course.id)}
+                    >
+                      <FlaskConical size={17} /> Open guided lab
+                    </Action>
+                  )}
                   <div className="segmented" aria-label="Activity mode">
                     {["practice", "simulation", "transfer"].map((m) => (
                       <button
@@ -543,7 +589,7 @@ function Home({ overview, start, navigate, resume, busy }) {
                             value={count}
                             onChange={(e) => setCount(+e.target.value)}
                           >
-                            {[5, 8, 12, 16].map((n) => (
+                            {[3, 5, 8, 12, 16].map((n) => (
                               <option key={n}>{n}</option>
                             ))}
                           </select>
@@ -667,7 +713,7 @@ function Home({ overview, start, navigate, resume, busy }) {
           ) : (
             <>
               <input
-                placeholder="Search 331 concepts…"
+                placeholder={`Search ${library.terms.length} concepts…`}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -779,7 +825,10 @@ function Feedback({ value, score, points }) {
       )}
       {value.uncertainty && <p className="muted">{value.uncertainty}</p>}
       <small>
-        {value.ref || "Attributed model judgment; open to correction."}
+        {value.ref ||
+          (value.kind === "provisional_model_judgment"
+            ? "Attributed model judgment; open to correction."
+            : "Answer-key feedback; report any error for review.")}
       </small>
     </div>
   );
@@ -1120,6 +1169,12 @@ function Session({ ident, act, busy, done }) {
         </article>
         <aside className="context-rail">
           <h3>Your practice contract</h3>
+          {session.guided_activity_id && (
+            <p className="import-note">
+              Guided lesson preparation is recorded for these attempts. This
+              session contributes evidence of supported practice.
+            </p>
+          )}
           <p>
             {session.mode === "simulation"
               ? "Complete this fixed form independently. No answers or aids are shown before submission."
@@ -3689,6 +3744,63 @@ function Progress({ act, start }) {
         No prior telemetry is inferred from imported demos. These counts
         describe work recorded here, not a mastery percentage.
       </p>
+      <section className="section">
+        <h2>Guided activity and assessed outcomes</h2>
+        <p>
+          Time, experiments, and reflections describe your preparation. Linked
+          practice supplies scored evidence. These observations do not establish
+          the causal effect of a teaching method.
+        </p>
+        {data?.lab_activities?.length ? (
+          data.lab_activities
+            .slice(-10)
+            .reverse()
+            .map((activity) => (
+              <div className="panel" key={activity.id}>
+                <div className="row between">
+                  <strong>
+                    {activity.module} ·{" "}
+                    {activity.status === "finished"
+                      ? "Study activity finished"
+                      : "Study activity unfinished"}
+                  </strong>
+                  <Badge>
+                    {activity.running ? "Timer running" : "Timer stopped"}
+                  </Badge>
+                </div>
+                <p>
+                  {activityDuration(activity.active_seconds)} active study ·{" "}
+                  {activityDuration(activity.elapsed_seconds)} elapsed ·{" "}
+                  {activity.experiment_count} experiment runs ·{" "}
+                  {activity.reading_count} reading exposures
+                </p>
+                {activity.practice_outcome ? (
+                  <p>
+                    Linked practice: {activity.practice_outcome.attempt_count}{" "}
+                    attempts; {activity.practice_outcome.score}/
+                    {activity.practice_outcome.max_score} points so far;{" "}
+                    {activity.practice_outcome.pending_count} awaiting
+                    assessment.{" "}
+                    {activity.practice_outcome.assisted_attempt_count} attempts
+                    with recorded support.
+                  </p>
+                ) : (
+                  <p>No scored practice linked yet.</p>
+                )}
+                {activity.reflection && (
+                  <details>
+                    <summary>Saved reasoning</summary>
+                    <p className="preserve">{activity.reflection}</p>
+                  </details>
+                )}
+              </div>
+            ))
+        ) : (
+          <p className="muted">
+            Start a guided learning session to record this connection.
+          </p>
+        )}
+      </section>
       <section className="section">
         <h2>Capabilities to investigate</h2>
         {data?.learner_states.length ? (

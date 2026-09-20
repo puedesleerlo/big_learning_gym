@@ -26,7 +26,34 @@ The current workspace already has the AI Strategy content imported. To import it
 uv run python -m gym.cli import-legacy ../learning_gym
 ```
 
-The importer preserves 314 practice items, four 16-item / 100-point mock exams, shared cases and tables, matching questions, explanations, hints, plain-English aids, eight guides, and 331 glossary entries. The legacy style specification is imported as a **proposed** assessment profile to review. It does not fabricate practice sessions. The supplied `causal_know` directory was empty, so no causal example was imported.
+The importer preserves 314 practice items, four 16-item / 100-point mock exams, shared cases and tables, matching questions, explanations, hints, plain-English aids, eight guides, and 331 glossary entries. The legacy style specification is imported as a **proposed** assessment profile to review. It does not fabricate practice sessions.
+
+## Causality learning gym
+
+The causality curriculum uses the existing workbench, study library, practice sessions, sources, coursework, and rubrics. Select **Causality: from first questions to frontier research** and **Open guided lab**. Follow modules C01–C12: read the explanation, run a small illustrative experiment, save your reasoning, and start linked practice. The same content is available in the study library. Four longer exercises are in **Coursework & rubrics**.
+
+The guided lab records explicit start/pause/finish events, capped server-measured active time, elapsed time, reading exposure, experiment parameters, and reflections. Hiding the tab pauses its timer. Linked practice uses the existing session, scoring, and learner model; guided exposure is recorded as support before answers are submitted. **Learning evidence** shows preparation beside actual practice outcomes. Study completion earns no mastery, and linked time/outcome observations do not establish a causal teaching effect. The four widgets explain exact toy models; they do not execute causal-learn algorithms or claim real-world causal identification.
+
+Each lesson connects a foundational idea to an inspected paper, with assumptions, limitations, and a suggested reading task. Research includes causal-learn/Tetrad methods, BOSS, latent-variable discovery, causal representation learning, and Aether-linked world-model research. Preprints and company summaries are labeled. Public CMU course materials and an open textbook supplement the lessons. The two books mentioned by the learner have not yet been located; no contents from them are claimed to be included.
+
+To populate another running installation through its HTTP API:
+
+```sh
+uv run python scripts/install_causality.py --base-url http://127.0.0.1:8787
+```
+
+The importer validates source reconstruction, imports material atomically, and can be repeated with the same content without duplication. It records content provenance, not learner attempts or mastery, and makes no model calls. Source material is original AI-assisted teaching synthesis with links to the external papers. See [research notes](docs/causality-research-notes.md) for checked citations and scientific limits.
+
+## Agent access
+
+Agents use the same authenticated HTTP API as the UI. The live operation catalog is `/api/agent/capabilities`; `/api/agent/schema` exposes its OpenAPI contract. The authoring API adds course/module, guide, glossary, and question management, with revision checks, atomic imports, source references, and preserved historical questions. Existing source, rubric, assignment, practice, research, and planning endpoints remain the workflow authority.
+
+```sh
+uv run python -m gym.agent_client capabilities
+uv run python -m gym.agent_client GET /api/overview
+```
+
+Use the [Learning Gym skill](skills/learning-gym/SKILL.md) and [agent API guide](docs/AGENT_API.md) for authoring and maintenance. `GYM_ACCESS_TOKEN` is read from the server environment or `.env`; the client does not print it.
 
 ## Create a gym from a course
 

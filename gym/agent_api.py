@@ -1,8 +1,8 @@
 """Agent discovery and curriculum authoring on the same authenticated HTTP API."""
 
 from fastapi import HTTPException
-from fastapi.routing import APIRoute
 from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
 
 from . import authoring
 from .contracts import AssignmentInput, RubricInput
@@ -52,37 +52,151 @@ def register_agent_api(app, store):
             },
             "existing_workflows": {
                 "source_upload": {
-                    "route": "POST /api/sources", "encoding": "multipart/form-data",
+                    "route": "POST /api/sources",
+                    "encoding": "multipart/form-data",
                     "fields": ["course_id", "role", "file"],
                 },
                 "source_confirmation": {
-                    "route": "POST /api/sources/{id}/confirm", "json": {"expected_revision": "integer"},
+                    "route": "POST /api/sources/{id}/confirm",
+                    "json": {"expected_revision": "integer"},
                 },
                 "source_correction": {
                     "route": "POST /api/sources/{id}/correction",
-                    "json": {"expected_revision": "integer", "fragments": [{"anchor": "string", "text": "string"}]},
+                    "json": {
+                        "expected_revision": "integer",
+                        "fragments": [{"anchor": "string", "text": "string"}],
+                    },
                 },
                 "rubric": {
-                    "create": "POST /api/rubrics", "revise": "PUT /api/rubrics/{id}",
+                    "create": "POST /api/rubrics",
+                    "revise": "PUT /api/rubrics/{id}",
                     "schema": RubricInput.model_json_schema(),
                     "revision": "Send expected_revision on PUT. New versions preserve submitted rubric snapshots.",
                 },
-                "assignment": {"create": "POST /api/assignments", "schema": AssignmentInput.model_json_schema()},
+                "assignment": {
+                    "create": "POST /api/assignments",
+                    "schema": AssignmentInput.model_json_schema(),
+                },
                 "draft": {
                     "route": "POST /api/assignments/{id}/draft",
                     "json": {
-                        "body": "string", "expected_revision": "integer (omit on first save)",
-                        "assistance": ["disclose agent assistance"], "file_source_ids": ["source version IDs"],
+                        "body": "string",
+                        "expected_revision": "integer (omit on first save)",
+                        "assistance": ["disclose agent assistance"],
+                        "file_source_ids": ["source version IDs"],
                         "active_seconds_delta": "0 for agent authoring; never invent learner work time",
                     },
                 },
                 "submission": {
                     "route": "POST /api/assignments/{id}/submit",
-                    "json": {"idempotency_key": "unique stable key", "ai_contribution": "truthful description", "file_source_ids": []},
+                    "json": {
+                        "idempotency_key": "unique stable key",
+                        "ai_contribution": "truthful description",
+                        "file_source_ids": [],
+                    },
                     "meaning": "Records a local submission; does not deliver work to an institution.",
                 },
                 "learner": "Use /api/sessions for practice; do not answer or submit for the learner without instruction.",
+                "session_aid": {
+                    "route": "POST /api/sessions/{id}/aid",
+                    "json": {"item_id": "session item ID", "kind": "hint | plain | terms"},
+                },
+                "session_finish": {
+                    "route": "POST /api/sessions/{id}/finish",
+                    "json": {"blocker": "optional reason"},
+                },
+                "item_report": {
+                    "route": "POST /api/items/{id}/report",
+                    "json": {"reason": "at least five characters"},
+                    "effect": "Quarantines the item and invalidates affected attempts; use for genuine defects.",
+                },
+                "official_grade": {
+                    "route": "POST /api/submissions/{id}/grade",
+                    "json": {
+                        "score": "number",
+                        "feedback": "string",
+                        "source_id": "optional source version ID",
+                        "occurred_at": "optional ISO timestamp",
+                        "supersedes": "optional prior event ID",
+                    },
+                    "meaning": "Enter only an actual instructor grade supplied by the learner or source.",
+                },
+                "profile_request": {
+                    "route": "POST /api/profiles",
+                    "json": {"course_id": "ID", "source_ids": ["confirmed assessment/rubric version IDs"]},
+                },
+                "profile_revision": {
+                    "route": "PUT /api/profiles/{id}",
+                    "json": {"expected_revision": "integer", "profile": "revised structured profile object"},
+                },
                 "planning": "Use /api/planning, /api/tasks, /api/goals, /api/calendar and /api/schedules.",
+                "task_revision": {
+                    "route": "PATCH /api/tasks/{id}",
+                    "optional_fields": {
+                        "expected_revision": "integer",
+                        "deadline": "ISO timestamp or null",
+                        "effort_minutes": "5..10000",
+                        "blocked_reason": "string or null",
+                        "status": "open | complete",
+                        "at_risk": "boolean",
+                        "definition_of_done": "string",
+                        "active_minutes": "actual learner work only",
+                        "note": "string",
+                    },
+                },
+                "calendar_event": {
+                    "route": "POST /api/calendar",
+                    "json": {
+                        "title": "string",
+                        "kind": "commitment | deadline",
+                        "timezone": "IANA zone",
+                        "start": "commitment ISO timestamp",
+                        "end": "commitment ISO timestamp",
+                        "due": "deadline ISO timestamp",
+                    },
+                    "update": "Reuse provider_id to revise; cancelled=true cancels that event. Optional task_id links a deadline.",
+                },
+                "schedule_proposal": {
+                    "route": "POST /api/schedules",
+                    "json": {
+                        "timezone": "America/New_York",
+                        "days": 7,
+                        "daily_minutes": 120,
+                        "slack": 0.2,
+                        "weekdays": [0, 1, 2, 3, 4],
+                        "day_start": "09:00",
+                        "day_end": "18:00",
+                    },
+                    "accept": "POST /api/schedules/{id}/accept with no body",
+                    "pin": "POST /api/blocks/{id}/pin with {pinned:boolean}",
+                },
+                "artifact": {
+                    "route": "POST /api/artifacts",
+                    "json": {
+                        "title": "string",
+                        "body": "substantive text up to 100000 characters",
+                        "course_id": "optional ID",
+                        "kind": "argument",
+                        "claim": "string",
+                        "objection": "string",
+                        "ai_contribution": "truthful description",
+                    },
+                    "revision": "Include artifact_id and expected_revision to create a new version of an existing artifact.",
+                },
+                "adaptation_settings": {
+                    "route": "POST /api/adaptation/settings",
+                    "json": {"enabled": "boolean"},
+                },
+                "intervention_record": {
+                    "route": "POST /api/interventions",
+                    "json": {
+                        "alternatives": ["eligible choices, minimum two"],
+                        "chosen": "one eligible choice",
+                        "randomized": "boolean",
+                        "assignment_probability": "actual probability required when randomized",
+                    },
+                    "meaning": "Record the actual assignment mechanism; it does not establish a causal effect.",
+                },
                 "status": "Use /api/health for queued work; /api/jobs/{id}/retry retries failed jobs only.",
             },
             "integrity": [
@@ -93,10 +207,14 @@ def register_agent_api(app, store):
                 "No automatic retry after revision conflict; inspect changes before preparing a new update.",
             ],
             "model_backed_operations": [
-                "POST /api/generations", "POST /api/profiles", "POST /api/sources/{id}/rubric",
-                "POST /api/sources/{id}/interpret", "POST /api/submissions/{id}/assess",
+                "POST /api/generations",
+                "POST /api/profiles",
+                "POST /api/sources/{id}/rubric",
+                "POST /api/sources/{id}/interpret",
+                "POST /api/submissions/{id}/assess",
                 "POST /api/artifacts/{version_id}/critique",
             ],
+            "model_backed_condition": "Submitting an open/case/counterfactual/coding session answer queues model assessment.",
         }
 
     def read(kind, ident):
@@ -116,10 +234,24 @@ def register_agent_api(app, store):
         if include_solutions:
             return items
         return [
-            {**public_item(i), **{k: i[k] for k in (
-                "revision", "course_id", "status", "pool", "source_fragment_ids", "provenance",
-                "authored_version", "replacement_item_id", "supersedes_item_id",
-            ) if k in i}}
+            {
+                **public_item(i),
+                **{
+                    k: i[k]
+                    for k in (
+                        "revision",
+                        "course_id",
+                        "status",
+                        "pool",
+                        "source_fragment_ids",
+                        "provenance",
+                        "authored_version",
+                        "replacement_item_id",
+                        "supersedes_item_id",
+                    )
+                    if k in i
+                },
+            }
             for i in items
         ]
 

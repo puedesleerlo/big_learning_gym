@@ -324,6 +324,8 @@ def create_app(store=None, router=None, embedded_worker=None):
 
     @app.get("/api/progress")
     def progress():
+        from .lab_activity import activity_view
+
         with store.tx() as c:
             closed = {
                 s["id"]
@@ -337,6 +339,9 @@ def create_app(store=None, router=None, embedded_worker=None):
                 "execution": learning.execution_summary(store, c),
                 "evaluations": store.list(c, "evaluation"),
                 "interventions": store.list(c, "intervention"),
+                "lab_activities": [
+                    activity_view(store, c, activity) for activity in store.list(c, "lab_activity")
+                ],
                 "adaptation": store.get(c, "adaptation_settings", "default", False) or {"enabled": True},
             }
 
@@ -551,7 +556,9 @@ def create_app(store=None, router=None, embedded_worker=None):
             return {"status": "queued"}
 
     from .agent_api import register_agent_api
+    from .lab_activity import register_lab_api
 
+    register_lab_api(app, store)
     register_agent_api(app, store)
 
     dist = Path(__file__).resolve().parent.parent / "web/dist"
