@@ -1,0 +1,32 @@
+{
+  "name": "@learning-gym/frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./client.js"
+    },
+    "./react": {
+      "types": "./react.d.ts",
+      "default": "./hooks.js"
+    },
+    "./rich-activities": {
+      "types": "./rich-activities.d.ts",
+      "default": "./rich-activities.jsx"
+    },
+    "./visualization": "./visualization.js",
+    "./preview": {
+      "types": "./preview.d.ts",
+      "default": "./preview.js"
+    }
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "packageManager": "pnpm@10.7.1"
+}

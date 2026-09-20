@@ -1,3 +1,4 @@
+import { workspaceStorage } from "./workspace.js";
 import React, { useState } from "react";
 import { BookOpen, Check, FlaskConical, Play } from "lucide-react";
 import {
@@ -42,7 +43,7 @@ export default function LabActivity({
 }) {
   const [value, setValue] = useState(
     () =>
-      (!preview && sessionStorage.getItem(draftKey)) ||
+      (!preview && workspaceStorage.getItem(draftKey)) ||
       run?.responses?.[block.id]?.value ||
       "",
   );
@@ -124,7 +125,7 @@ export default function LabActivity({
             onChange={(e) => {
               setValue(e.target.value);
               setSaved(false);
-              if (!preview) sessionStorage.setItem(draftKey, e.target.value);
+              if (!preview) workspaceStorage.setItem(draftKey, e.target.value);
             }}
           />
           <button

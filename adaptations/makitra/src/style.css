@@ -1,0 +1,531 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+.kitchen {
+  min-height: 100vh;
+}
+.kitchen a,
+.kitchen button,
+.kitchen input,
+.kitchen textarea,
+.kitchen select {
+  -webkit-tap-highlight-color: transparent;
+}
+.kitchen button,
+.kitchen input,
+.kitchen textarea,
+.kitchen select {
+  font: inherit;
+}
+.kitchen p {
+  line-height: var(--mk-leading-body);
+}
+.kitchen h1,
+.kitchen h2,
+.kitchen h3 {
+  text-wrap: balance;
+}
+.kitchen small {
+  display: block;
+  font-size: var(--mk-text-sm);
+  color: var(--mk-text-muted);
+}
+.kitchen main {
+  max-width: 1200px;
+  padding: var(--mk-space-7) var(--mk-space-6);
+  margin: auto;
+}
+.kitchen .masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-5);
+  padding: var(--mk-space-4) var(--mk-space-7);
+  border-bottom: 1px solid var(--mk-line);
+}
+.kitchen .wordmark {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-3);
+  color: var(--mk-text);
+  text-decoration: none;
+  line-height: 1.1;
+}
+.kitchen .wordmark strong {
+  font-size: var(--mk-text-lg);
+}
+.kitchen .masthead nav {
+  display: flex;
+  gap: var(--mk-space-6);
+}
+.kitchen .masthead nav a {
+  padding-block: var(--mk-space-3);
+}
+.kitchen footer {
+  max-width: 1200px;
+  margin: var(--mk-space-7) auto 0;
+  padding: var(--mk-space-6);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mk-space-5);
+  font-size: var(--mk-text-sm);
+  color: var(--mk-text-muted);
+}
+.kitchen .welcome {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--mk-space-7);
+  padding-bottom: var(--mk-space-7);
+}
+.kitchen .welcome > div {
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-5);
+}
+.kitchen .welcome .mk-display {
+  color: var(--mk-action);
+}
+.kitchen .lede {
+  max-width: 560px;
+  font-size: var(--mk-text-lg);
+}
+.kitchen .eyebrow,
+.kitchen .meta {
+  font-size: var(--mk-text-sm);
+  color: var(--mk-text-muted);
+}
+.kitchen .section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-5);
+  margin-bottom: var(--mk-space-5);
+}
+.kitchen .section-heading .mk-search {
+  max-width: 380px;
+  width: 100%;
+}
+.kitchen .lab-list {
+  display: grid;
+  gap: var(--mk-space-4);
+}
+.kitchen .lab-card {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  align-items: center;
+  gap: var(--mk-space-5);
+  background: var(--mk-surface);
+  padding: var(--mk-space-6);
+  border-radius: var(--mk-nick-lg);
+}
+.kitchen .lab-card > div:nth-child(2) {
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-3);
+}
+.kitchen .lab-number {
+  font-family: var(--mk-font-display);
+  font-size: var(--mk-text-3xl);
+  color: var(--mk-action);
+}
+.kitchen .back-link {
+  display: inline-block;
+  padding-block: var(--mk-space-3);
+  margin-bottom: var(--mk-space-5);
+}
+.kitchen .lab-title {
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-4);
+  margin-bottom: var(--mk-space-7);
+  max-width: 840px;
+}
+.kitchen .lesson-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: var(--mk-space-7);
+  align-items: start;
+}
+.kitchen .lesson-nav {
+  display: grid;
+  gap: var(--mk-space-3);
+  position: sticky;
+  top: var(--mk-space-5);
+}
+.kitchen .lesson-nav h2 {
+  font-size: var(--mk-text-md);
+  margin-bottom: var(--mk-space-3);
+}
+.kitchen .lesson-nav a {
+  display: flex;
+  align-items: start;
+  gap: var(--mk-space-3);
+  text-decoration: none;
+  padding: var(--mk-space-4);
+  color: var(--mk-text);
+  border-radius: var(--mk-nick-md);
+}
+.kitchen .lesson-nav a[aria-current] {
+  background: var(--mk-selected);
+  color: var(--mk-on-selected);
+}
+.kitchen .lesson-nav a[aria-current] small {
+  color: inherit;
+  opacity: 0.85;
+}
+.kitchen .lesson-nav a span {
+  font-variant-numeric: tabular-nums;
+}
+.kitchen .lesson {
+  min-width: 0;
+}
+.kitchen .lesson-intro {
+  display: grid;
+  gap: var(--mk-space-4);
+}
+.kitchen .lesson-intro ul {
+  padding-left: var(--mk-space-5);
+  margin: 0;
+}
+.kitchen .visit-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--mk-space-4);
+  background: var(--mk-sunken);
+  padding: var(--mk-space-4);
+  margin-block: var(--mk-space-6);
+  border-radius: var(--mk-nick-md);
+}
+.kitchen .activity-stack {
+  display: grid;
+  gap: var(--mk-space-5);
+}
+.kitchen .activity,
+.kitchen .question {
+  background: var(--mk-surface);
+  padding: var(--mk-space-6);
+  border-radius: var(--mk-nick-lg);
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-4);
+  min-width: 0;
+}
+.kitchen .activity-heading {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mk-space-4);
+}
+.kitchen .activity h3 {
+  font-size: var(--mk-text-lg);
+}
+.kitchen .prose,
+.kitchen .lab-preserve-lines {
+  white-space: pre-wrap;
+}
+.kitchen textarea {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+}
+.kitchen label {
+  display: block;
+  width: 100%;
+}
+.kitchen .range-field {
+  display: grid;
+  gap: var(--mk-space-2);
+}
+.kitchen input[type="range"] {
+  width: 100%;
+  accent-color: var(--mk-action);
+  min-height: var(--mk-touch);
+}
+.kitchen .lesson-finish {
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-4);
+  padding-block: var(--mk-space-6);
+}
+.kitchen .notice {
+  width: 100%;
+  background: var(--mk-sunken);
+  padding: var(--mk-space-5);
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-3);
+  border-radius: var(--mk-nick-md);
+}
+.kitchen .error {
+  color: var(--mk-danger);
+  background: var(--mk-danger-bg);
+}
+.kitchen .notice form {
+  display: grid;
+  gap: var(--mk-space-3);
+}
+.kitchen .practice {
+  max-width: 850px;
+  margin: auto;
+  display: grid;
+  gap: var(--mk-space-5);
+}
+.kitchen .practice-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--mk-space-4);
+}
+.kitchen .practice-heading > div {
+  display: grid;
+  gap: var(--mk-space-3);
+}
+.kitchen progress {
+  width: 100%;
+  height: 7px;
+  accent-color: var(--mk-action);
+}
+.kitchen .practice-tools,
+.kitchen .question-nav,
+.kitchen .aid-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
+  justify-content: space-between;
+}
+.kitchen .support-note {
+  font-size: var(--mk-text-sm);
+  color: var(--mk-text-muted);
+}
+.kitchen .question fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: grid;
+  gap: var(--mk-space-3);
+}
+.kitchen .question legend {
+  margin-bottom: var(--mk-space-3);
+}
+.kitchen .answer-option {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-3);
+  min-height: var(--mk-touch);
+  padding: var(--mk-space-3);
+  background: var(--mk-sunken);
+  border-radius: var(--mk-nick-sm);
+}
+.kitchen .answer-option:has(input:checked) {
+  background: var(--mk-selected);
+  color: var(--mk-on-selected);
+}
+.kitchen .answer-option input {
+  accent-color: var(--mk-action);
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.kitchen .matching-field {
+  display: grid;
+  gap: var(--mk-space-2);
+}
+.kitchen .feedback {
+  display: grid;
+  gap: var(--mk-space-3);
+  width: 100%;
+}
+.kitchen pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--mk-font-code);
+  font-size: var(--mk-text-sm);
+  max-width: 100%;
+}
+.kitchen .code-answer {
+  font-family: var(--mk-font-code);
+}
+.kitchen .review {
+  max-width: 850px;
+  margin: auto;
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-5);
+}
+.kitchen .review .activity {
+  width: 100%;
+}
+.kitchen .preview-notice {
+  padding: var(--mk-space-3) var(--mk-space-5);
+  background: var(--mk-warning-bg);
+  color: var(--mk-warning);
+  text-align: center;
+  font-size: var(--mk-text-sm);
+}
+.kitchen .skip {
+  position: absolute;
+  left: -10000px;
+}
+.kitchen .skip:focus {
+  left: var(--mk-space-3);
+  top: var(--mk-space-3);
+  padding: var(--mk-space-3);
+  background: var(--mk-surface);
+  z-index: 10;
+}
+/* Shared rich renderers own interaction/sandbox behavior; these rules style their public markup. */
+.kitchen .lab-media,
+.kitchen .lab-visualization,
+.kitchen .lab-discussion {
+  display: grid;
+  gap: var(--mk-space-4);
+  width: 100%;
+  min-width: 0;
+}
+.kitchen .lab-controls,
+.kitchen .lab-rich-placeholder,
+.kitchen .lab-discussion-turns,
+.kitchen .lab-discussion-turn {
+  display: grid;
+  gap: var(--mk-space-3);
+}
+.kitchen .lab-tutor-message,
+.kitchen .lab-learner-message {
+  display: grid;
+  gap: var(--mk-space-2);
+  padding-block: var(--mk-space-3);
+}
+.kitchen .lab-tutor-message {
+  border-top: 1px solid var(--mk-line);
+}
+.kitchen .row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-space-3);
+}
+.kitchen .between {
+  justify-content: space-between;
+}
+.kitchen .button,
+.kitchen .text-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--mk-touch);
+  padding: var(--mk-space-3) var(--mk-space-4);
+  border: 0;
+  border-radius: var(--mk-nick-sm);
+  background: var(--mk-sunken);
+  color: var(--mk-text);
+  cursor: pointer;
+}
+.kitchen .button:disabled,
+.kitchen .text-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.kitchen .lab-video-frame,
+.kitchen .lab-visualization-frame {
+  width: 100%;
+  border: 0;
+}
+.kitchen .lab-video-frame {
+  aspect-ratio: 16/9;
+}
+.kitchen audio,
+.kitchen video {
+  width: 100%;
+  max-width: 100%;
+}
+.kitchen .lab-discussion textarea {
+  border: 1px solid var(--mk-line-strong);
+  padding: var(--mk-space-3);
+  background: var(--mk-surface);
+  color: var(--mk-text);
+  border-radius: var(--mk-nick-sm);
+}
+.kitchen summary {
+  min-height: var(--mk-touch);
+  padding-block: var(--mk-space-3);
+  cursor: pointer;
+}
+@media (max-width: 800px) {
+  .kitchen .masthead {
+    padding: var(--mk-space-4);
+    flex-wrap: wrap;
+  }
+  .kitchen .masthead nav {
+    gap: var(--mk-space-4);
+  }
+  .kitchen main {
+    padding: var(--mk-space-5) var(--mk-space-4);
+  }
+  .kitchen .welcome {
+    grid-template-columns: 1fr;
+  }
+  .kitchen .welcome-art {
+    display: none;
+  }
+  .kitchen .welcome .mk-display {
+    font-size: var(--mk-text-3xl);
+  }
+  .kitchen .section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .kitchen .lab-card {
+    grid-template-columns: 1fr;
+    padding: var(--mk-space-5);
+  }
+  .kitchen .lab-number {
+    display: none;
+  }
+  .kitchen .lesson-layout {
+    grid-template-columns: 1fr;
+    gap: var(--mk-space-5);
+  }
+  .kitchen .lesson-nav {
+    position: static;
+  }
+  .kitchen .activity,
+  .kitchen .question {
+    padding: var(--mk-space-4);
+  }
+  .kitchen .activity-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: var(--mk-space-2);
+  }
+  .kitchen .visit-bar,
+  .kitchen .practice-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .kitchen .lab-title .mk-display {
+    font-size: var(--mk-text-2xl);
+  }
+  .kitchen footer {
+    padding: var(--mk-space-4);
+    flex-wrap: wrap;
+  }
+}
+
+.kitchen .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.kitchen th,
+.kitchen td {
+  padding: var(--mk-space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--mk-line);
+}

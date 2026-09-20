@@ -6,19 +6,19 @@ The implementation follows the shared [AI research assistantships architecture](
 
 ## Run locally
 
-Requirements: Python 3.11+, [uv](https://docs.astral.sh/uv/), Node 22+, npm.
+Requirements: Python 3.11+, [uv](https://docs.astral.sh/uv/), Node 22+, pnpm 10.7.1.
 
 ```sh
 uv sync --frozen
-npm --prefix web ci
-npm --prefix web run build
+pnpm --dir web install --frozen-lockfile
+pnpm --dir web run build
 cp .env.example .env  # Only on a new installation; preserve an existing .env.
 # Set the relevant provider key in .env using your editor.
 uv run python -m gym.cli init
 uv run python -m gym.cli serve
 ```
 
-Open <http://127.0.0.1:8787>. The local server includes a durable background worker. It runs while the process is alive; this release does not install a system service. For frontend development, run `npm --prefix web run dev` alongside the API; Vite proxies `/api` to port 8787.
+Open <http://127.0.0.1:8787>. The local server includes a durable background worker. It runs while the process is alive; this release does not install a system service. For frontend development, run `pnpm --dir web run dev` alongside the API; Vite proxies `/api` to port 8787.
 
 The current workspace already has the AI Strategy content imported. To import it into another installation:
 
@@ -27,6 +27,10 @@ uv run python -m gym.cli import-legacy ../learning_gym
 ```
 
 The importer preserves 314 practice items, four 16-item / 100-point mock exams, shared cases and tables, matching questions, explanations, hints, plain-English aids, eight guides, and 331 glossary entries. The legacy style specification is imported as a **proposed** assessment profile to review. It does not fabricate practice sessions.
+
+## Company experiences
+
+Use one shared learning platform with independent company frontend packages. The standard Gym remains at `/`; the Makitra personal reference opens at `/experience/makitra/` in a configured workspace. See [workspace setup and the exportable agent kit](docs/EXPERIENCES.md), the [build-gym-frontend skill](skills/build-gym-frontend/SKILL.md), and D-012 in [the decisions](DECISIONS.md).
 
 ## Reusable labs
 
@@ -117,7 +121,7 @@ GYM_DATABASE_URL=sqlite:///data/restored.db GYM_DATA_DIR=data/restored \
 
 uv run pytest -q
 uv run ruff check gym tests scripts
-npm --prefix web run build
+pnpm --dir web run build
 # Optional: isolated schemas in your test PostgreSQL instance.
 GYM_TEST_DATABASE_URL=postgresql+psycopg://gym:gym-local-only@127.0.0.1:55432/gym uv run pytest -q
 # Optional, explicitly makes paid model calls using synthetic material only:

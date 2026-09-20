@@ -8,5 +8,9 @@ __pycache__/
 data/
 node_modules/
 web/dist/
+adaptations/*/dist/
+frontend-kit/starter/dist/
+workspaces.local/
+frontend-kit/exports/
 *.log
 .DS_Store

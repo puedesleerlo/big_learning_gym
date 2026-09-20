@@ -1,0 +1,51 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  color: #202020;
+  background: #fafafa;
+}
+main {
+  max-width: 900px;
+  margin: auto;
+  padding: 24px;
+}
+article {
+  margin-block: 24px;
+  padding: 20px;
+  border: 1px solid #ddd;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  padding: 10px;
+  margin: 5px;
+}
+button {
+  cursor: pointer;
+}
+label {
+  display: block;
+}
+textarea {
+  display: block;
+  width: min(90%, 600px);
+  min-height: 120px;
+}
+nav {
+  display: flex;
+  flex-wrap: wrap;
+}
+[role="alert"] {
+  color: #922;
+  white-space: pre-wrap;
+}
+p {
+  line-height: 1.5;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #1564ac;
+  outline-offset: 2px;
+}

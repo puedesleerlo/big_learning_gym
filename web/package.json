@@ -6,15 +6,20 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "test:rich-labs": "node tests/rich-labs.mjs",
+    "test:experiences": "node tests/experiences.mjs"
   },
   "dependencies": {
+    "@learning-gym/frontend": "file:../packages/gym-frontend",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "playwright": "1.58.2",
     "prettier": "^3.9.8",
     "vite": "^6.1.0"
-  }
+  },
+  "packageManager": "pnpm@10.7.1"
 }

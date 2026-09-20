@@ -17,7 +17,15 @@
 /compose.yaml @puedesleerlo
 /web/src/ @puedesleerlo
 /web/package.json @puedesleerlo
-/web/package-lock.json @puedesleerlo
+/web/pnpm-lock.yaml @puedesleerlo
 /.gitignore @puedesleerlo
 /.dockerignore @puedesleerlo
 /web/vite.config.* @puedesleerlo
+
+/packages/ @puedesleerlo
+/adaptations/ @puedesleerlo
+/frontend-kit/ @puedesleerlo
+/skills/build-gym-frontend/ @puedesleerlo
+
+/web/tests/ @puedesleerlo
+/docs/EXPERIENCES.md @puedesleerlo

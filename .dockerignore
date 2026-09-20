@@ -7,3 +7,8 @@ web/dist
 __pycache__
 tests
 .pytest_cache
+
+**/node_modules
+**/dist
+workspaces.local
+frontend-kit/exports

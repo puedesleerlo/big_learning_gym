@@ -1,3 +1,10 @@
+import {
+  workspaceStorage,
+  workspaceConfig,
+  workspaceClient,
+  initializeWorkspace,
+  initialRoute,
+} from "./workspace.js";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -33,7 +40,7 @@ async function api(path, data, method) {
     method: method || (data === undefined ? "GET" : "POST"),
     headers: {},
   };
-  const token = sessionStorage.getItem("gym-token");
+  const token = workspaceStorage.getItem("gym-token");
   if (token) options.headers.Authorization = `Bearer ${token}`;
   if (data instanceof FormData) options.body = data;
   else if (data !== undefined) {
@@ -181,7 +188,7 @@ function TokenGate({ reload }) {
       </Field>
       <Action
         onClick={() => {
-          sessionStorage.setItem("gym-token", token);
+          workspaceStorage.setItem("gym-token", token);
           reload();
         }}
       >
@@ -192,12 +199,19 @@ function TokenGate({ reload }) {
 }
 
 function App() {
-  const [page, setPage] = useState("home"),
-    [labId, setLabId] = useState(null),
-    [labFilter, setLabFilter] = useState(""),
+  const route = useRef(initialRoute()).current;
+  const [page, setPage] = useState(route.page),
+    [labId, setLabId] = useState(route.labId),
+    [labFilter, setLabFilter] = useState(route.courseId || ""),
     [labEdit, setLabEdit] = useState(null),
-    [courseworkAssignmentId, setCourseworkAssignmentId] = useState(null),
-    [sessionId, setSessionId] = useState(sessionStorage.getItem("gym-session")),
+    [courseworkAssignmentId, setCourseworkAssignmentId] = useState(
+      route.assignmentId,
+    ),
+    [sessionId, setSessionId] = useState(
+      route.sessionId || workspaceStorage.getItem("gym-session"),
+    ),
+    [recoveryVisit, setRecoveryVisit] = useState(null),
+    [recoverySessions, setRecoverySessions] = useState(null),
     [refresh, setRefresh] = useState(0),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -222,7 +236,7 @@ function App() {
     if (p === "lab" && contextId) setLabId(contextId);
     if (p === "session" && contextId) {
       setSessionId(contextId);
-      sessionStorage.setItem("gym-session", contextId);
+      workspaceStorage.setItem("gym-session", contextId);
     }
     if (p === "coursework") setCourseworkAssignmentId(assignmentId || null);
     setError("");
@@ -231,33 +245,25 @@ function App() {
   };
   const openSession = (id) => {
     setSessionId(id);
-    sessionStorage.setItem("gym-session", id);
+    workspaceStorage.setItem("gym-session", id);
     setPage("session");
   };
   const start = (spec, labActivityId) =>
     act(async () => {
-      const pendingKey = labActivityId
-        ? `gym-lab-pending:${labActivityId}`
-        : null;
-      const pendingId = pendingKey && sessionStorage.getItem(pendingKey);
-      const s = pendingId
-        ? await api(`/sessions/${pendingId}`)
-        : await api("/sessions", spec);
+      let s;
       if (labActivityId) {
-        sessionStorage.setItem(pendingKey, s.id);
+        const visit = await workspaceClient.visit(labActivityId);
         try {
-          await api(`/lab-activities/${labActivityId}/link-session`, {
-            session_id: s.id,
-          });
-          await api(`/sessions/${s.id}/timer`, { action: "resume" });
-          sessionStorage.removeItem(pendingKey);
+          s = await workspaceClient.startLinkedPractice(visit, spec);
+          setRecoveryVisit(null);
         } catch (error) {
-          await api(`/sessions/${s.id}/timer`, { action: "pause" }).catch(
-            () => {},
-          );
+          if (workspaceStorage.getItem(`gym-lab-pending:${labActivityId}`)) {
+            setRecoveryVisit(visit);
+            setRecoverySessions(null);
+          }
           throw error;
         }
-      }
+      } else s = await api("/sessions", spec);
       openSession(s.id);
       reload();
       return s;
@@ -316,6 +322,11 @@ function App() {
           </button>
         )}
         <div className="sidebar-bottom">
+          {workspaceConfig.experiences.map((x) => (
+            <a key={x.id} href={`/experience/${x.id}/`}>
+              Open {x.id} experience
+            </a>
+          ))}
           <span className="status-dot" />
           Local workspace<small>Evidence before assumptions.</small>
         </div>
@@ -343,6 +354,64 @@ function App() {
         </div>
         <main>
           <ErrorBox message={error || loadError} />
+          {recoveryVisit && (
+            <section
+              className="notice experience-recovery"
+              aria-label="Interrupted practice"
+            >
+              <p>
+                A practice start needs recovery. Choose the existing session
+                before continuing.
+              </p>
+              <Action
+                disabled={busy}
+                onClick={() =>
+                  act(async () =>
+                    setRecoverySessions(
+                      await workspaceClient.recoveryCandidates(recoveryVisit),
+                    ),
+                  )
+                }
+              >
+                Find interrupted practice
+              </Action>
+              {recoverySessions?.map((s) => (
+                <Action
+                  key={s.id}
+                  disabled={busy}
+                  onClick={() =>
+                    act(async () => {
+                      await workspaceClient.linkPractice(
+                        recoveryVisit.id,
+                        s.id,
+                      );
+                      setRecoveryVisit(null);
+                      openSession(s.id);
+                    })
+                  }
+                >
+                  Recover practice from{" "}
+                  {new Date(s.started_at).toLocaleTimeString()}
+                </Action>
+              ))}
+              {recoverySessions?.length === 0 && (
+                <>
+                  <p>
+                    No matching recent session was found. Inspect recent work
+                    before starting another.
+                  </p>
+                  <Action
+                    onClick={() => {
+                      workspaceClient.abandonPendingPractice(recoveryVisit.id);
+                      setRecoveryVisit(null);
+                    }}
+                  >
+                    I checked; allow a new practice start
+                  </Action>
+                </>
+              )}
+            </section>
+          )}
           {!overview ? (
             loadError?.toLowerCase().includes("token") ? (
               <TokenGate reload={reload} />
@@ -375,6 +444,9 @@ function App() {
                 <GuidedLab
                   key={labId}
                   labId={labId}
+                  initialLessonId={
+                    labId === route.labId ? route.lessonId : null
+                  }
                   api={api}
                   start={start}
                   navigate={navigate}
@@ -876,7 +948,7 @@ function Feedback({ value, score, points }) {
 function Session({ ident, act, busy, done }) {
   const [session, reload, error] = useLoad("/sessions/" + ident),
     [index, setIndex] = useState(0),
-    [answer, setAnswer] = useState(""),
+    [answerDrafts, setAnswerDrafts] = useState({}),
     [confidence, setConfidence] = useState(""),
     [aid, setAid] = useState(null),
     [report, setReport] = useState(false),
@@ -889,8 +961,23 @@ function Session({ ident, act, busy, done }) {
   useEffect(() => {
     setIndex(0);
   }, [ident]);
+  const draftKey = `experience-answer:${ident}:${item?.id}`;
+  let storedDraft;
+  try {
+    storedDraft = JSON.parse(workspaceStorage.getItem(draftKey) || "null");
+  } catch {
+    storedDraft = null;
+  }
+  const answer =
+    prior?.answer ??
+    answerDrafts[draftKey] ??
+    storedDraft ??
+    (item?.type === "matching" ? {} : "");
+  const setAnswer = (value) => {
+    setAnswerDrafts((current) => ({ ...current, [draftKey]: value }));
+    workspaceStorage.setItem(draftKey, JSON.stringify(value));
+  };
   useEffect(() => {
-    setAnswer(prior?.answer || (item?.type === "matching" ? {} : ""));
     setConfidence("");
     setAid(null);
   }, [item?.id, prior?.id]);
@@ -990,12 +1077,13 @@ function Session({ ident, act, busy, done }) {
     );
   const submit = () =>
     act(async () => {
-      await api("/sessions/" + ident + "/answers", {
-        item_id: item.id,
+      await workspaceClient.answer(
+        ident,
+        item.id,
         answer,
-        confidence: confidence === "" ? null : +confidence,
-        idempotency_key: crypto.randomUUID(),
-      });
+        confidence === "" ? null : +confidence,
+      );
+      workspaceStorage.removeItem(draftKey);
       await reload();
     });
   const requestAid = (kind) =>
@@ -3037,7 +3125,7 @@ function Planner({ act, busy, overview }) {
               className="text-button"
               onClick={() =>
                 act(async () => {
-                  const token = sessionStorage.getItem("gym-token");
+                  const token = workspaceStorage.getItem("gym-token");
                   const r = await fetch("/api/schedule.ics", {
                     headers: token ? { Authorization: "Bearer " + token } : {},
                   });
@@ -4248,7 +4336,7 @@ function System({ act, health, refresh }) {
         </Field>
         <Action
           onClick={() => {
-            sessionStorage.setItem("gym-token", token);
+            workspaceStorage.setItem("gym-token", token);
             refresh();
           }}
         >
@@ -4259,4 +4347,15 @@ function System({ act, health, refresh }) {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+const root = createRoot(document.getElementById("root"));
+initializeWorkspace()
+  .then(() => root.render(<App />))
+  .catch((error) =>
+    root.render(
+      <main>
+        <h1>Cannot open this workspace</h1>
+        <p role="alert">{error.message}</p>
+        <button onClick={() => location.reload()}>Try again</button>
+      </main>,
+    ),
+  );

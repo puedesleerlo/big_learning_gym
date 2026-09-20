@@ -106,6 +106,30 @@ Validation: schema/reference and revision tests, source/role isolation, provider
 
 Rollback: revert the implementation together with its renderer; retain published versions, discussions and historical evidence. Older clients cannot render new block types. Restore earlier lab presentations through a new revision rather than deleting historical records.
 
+## D-012 — Independent experience adaptation over shared learning workflows
+
+Status: Accepted by the user's explicit implementation request in the 2026-09-20 experience adaptation conversation: “Keep one learning platform with independently replaceable frontends” and “Each adaptation is a separate React/Vite application with its own design-system dependencies and styles.”
+
+Context: companies need different screens and design-system code as well as different content. A clone of the platform per company would duplicate evidence, assessment and planning implementations. Data-only themes cannot express the requested frontend freedom.
+
+Decision: an experience adaptation is a trusted, independently built frontend package. Its manifest declares identity, version, supported frontend-contract version and capabilities. A local workspace installs builds under `/experience/<id>/`, with the existing Gym at `/`. Both invoke the same workspace API. The shared, unstyled frontend kit centralizes typed contracts, workspace browser state, visit/session linking, clocks and supported request recovery. Company design-system dependencies remain inside the company's frontend. Reuse D-011's media and visualization execution boundary; company presentation code cannot redefine assessment, evidence or scheduling authority.
+
+A named local workspace selects an explicit data directory, database, localhost port and installed frontends. Each process serves one workspace and runs its own existing jobs/planner. Configuration must select distinct stores and upload directories for distinct companies; this is local separation, not hosted tenant authorization. The existing command and environment continue to select the original default workspace. Switching frontends within a workspace does not copy content or learner evidence. Documents and questions enter through existing imports and authoring APIs.
+
+The repository-owned `build-gym-frontend` skill and exported bundle reveal purpose, chosen journeys, exact contracts and verification progressively. A runnable starter has explicitly chosen synthetic or live transports. Synthetic preview creates no learner history; failed live requests remain errors. No mutation is automatically retried without supported idempotency. Ambiguous session creation requires recovery rather than issuing a second creation request. Installed frontend code is trusted application code; the kit, manifests and compatibility checks are guidance and verification, not a security sandbox.
+
+D-001–D-011 remain in force. This adds a presentation boundary and explicit local workspace configuration, without splitting the domain application or superseding existing algorithm/evidence meanings. It is separate from `gym/adaptation.py` and A-005. A-001–A-007 retain their versions and semantics. Existing API routes/payloads remain compatible; missing documentation is supplemented without response filtering.
+
+Alternatives: cloned full applications duplicate learning behavior; a universal themed component layer constrains whole-screen design; a new tenant service or live company synchronization exceeds the personal experiment. Independent same-origin frontend builds allow company code without those changes.
+
+Consequences and limits: agents must test generated code against the contract and may need corrections. Static compatibility is not proof of every workflow. The initial Makitra reference implements labs, practice and transfer; legacy lab presentations, simulation entry, coursework, authoring and administration link to the standard Gym. Its actual package, tokens and fonts are retained with attribution for the personal, non-commercial reference experiment. No claim is made that Claude Design or Claude Code was executed during validation. Separate localhost origins and workspace namespaces avoid accidental state reuse; misconfigured shared databases are not automatically made independent.
+
+Migration: no learner database rewrite. Browser session references and drafts gain workspace namespaces, with one-way migration of original keys only for `default`. Frontend contract starts at 1.0. JavaScript package management uses pnpm under the user's explicit preference, including lockfiles, build documentation, Docker and CI.
+
+Validation: real API contracts from a disposable instance, synthetic browser outcome comparison, request interruption/recovery, authentication, unavailable tutor, preview isolation, workspace separation, keyboard/narrow-screen checks, shared sandbox tests, exported-bundle build, full backend suite and committed-diff architecture checks. Results live in `docs/changes/2026-09-20-experience-adaptation.json`.
+
+Rollback: open the standard Gym at `/`, remove the adaptation from the workspace configuration and restart. Existing content, visits, attempts, assessments, jobs and plans remain readable with no evidence rewrite. Revert the platform changes only with their paired default-frontend integration; preserve all local databases and uploads.
+
 ## Adding or revising a decision
 
 Append the next `D-NNN` entry with status `Proposed`, context, decision, alternatives, consequences, affected algorithm versions, migration, checks, rollback and the decisions it supersedes. Link the exact user request or maintainer review covering the revision. A request already authorizing the specific change is sufficient; do not request permission again. Only mark acceptance when that authorization exists. A JSON change record or a checked box is not proof of approval.

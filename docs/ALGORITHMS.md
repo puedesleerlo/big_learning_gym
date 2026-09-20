@@ -60,7 +60,7 @@ Tests: `tests/test_generation.py`, `tests/test_coursework.py`, `tests/test_sessi
 
 ## A-007 — Rich lab activities: registry `2.0`, tutor `lab-discussion-v1`
 
-Implementations: `gym/lab_blocks.py`, `gym/lab_activity.py`, `gym/lab_tutor.py`, `web/src/labVisualization.js` and `web/src/RichLabActivities.jsx`. Authorized by D-011; A-001–A-006 retain their versions and behavior.
+Implementations: `gym/lab_blocks.py`, `gym/lab_activity.py`, `gym/lab_tutor.py`, `packages/gym-frontend/visualization.js` and `packages/gym-frontend/rich-activities.jsx`. Authorized by D-011; A-001–A-006 retain their versions and behavior.
 
 Media load records a preparation exposure, not elapsed playback or completion. Visualization run records exactly the pinned numeric parameter keys after checking finite values within declared bounds; submitted outputs and extra fields are rejected. Custom browser computations are illustrative and unscored. These exposures use the existing reading/experiment counters, which disclose assistance when linking later practice. Preview runs create no visits or events.
 

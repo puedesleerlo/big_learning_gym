@@ -35,13 +35,16 @@ from .contracts import (
     TimerInput,
 )
 from .llm import Router
-from .store import Store, decisions, jobs, llm_calls, now, predictions, uid
+from .store import decisions, jobs, llm_calls, now, predictions, uid
 from .worker import Worker
 
 
-def create_app(store=None, router=None, embedded_worker=None):
+def create_app(store=None, router=None, embedded_worker=None, workspace=None):
     load_dotenv()
-    store = store or Store()
+    from .workspaces import load_workspace
+
+    workspace = workspace or load_workspace()
+    store = store or workspace.store()
     router = router or Router(store)
     if embedded_worker is None:
         embedded_worker = os.getenv("GYM_EMBEDDED_WORKER", "1") == "1"
@@ -74,6 +77,7 @@ def create_app(store=None, router=None, embedded_worker=None):
     app = FastAPI(title="Big Learning Gym", version="0.1.0", lifespan=lifespan)
     app.state.store = store
     app.state.router = router
+    app.state.workspace = workspace
     allowed = os.getenv("GYM_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed)
 
@@ -562,6 +566,14 @@ def create_app(store=None, router=None, embedded_worker=None):
     register_lab_api(app, store)
     register_lab_tutor_api(app, store, router)
     register_agent_api(app, store)
+
+    from .frontends import register_frontends
+
+    register_frontends(app, workspace)
+
+    from .frontend_contracts import document_frontend_contract
+
+    document_frontend_contract(app)
 
     dist = Path(__file__).resolve().parent.parent / "web/dist"
     if dist.exists():

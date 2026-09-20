@@ -19,7 +19,13 @@ PROTECTED = (
     "scripts/*",
     "config/*",
     "web/src/*",
+    "web/tests/*",
     "web/package*",
+    "web/pnpm-lock.yaml",
+    "packages/*",
+    "adaptations/*",
+    "frontend-kit/*",
+    "skills/build-gym-frontend/*",
     "web/vite.config.*",
     "pyproject.toml",
     "uv.lock",
@@ -32,6 +38,7 @@ PROTECTED = (
     ".gitignore",
     ".dockerignore",
     "docs/ARCHITECTURE.md",
+    "docs/EXPERIENCES.md",
     "docs/ALGORITHMS.md",
     "docs/CHANGE_CONTROL.md",
     "docs/changes/*",
@@ -47,6 +54,9 @@ FORBIDDEN_CORE_IMPORTS = {
     "openai",
     "anthropic",
     "litellm",
+    "frontends",
+    "frontend_kit",
+    "frontend_fixture",
 }
 REQUIRED = ("AGENTS.md", "DECISIONS.md", "docs/ARCHITECTURE.md", "docs/ALGORITHMS.md")
 
@@ -90,6 +100,22 @@ def structural_errors(root):
                     errors.append(
                         f"{path.name}:{node.lineno}: active schedule writes belong to planning.py (D-003)"
                     )
+    # The integration kit remains independent of any installed company design system.
+    shared = root / "packages/gym-frontend/package.json"
+    company_dependencies = set()
+    for package in (root / "adaptations").glob("*/package.json"):
+        company_dependencies.update(json.loads(package.read_text()).get("dependencies", {}))
+    company_dependencies -= {"react", "react-dom", "@learning-gym/frontend"}
+    if shared.exists():
+        manifest = json.loads(shared.read_text())
+        dependencies = set(manifest.get("dependencies", {})) | set(manifest.get("peerDependencies", {}))
+        if dependencies & company_dependencies:
+            errors.append("Shared frontend kit imports company dependencies (D-012)")
+        for path in shared.parent.glob("*.*"):
+            if path.suffix in {".js", ".jsx", ".ts", ".tsx"}:
+                for module in re.findall(r"(?:from|import)\s*['\"]([^'\"]+)", path.read_text()):
+                    if any(module == dep or module.startswith(dep + "/") for dep in company_dependencies):
+                        errors.append(f"{path.name}: company import belongs to its adaptation (D-012)")
     return errors
 
 

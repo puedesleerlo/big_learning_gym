@@ -66,17 +66,35 @@ jobs:
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.1
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+          cache-dependency-path: |
+            web/pnpm-lock.yaml
+            adaptations/makitra/pnpm-lock.yaml
+            frontend-kit/starter/pnpm-lock.yaml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install uv
+      - run: uv sync --frozen
+      - run: pnpm --dir web install --frozen-lockfile
+      - run: pnpm --dir adaptations/makitra install --frozen-lockfile
+      - run: pnpm --dir frontend-kit/starter install --frozen-lockfile
+      - run: pnpm --dir packages/gym-frontend test
+      - run: pnpm --dir web run build
+      - run: pnpm --dir adaptations/makitra run build
+      - run: pnpm --dir adaptations/makitra run check
+      - run: pnpm --dir frontend-kit/starter run build
+      - run: pnpm --dir frontend-kit/starter run check
+      - run: pnpm --dir web exec playwright install --with-deps chromium
+      - run: pnpm --dir web run test:rich-labs
+      - run: pnpm --dir web run test:experiences

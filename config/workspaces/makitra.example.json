@@ -1,0 +1,6 @@
+{
+  "id": "makitra-personal",
+  "port": 8791,
+  "data_dir": "../../workspaces.local/makitra/data",
+  "frontends": ["../../adaptations/makitra"]
+}

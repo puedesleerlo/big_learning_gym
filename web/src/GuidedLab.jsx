@@ -1,3 +1,4 @@
+import { workspaceStorage } from "./workspace.js";
 import React, { useEffect, useRef, useState, useId } from "react";
 import {
   ArrowLeft,
@@ -676,9 +677,16 @@ export function LabPreview({ lab }) {
   );
 }
 
-export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
+export default function GuidedLab({
+  labId,
+  initialLessonId,
+  api,
+  start,
+  navigate,
+  onEdit,
+}) {
   const [lab, setLab] = useState(null),
-    [lessonId, setLessonId] = useState(null),
+    [lessonId, setLessonId] = useState(initialLessonId || null),
     [run, setRun] = useState(null);
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -707,13 +715,15 @@ export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
     let live = true;
     mounted.current = true;
     load().catch((e) => setError(e.message));
-    const saved = sessionStorage.getItem(`gym-lab-run:${labId}`);
+    const saved = workspaceStorage.getItem(`gym-lab-run:${labId}`);
     if (saved)
       api(`/lab-activities/${saved}`)
         .then((record) => {
           if (
             live &&
             record.status !== "finished" &&
+            (!initialLessonId ||
+              (record.lesson_id || record.module) === initialLessonId) &&
             (!record.lab_id || record.lab_id === labId)
           ) {
             setRun(record);
@@ -721,13 +731,13 @@ export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
             const id = record.lesson_id || record.module;
             setLessonId(id);
             setReflection(
-              sessionStorage.getItem(`gym-lab-note:${labId}:${id}`) ??
+              workspaceStorage.getItem(`gym-lab-note:${labId}:${id}`) ??
                 record.reflection ??
                 "",
             );
           }
         })
-        .catch(() => sessionStorage.removeItem(`gym-lab-run:${labId}`));
+        .catch(() => workspaceStorage.removeItem(`gym-lab-run:${labId}`));
     return () => {
       live = false;
       mounted.current = false;
@@ -837,7 +847,7 @@ export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
       );
       setRun(record);
       currentRun.current = record;
-      sessionStorage.setItem(`gym-lab-run:${labId}`, record.id);
+      workspaceStorage.setItem(`gym-lab-run:${labId}`, record.id);
       await event("reading", { parameters: { section: "lesson" } });
     });
   const choose = (next) =>
@@ -857,12 +867,13 @@ export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
       setRun(previous);
       currentRun.current = previous;
       setReflection(
-        sessionStorage.getItem(`gym-lab-note:${labId}:${next}`) ??
+        workspaceStorage.getItem(`gym-lab-note:${labId}:${next}`) ??
           previous?.reflection ??
           "",
       );
-      if (previous) sessionStorage.setItem(`gym-lab-run:${labId}`, previous.id);
-      else sessionStorage.removeItem(`gym-lab-run:${labId}`);
+      if (previous)
+        workspaceStorage.setItem(`gym-lab-run:${labId}`, previous.id);
+      else workspaceStorage.removeItem(`gym-lab-run:${labId}`);
     });
   const practice = (block) =>
     act(async () => {
@@ -1021,7 +1032,7 @@ export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
               reflection={reflection}
               setReflection={(value) => {
                 setReflection(value);
-                sessionStorage.setItem(
+                workspaceStorage.setItem(
                   `gym-lab-note:${labId}:${lessonId}`,
                   value,
                 );
@@ -1046,7 +1057,7 @@ export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
                   onClick={() =>
                     act(async () => {
                       await event("finish", { reflection });
-                      sessionStorage.removeItem(`gym-lab-run:${labId}`);
+                      workspaceStorage.removeItem(`gym-lab-run:${labId}`);
                       await load();
                     })
                   }
@@ -1102,13 +1113,13 @@ export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
                                 restored.lesson_id || restored.module;
                               setLessonId(restoredLesson);
                               setReflection(
-                                sessionStorage.getItem(
+                                workspaceStorage.getItem(
                                   `gym-lab-note:${labId}:${restoredLesson}`,
                                 ) ??
                                   restored.reflection ??
                                   "",
                               );
-                              sessionStorage.setItem(
+                              workspaceStorage.setItem(
                                 `gym-lab-run:${labId}`,
                                 restored.id,
                               );

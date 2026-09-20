@@ -1922,3 +1922,5 @@ footer {
     transition: none !important;
   }
 }
+
+.experience-recovery { display: grid; justify-items: start; gap: 12px; }

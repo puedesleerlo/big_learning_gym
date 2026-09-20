@@ -6,7 +6,7 @@ import time
 
 from sqlalchemy import or_, select, update
 
-from .store import Store, events, jobs, now, uid
+from .store import events, jobs, now, uid
 
 
 class Worker:
@@ -219,7 +219,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
-    worker = Worker(Store())
+    from .workspaces import load_workspace
+
+    worker = Worker(load_workspace().store())
     last = 0
     while True:
         if time.time() - last > 30:
