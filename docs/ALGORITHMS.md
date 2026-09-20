@@ -57,3 +57,15 @@ MCQ uses one exact key; matching earns the fraction of correctly matched prompts
 Generate up to 40 items in batches of four, enforcing requested format counts and source references. A shared case is reused for the configured trailing items. A separate verifier must agree on MCQ keys/matching mappings and return no issues. Unsupported, ambiguous or duplicate items are quarantined. Fixed simulations publish only if every item passes. These checks do not establish psychometric equivalence to an official exam.
 
 Tests: `tests/test_generation.py`, `tests/test_coursework.py`, `tests/test_sessions.py`.
+
+## A-007 — Rich lab activities: registry `2.0`, tutor `lab-discussion-v1`
+
+Implementations: `gym/lab_blocks.py`, `gym/lab_activity.py`, `gym/lab_tutor.py`, `web/src/labVisualization.js` and `web/src/RichLabActivities.jsx`. Authorized by D-011; A-001–A-006 retain their versions and behavior.
+
+Media load records a preparation exposure, not elapsed playback or completion. Visualization run records exactly the pinned numeric parameter keys after checking finite values within declared bounds; submitted outputs and extra fields are rejected. Custom browser computations are illustrative and unscored. These exposures use the existing reading/experiment counters, which disclose assistance when linking later practice. Preview runs create no visits or events.
+
+Each tutor turn uses up to six lexically retrieved fragments (the existing ingestion ranking) from the pinned lesson's confirmed instruction/research source versions, at most 2,000 characters per fragment, four prior exchanges, and four reading/worked-example/media text excerpts capped at 1,500 characters. Block objectives are bounded to 12 entries of at most 500 characters. Input messages are capped at 4,000 characters. Published max_turns is 1–24 (default 8); target response_words is 50–500 (default 180), a prompt target, not a measured grading rule. The output schema caps replies at 6,000 characters and six source references, rejects extra fields and foreign fragment IDs, and labels turns unassessed. The router retains its existing input and daily-call budgets. Missing context/configuration and invalid responses produce explicit errors, never a fabricated tutor answer.
+
+Expected-turn checks and per-request receipts serialize discussion updates. A pending lease expires after 3,600 seconds to recover a crashed process; a superseded worker cannot publish. Provider failures or changed visit/simulation state discard the response and release the pending slot. A completed key can be replayed without a second model call; a failed key needs a new request. Success increments help_count once and preserves model/prompt provenance and source snippets. It does not score a response, alter capability state, finish coursework, or accept a schedule.
+
+Tests: `tests/test_rich_labs.py`, `web/tests/rich-labs.mjs`; existing lab and scoring fixtures remain applicable.

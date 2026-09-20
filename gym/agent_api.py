@@ -46,6 +46,9 @@ def register_agent_api(app, store):
                     "publish": "PUT /api/labs/{lab_id}; same validated LabWrite body and expected_revision",
                     "identity": "Globally unique lab_id, immutable course_id; many labs per gym; lesson.id separate from lesson.module.",
                     "learner_activity": "Start with module and lesson_id; events reference activity_id from the pinned lesson version. Never start visits during authoring.",
+                    "rich_blocks": "media: HTTPS native video/audio or YouTube/Vimeo embeds; visualization: self-contained html/css/javascript, data and bounded parameters; discussion: prompt, objectives, style and turn limits.",
+                    "discussion": "POST /api/lab-activities/{ident}/discussion with activity_id, message, expected_turn and idempotency_key; learner-initiated tutor call, never authoring or grading.",
+                    "limits": "Parameter experiments retain the weighted sum. Custom visualization code executes only in an isolated browser frame without a Gym API bridge. Tutor uses pinned instructional sources and the configured tutor role; unavailable during active course simulations.",
                 },
                 "course": "PUT /api/authoring/courses/{id}; expected_revision=0 creates",
                 "guide": "PUT /api/authoring/guides/{id}; expected_revision=0 creates",
@@ -216,6 +219,7 @@ def register_agent_api(app, store):
                 "No automatic retry after revision conflict; inspect changes before preparing a new update.",
             ],
             "model_backed_operations": [
+                "POST /api/lab-activities/{ident}/discussion",
                 "POST /api/generations",
                 "POST /api/profiles",
                 "POST /api/sources/{id}/rubric",

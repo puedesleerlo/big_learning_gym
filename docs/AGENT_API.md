@@ -81,6 +81,289 @@ existing safe markup policy. Glossary entries use `term`, `def`, `module`,
 `rubric_version_id`, and provenance. Linked glossary terms appear in the existing
 session's Key terms aid; taking the aid remains recorded as assistance.
 
+## Named labs: validate, preview, publish
+
+A course can contain multiple named labs. Each lab has a globally unique
+`lab_id` in `/api/labs/{lab_id}` and an explicit `course_id` in its write body.
+Do not assume the two IDs are equal. Existing default labs keep their existing
+IDs and URLs. A lesson's `id` identifies a step within a lab; its `module`
+references an existing course module and defaults to the lesson ID only when
+omitted. Multiple lessons may intentionally share one module.
+
+Discover the existing content and supported blocks before authoring:
+
+```sh
+.venv/bin/python -m gym.agent_client GET /api/labs
+.venv/bin/python -m gym.agent_client GET '/api/labs?course_id=COURSE_ID'
+.venv/bin/python -m gym.agent_client GET /api/lab-activity-types
+.venv/bin/python -m gym.agent_client GET /api/labs/LAB_ID
+```
+
+The list route returns summaries. The registry returns activity schemas and
+templates; the live OpenAPI schema is authoritative for current field limits.
+`LabWrite` contains `course_id`, `expected_revision`, `title`, `description`,
+`objectives`, `prerequisite_lab_ids`, `lessons`, optional external `sources`,
+and provenance. Lesson fields include `id`, `module`, `title`, `stage`,
+`minutes`, `objectives`, `prerequisites`, `source_ids`, and `activities`.
+Legacy lesson fields remain compatible, and `paper_bridge` is optional.
+
+Keep the reference namespaces distinct:
+
+- Lesson `source_ids` contain confirmed **source-version IDs** from the same
+  course, with instructional or research roles. They are not fragment IDs.
+- Guides, glossary terms, and questions cite **fragment IDs** through their
+  existing authoring contracts.
+- The lab's optional external `sources` catalog holds bibliographic records.
+  A `paper_bridge.source_id` refers to this catalog. A catalog entry does not
+  upload, review, or confirm a source document.
+- Lesson `prerequisites` refer to lesson IDs in that lab. Top-level
+  `prerequisite_lab_ids` refer to already-existing labs in the same course.
+  Both dependency graphs must be acyclic.
+
+Each activity has its own `id`, `title`, and discriminating `type`. Supported
+types are:
+
+- `reading` and `worked_example`: authored `body` text.
+- `prediction` and `reflection`: a `prompt` for the learner to answer.
+- `parameter_experiment`: `description`, bounded `inputs`, `offset`,
+  `output_label`, and `unit`. Each input has `key`, `label`, `min`, `max`,
+  `step`, `initial`, and `coefficient`. Its output is the declared affine sum
+  `offset + sum(coefficient * input)`. This does not execute arbitrary
+  expressions, products of inputs, user code, or an external simulation.
+- `assessment`: `mode` (`practice` or `transfer`) and `count`. This opens the
+  existing session workflow using the lesson's course/module question bank.
+  Author suitable items in that pool first; a block does not contain questions
+  or solutions and does not create learner attempts when published. A lesson
+  supports at most one assessment block, with 1–30 questions.
+- `coursework`: `assignment_id`, referring to an existing same-course
+  assignment. Create its rubric and assignment through the normal routes first.
+- `media`: `kind` (video/audio), `provider` (native/youtube/vimeo), HTTPS `url`,
+  optional `description`, plain-text `transcript`, `start_seconds`, and optional
+  `end_seconds`. Native players also accept HTTPS WebVTT `captions_url` and
+  `captions_language`. YouTube uses `https://www.youtube-nocookie.com/embed/ID`
+  and Vimeo uses `https://player.vimeo.com/video/ID`, without query parameters.
+  Vimeo supports starts only; native media and YouTube support end bounds.
+  Hosts must permit playback/embedding; authenticated course recordings may
+  need their own browser login. Loading is user-initiated. URLs are references,
+  not a copy or immutable snapshot of the hosted recording.
+- `visualization`: self-contained `html`, `css`, `javascript`, an object `data`,
+  numeric `parameters`, frame `height`, and required plain-text `fallback`.
+  Each parameter has `key`, `label`, `min`, `max`, `step`, and `initial`.
+  Code reads `gym.parameters` and `gym.data`. Changing a control and running
+  reloads the frame with those values. HTML/SVG/canvas and bundled libraries can
+  implement arbitrary teaching visuals; external scripts, fetch, workers and
+  frame navigation are blocked. Code stays in the browser's sandbox, not the
+  Gym application or server. There is no postMessage/API bridge for results.
+  Supply teaching data only, never credentials, learner history or private
+  institutional documents. Use preview's “Try visualization” to review behavior
+  without recording study activity; visual correctness remains an author review.
+- `discussion`: `prompt`, `objectives`, `style` (socratic/explain/debate),
+  `max_turns` (1–24, default 8), and `response_words` (target 50–500, default 180).
+  Inherits the lesson's pinned confirmed sources and the existing `tutor` role
+  from `config/models.json`. A block cannot choose a new provider, system prompt
+  or scoring method. Preview shows the prompt and goals without calling a model.
+
+Copy the `activities` entries from
+[`content/examples/rich-lab-blocks.json`](../content/examples/rich-lab-blocks.json)
+into an existing lesson, replace media URLs/content, and use the same
+validate → preview → publish workflow. No dedicated MCP tool is required;
+`gym_request` accepts the normal LabWrite payload. The registry supplies a
+complete normalized template and schema for every block, including the new types.
+
+### Learner discussion and rich activity events
+
+During an actual running study visit, send:
+
+```json
+{
+  "activity_id": "discussion-1",
+  "message": "Why does doubling the frequency add cycles?",
+  "expected_turn": 0,
+  "idempotency_key": "a-unique-request-id"
+}
+```
+
+to `POST /api/lab-activities/{visit_id}/discussion`. This is a model-backed
+learner action, not an authoring operation. Read the visit's `discussions`
+mapping first; `expected_turn` is the number of completed exchanges for this
+block. Successful responses contain the updated visit and turns, source snippets,
+citations and provider/model/prompt provenance. Replay a completed request using
+the exact same key/payload. A failed key cannot be reused for a new call; read
+current turns and use a new key. Competing requests return 409. A pending call
+after process interruption becomes retryable after one hour; do not assume that
+an interrupted provider call consumed no budget. Active course simulations,
+paused/finished visits and missing readable sources reject new calls.
+
+`media` events accept only `parameters: {"activity_id": "..."}`. Visualization
+events use action `visualization` and `parameters: {"activity_id": "...",
+"inputs": {"frequency": 2}}`. Both use the normal event idempotency key and
+validate against the visit's pinned block. They record preparation exposure;
+media duration, completion, visualization output and grades cannot be asserted
+through these events. Tutor replies count as help. Existing practice linking
+discloses this assistance; tutor conversation is excluded from assessor inputs.
+
+The non-causal [ideal-spring example](../content/examples/general-lab.json)
+uses two lessons in one module, with reading, prediction, a worked example,
+a bounded parameter experiment, and reflection. Its course, module, and source
+IDs are explicit placeholders. It intentionally has no assessment or coursework
+dependency, so those blocks can be added after their underlying material exists.
+This is a template, not an already-published or independently validated lab.
+
+### Copyable example workflow
+
+These commands create an example course in the selected Gym. Use a development
+workspace when trying the example; for actual authoring, use the intended
+existing course and its current revision. Check that your chosen course and lab
+IDs are unused before creating new records. Run commands from the repository.
+
+Create a course with one module using the existing authoring route:
+
+```sh
+.venv/bin/python -m gym.agent_client PUT /api/authoring/courses/physics-foundations-example --json - <<'JSON'
+{
+  "expected_revision": 0,
+  "title": "Physics foundations example",
+  "description": "Practice proportional reasoning with a declared ideal-spring model.",
+  "modules": [
+    {
+      "id": "springs",
+      "title": "Ideal springs and model limits",
+      "objectives": ["Reason about proportional relationships and model assumptions"],
+      "estimated_minutes": 25,
+      "level": "beginner"
+    }
+  ],
+  "provenance": {
+    "author": "Learning Gym example author",
+    "method": "agent",
+    "rationale": "Create a course for the original ideal-spring teaching example",
+    "reference_urls": []
+  }
+}
+JSON
+```
+
+Prepare an instructional source from the example's original teaching text.
+This is transparently authored material, not an imported textbook or a record
+of real measurements:
+
+```sh
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+
+lab = json.loads(Path('content/examples/general-lab.json').read_text())
+parts = ['# Original ideal-spring teaching notes',
+         'Declared model: restoring-force magnitude F = 40 N/m × extension.',
+         'These are original explanations and hypothetical values, not measured data.']
+for lesson in lab['lessons']:
+    parts.append('## ' + lesson['title'])
+    for block in lesson['activities']:
+        if block['type'] in {'reading', 'worked_example'}:
+            parts.extend(['### ' + block['title'], block['body']])
+Path('/tmp/gym-spring-notes.md').write_text('\n\n'.join(parts) + '\n')
+PY
+.venv/bin/python -m gym.agent_client POST /api/sources \
+  --field course_id=physics-foundations-example --field role=instruction \
+  --file file=/tmp/gym-spring-notes.md --output /tmp/gym-spring-source.json
+```
+
+Read the upload response. Replace `SOURCE_VERSION_ID` below with its returned
+`id`, inspect the reconstructed fragments against the notes, and correct any
+extraction problem before confirming. The confirmation body must contain the
+actual current source `revision`; the number below is a placeholder to replace
+if the response reports a different value.
+
+```sh
+.venv/bin/python -m gym.agent_client GET /api/sources/SOURCE_VERSION_ID/fragments
+.venv/bin/python -m gym.agent_client POST /api/sources/SOURCE_VERSION_ID/confirm \
+  --output /tmp/gym-spring-source.json --json - <<'JSON'
+{"expected_revision": 1}
+JSON
+```
+
+Fill the template from the confirmed response. Both lessons map to `springs`,
+while their lesson IDs remain different. The external catalog stays empty:
+
+```sh
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+
+lab = json.loads(Path('content/examples/general-lab.json').read_text())
+source = json.loads(Path('/tmp/gym-spring-source.json').read_text())
+assert source['course_id'] == 'physics-foundations-example'
+assert source['reconstruction_status'] == 'confirmed', 'Review and confirm the source first'
+lab['course_id'] = source['course_id']
+for lesson in lab['lessons']:
+    lesson['module'] = 'springs'
+    lesson['source_ids'] = [source['id']]
+Path('/tmp/gym-spring-lab.json').write_text(json.dumps(lab, indent=2) + '\n')
+PY
+.venv/bin/python -m gym.agent_client POST /api/labs/ideal-spring-example/validate \
+  --json /tmp/gym-spring-lab.json
+.venv/bin/python -m gym.agent_client POST /api/labs/ideal-spring-example/preview \
+  --json /tmp/gym-spring-lab.json --output /tmp/gym-spring-preview.json
+```
+
+Validation and preview use the same write schema and return
+`{"valid": true, "lab": <normalized lab>, "warnings": [...]}` on success.
+Neither call publishes content, starts a visit, nor creates learner evidence.
+Inspect the normalized preview and warnings; fix validation errors and review
+any warnings before publishing the same candidate payload:
+
+```sh
+.venv/bin/python -m gym.agent_client PUT /api/labs/ideal-spring-example \
+  --json /tmp/gym-spring-lab.json
+.venv/bin/python -m gym.agent_client GET /api/labs/ideal-spring-example
+.venv/bin/python -m gym.agent_client GET '/api/labs?course_id=physics-foundations-example'
+```
+
+Readback verifies the published lab's ID, course, revision, lesson-to-module
+mapping, blocks, and source references. Preview is not a reservation: an update
+requires the current lab revision, and publication can still conflict if the
+lab changes after preview. On a conflict, fetch and reconcile the current lab,
+then validate and preview the revised candidate before publishing. Do not
+automatically replace `expected_revision` and overwrite another edit.
+
+The same workflow needs no specialized MCP tool. Use `gym_read` for discovery
+and readback, `gym_upload` for the source, and `gym_request` with `method`,
+`path`, and the candidate `body` for confirmation, validation, preview, and
+publication. For example, validation uses `method: "POST"` and
+`path: "/api/labs/ideal-spring-example/validate"`; publication uses `PUT` at
+the lab path. Read the live schemas rather than assuming the example captures
+every current field.
+
+### Actual learner activity is a separate workflow
+
+The learner's UI starts a visit through
+`POST /api/labs/{lab_id}/activities`, identifying both `module` and `lesson_id`
+with an idempotency key. `POST /api/lab-activities/{id}/events` records observed
+activity, including responses associated with individual published blocks.
+Read the live event schema for the specific action. A prompt in an authored
+block is not a learner response, and a default parameter value is not evidence
+that the learner performed an experiment.
+
+For an actual learner event, `parameters.activity_id` is the published block
+ID, distinct from the study-visit ID in the URL. A `response` action supplies
+`parameters: {"activity_id": "BLOCK_ID", "value": "LEARNER_RESPONSE"}` for
+a prediction or reflection block. A parameter `experiment` action supplies
+`parameters: {"activity_id": "BLOCK_ID", "inputs": {"extension_m": 0.1}}`;
+the server checks the exact input keys and bounds against the version studied,
+then computes the output itself. These shapes describe observed learner
+actions, not authoring or preview steps. Use a stable idempotency key for a
+retry of the same event; a changed action or response needs a new key.
+
+The platform records active and elapsed time separately and keeps guided
+preparation separate from assessment. Link a same-course, same-module practice
+or transfer session through `/api/lab-activities/{id}/link-session` before any
+answers, so the existing assessment workflow can disclose preparation. Inspect
+the activity's linked outcome rather than copying scores into the lab record.
+Finishing a visit does not grant mastery or prove an intervention improved
+learning. Agents must not start study timers, submit block responses, or take
+practice on the learner's behalf merely to test or populate curriculum. Verify
+those behavioral flows using isolated test data.
+
 ## Revise and import safely
 
 Authoring conflicts return HTTP 409. Read the latest record and reconcile the
@@ -193,7 +476,7 @@ SDK references: [official v1 source and compatibility policy](https://github.com
 ## Verification
 
 ```sh
-.venv/bin/pytest -q tests/test_authoring.py tests/test_agent_mcp.py
+.venv/bin/pytest -q tests/test_authoring.py tests/test_agent_mcp.py tests/test_lab_activity.py tests/test_lab_catalog.py
 ```
 
 Authoring tests exercise stale revision rejection, module/reference validation,
@@ -202,3 +485,11 @@ session scores, pinned rubric versions, and solution redaction. MCP tests use a
 real SDK client/server protocol session and the Gym ASGI app to discover schemas,
 create a course, upload/read source fragments, detect conflicts, and reject
 foreign URLs and disallowed file paths. No paid model calls are required.
+
+Lab tests cover definition validation, named-lab scope, activity references,
+versioned study records, and the separation between preparation and assessed
+evidence. The ideal-spring example was also exercised through an isolated API
+workflow: course creation, source upload/review/confirmation, validation,
+preview, publication, and readback. Preview left the lab unpublished; the final
+lab contained two distinct lessons mapped to one module, with no sessions,
+attempts, study visits, submissions, or learner-state records created.

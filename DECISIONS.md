@@ -86,6 +86,26 @@ Agents read this register, the architecture and applicable algorithms before cha
 
 Reason: documentation alone cannot constrain an agent that can edit the documentation and its tests. Repository-side checks and independently administered GitHub controls supply additional enforcement.
 
+## D-011 — Parametric media, browser visualizations and lab discussion
+
+Status: Accepted by explicit user request on 2026-09-20: “Add this capabilities to labs: Embedded video/audio, arbitrary interactive visualizations, and an integrated discussion tutor … Make sure they are parametric so they are easy to insert in the lab.”
+
+Context: the version 1 activity registry provided text, affine experiments and links to existing assessment/coursework. Course preparers need richer reusable teaching blocks without editing the application for every lesson.
+
+Decision: extend the versioned block registry with media, visualization and discussion contracts. Media loads on user action from an authored HTTPS file or a supported video host, with transcripts and clip parameters. Self-contained author-supplied HTML/CSS/JavaScript may execute only in nested sandboxed browser frames with opaque origins, restrictive content policies and no Gym API/message bridge. Data and bounded control values are the only injected configuration; never inject learner history, credentials or source documents. No server-side code execution is added. The integrated discussion tutor uses the existing configured tutor role, selected fragments from the pinned lesson's instructional sources, bounded conversation history and attributed non-assessed turns. It is unavailable during an active simulation in the course.
+
+This supplies the explicit design and authorization required by D-008 for browser code execution and media access, superseding any blanket reading of that decision as prohibiting all authored browser code. All other D-008 boundaries remain in force. D-001–D-007 and D-009–D-010 are preserved. No new model provider, assessment authority or scheduling authority is introduced.
+
+Alternatives: a fixed chart catalog cannot cover arbitrary teaching interactions; executing uploaded code on the server expands privileges unnecessarily; separate tutoring storage/provider routes would duplicate existing boundaries. The chosen renderer supports arbitrary self-contained visual content while keeping its execution separate from the application.
+
+Consequences and limits: remote media availability, codecs and embed policies remain external constraints. Custom visualizations must bundle their dependencies and may consume browser CPU; the sandbox is not a hard compute quota or scientific verification. Discussion is model assistance, not an official grade. Source citations are validated for membership, not semantic truth. Failed/abandoned model calls may consume provider budget even if no turn is saved.
+
+Version/migration: activity registry 2.0 and discussion prompt `lab-discussion-v1`; A-001–A-006 are unchanged and A-007 documents the new behavior. Existing lab versions and visits require no migration. New discussion and request records use shared transactional storage.
+
+Validation: schema/reference and revision tests, source/role isolation, provider failure and idempotency tests, browser editor/preview/publication tests, sandbox escape/network checks, full backend suite, frontend build and architecture checks. See `docs/changes/2026-09-20-rich-lab-blocks.json` for results.
+
+Rollback: revert the implementation together with its renderer; retain published versions, discussions and historical evidence. Older clients cannot render new block types. Restore earlier lab presentations through a new revision rather than deleting historical records.
+
 ## Adding or revising a decision
 
 Append the next `D-NNN` entry with status `Proposed`, context, decision, alternatives, consequences, affected algorithm versions, migration, checks, rollback and the decisions it supersedes. Link the exact user request or maintainer review covering the revision. A request already authorizing the specific change is sufficient; do not request permission again. Only mark acceptance when that authorization exists. A JSON change record or a checked box is not proof of approval.

@@ -71,6 +71,26 @@ expressions. Assessment blocks open existing practice/transfer sessions;
 coursework blocks reference existing assignments. Create any required question
 bank or assignment through its normal workflow first.
 
+Registry 2.0 also includes `media`, `visualization`, and `discussion`; discover
+their live templates rather than inventing fields. Media takes an HTTPS native
+video/audio URL or a supported video embed URL, transcript, and clip bounds.
+Visualization takes self-contained `html`, `css`, `javascript`, `data`, bounded
+numeric `parameters`, `height`, and a text `fallback`. Code reads `gym.data` and
+`gym.parameters` inside the browser sandbox; bundle dependencies and use only
+teaching datasets. It has no network or Gym API bridge. Never inject private
+learner data, credentials or institutional source documents into its code/data.
+The preview's “Try visualization” action is appropriate for author review and
+does not create learner evidence. Supply a useful text alternative.
+
+Discussion takes `prompt`, `objectives`, `style` (socratic/explain/debate),
+`max_turns`, and `response_words`; it inherits the pinned lesson's sources and
+the server's configured tutor role. Authoring a block makes no model call.
+Do not populate a conversation on the learner's behalf. A real discussion uses
+`/api/lab-activities/{id}/discussion` with `activity_id`, `message`,
+`expected_turn`, and an idempotency key; read current turns after conflicts.
+Responses remain assistance, not grades. See the rich-block examples in
+`docs/AGENT_API.md` and `content/examples/rich-lab-blocks.json`.
+
 Lab lesson `source_ids` are confirmed **source-version IDs** from the same
 course, not fragment IDs or entries in the optional external `sources` catalog.
 An optional paper bridge refers to that catalog. Lesson `prerequisites` name

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { LabPreview } from "./GuidedLab.jsx";
 import { activityLabels } from "./LabActivities.jsx";
+import RichLabEditor from "./RichLabEditor.jsx";
 import "./guided-lab.css";
 
 const id = (prefix) =>
@@ -306,6 +307,7 @@ function ActivityEditor({ block, onChange, assignments }) {
           onChange={(e) => set("title", e.target.value)}
         />
       </Field>
+      <RichLabEditor block={block} onChange={onChange} />
       {["reading", "worked_example"].includes(block.type) && (
         <Field
           label={block.type === "reading" ? "Reading" : "Worked example"}

@@ -1,0 +1,68 @@
+{
+  "activities": [
+    {
+      "id": "concept-video",
+      "title": "Watch the concept",
+      "type": "media",
+      "kind": "video",
+      "provider": "youtube",
+      "url": "https://www.youtube-nocookie.com/embed/REPLACE_ID0",
+      "description": "",
+      "transcript": "Replace with the accurate transcript.",
+      "captions_url": null,
+      "captions_language": "en",
+      "start_seconds": 30,
+      "end_seconds": 120
+    },
+    {
+      "id": "concept-audio",
+      "title": "Listen and reflect",
+      "type": "media",
+      "kind": "audio",
+      "provider": "native",
+      "url": "https://example.org/lesson-podcast.mp3",
+      "description": "",
+      "transcript": "Replace with the accurate podcast transcript.",
+      "captions_url": null,
+      "captions_language": "en",
+      "start_seconds": 0,
+      "end_seconds": null
+    },
+    {
+      "id": "wave-model",
+      "title": "Explore frequency",
+      "type": "visualization",
+      "description": "",
+      "html": "<canvas id='plot' width='640' height='280'></canvas>",
+      "css": "",
+      "javascript": "const c = document.querySelector('#plot').getContext('2d'); c.strokeStyle = '#386db1'; c.beginPath(); for(let x=0;x<640;x++){ const y=140-90*Math.sin(x/640*2*Math.PI*gym.parameters.frequency); x ? c.lineTo(x,y) : c.moveTo(x,y); } c.stroke();",
+      "data": {
+        "label": "An illustrative wave"
+      },
+      "parameters": [
+        {
+          "key": "frequency",
+          "label": "Frequency",
+          "min": 1.0,
+          "max": 5.0,
+          "initial": 2.0,
+          "step": 0.1
+        }
+      ],
+      "height": 420,
+      "fallback": "Increasing frequency fits more wave cycles into the same horizontal interval."
+    },
+    {
+      "id": "wave-discussion",
+      "title": "Explain the pattern",
+      "type": "discussion",
+      "prompt": "What changed when you increased frequency, and what stayed constant?",
+      "objectives": [
+        "Explain how frequency changes cycle count"
+      ],
+      "style": "socratic",
+      "max_turns": 8,
+      "response_words": 180
+    }
+  ]
+}
