@@ -1,6 +1,6 @@
 ---
 name: learning-gym
-description: Create or maintain courses, grounded lessons, glossary terms, practice questions, rubrics, and assignments in the existing Learning Gym through its API or MCP tools. Use for Learning Gym authoring and maintenance, not for building a separate learning platform.
+description: Create or maintain courses, named interactive labs, grounded lessons, practice questions, rubrics, and assignments in the existing Learning Gym through its API or MCP tools. Use for Learning Gym authoring and maintenance, not for building a separate learning platform.
 ---
 
 # Learning Gym
@@ -55,11 +55,43 @@ Verify writes through the same API and report the resulting course/material
 IDs, what changed, and unresolved source or assessment limitations. Keep the
 learner's platform and existing evidence intact.
 
-For a guided learning path, inspect `/api/labs/{course_id}` and its live schema.
-Publish versioned lesson presentations through that API, referencing confirmed
-source versions and existing course modules. The platform records actual
-learning activity separately from scored practice: reading, experiment inputs,
-saved reflections, capped active time, and elapsed time. Link a guided activity
-to its practice session before answers so preparation is disclosed as support.
-Do not start timers, click through experiments, or answer practice as though
-the learner did so. Verify these workflows in an isolated test workspace.
+## Named labs and activity blocks
+
+Discover `/api/labs?course_id=COURSE_ID`, `/api/lab-activity-types`, and the live
+`LabWrite` schema before authoring a lab. A globally unique `lab_id` identifies
+one lab; `course_id` identifies its course. Multiple named labs can share a
+course. Existing default-lab URLs remain valid. A lesson has its own `id` and
+an explicit existing course `module`; several lessons may use one module.
+
+Build lessons from the supported activity registry. Reading and worked
+examples hold authored content; predictions and reflections ask for learner
+responses. Parameter experiments use bounded inputs and the declared formula
+`offset + sum(coefficient * input)`, not arbitrary code or mathematical
+expressions. Assessment blocks open existing practice/transfer sessions;
+coursework blocks reference existing assignments. Create any required question
+bank or assignment through its normal workflow first.
+
+Lab lesson `source_ids` are confirmed **source-version IDs** from the same
+course, not fragment IDs or entries in the optional external `sources` catalog.
+An optional paper bridge refers to that catalog. Lesson `prerequisites` name
+lessons in the lab; `prerequisite_lab_ids` name existing labs in the same course.
+Keep those dependency graphs acyclic.
+
+Prepare one write payload with provenance and `expected_revision`. Send it to
+`POST /api/labs/{lab_id}/validate`, then `/preview`; both validate without
+publishing or creating learner evidence. Inspect the normalized lab and
+warnings. Publish the reviewed payload with `PUT /api/labs/{lab_id}`, then read
+it back. Creation uses revision zero; updates use the current lab revision. If
+preview or publication reports a conflict, read and reconcile the latest lab
+instead of forcing a newer revision. Use the generic MCP `gym_request` for
+these JSON operations. `docs/AGENT_API.md` explains the complete workflow, and
+`content/examples/general-lab.json` is a non-causal template whose placeholder
+IDs must be replaced and references validated before use.
+
+Activity tracking is separate from content authoring. A real study visit names
+both the lesson and module; block responses, experiment inputs, capped active
+time, and elapsed time record what the learner actually did. Link practice
+before answers so preparation is disclosed as support. Do not start timers,
+record block responses, click experiments, or answer practice as though the
+learner did so. Validate authoring through preview and readback; exercise
+learner-evidence workflows only in an isolated test workspace.

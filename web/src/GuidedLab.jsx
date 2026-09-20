@@ -10,6 +10,7 @@ import {
   Play,
 } from "lucide-react";
 import "./guided-lab.css";
+import LabActivity from "./LabActivities.jsx";
 
 const key = () => crypto.randomUUID();
 const elapsed = (seconds) =>
@@ -399,9 +400,285 @@ function Experiment({ type, onRun, disabled }) {
   );
 }
 
-export default function GuidedLab({ courseId, api, start, navigate }) {
+export function LabLessonContent({
+  lab,
+  lesson,
+  run,
+  running,
+  preview = false,
+  busy,
+  reflection,
+  setReflection,
+  onEvent,
+  onPractice,
+  onCoursework,
+  onDiscuss,
+  onChoose,
+  onSaveReflection,
+}) {
+  const paper = (lab.sources || []).find(
+    (s) => s.id === lesson.paper_bridge?.source_id,
+  );
+  const legacy = Boolean(
+    lesson.intuition?.length ||
+    lesson.worked_example ||
+    lesson.experiment ||
+    lesson.paper_bridge,
+  );
+  return (
+    <>
+      <p className="muted">
+        {lesson.stage || "Lesson"} · {lesson.minutes} min suggested
+      </p>
+      <h2>{lesson.question || lesson.title}</h2>
+      {!!lesson.prerequisites?.length && (
+        <p className="lab-prerequisites">
+          Builds on{" "}
+          {lesson.prerequisites.map((id) => (
+            <button
+              key={id}
+              className="text-button"
+              disabled={busy}
+              onClick={() => onChoose?.(id)}
+            >
+              {lab.lessons.find((l) => l.id === id)?.title || id}
+            </button>
+          ))}
+        </p>
+      )}
+      {!!lesson.objectives?.length && (
+        <details>
+          <summary>What you will be able to explain</summary>
+          <ul>
+            {lesson.objectives.map((text, i) => (
+              <li key={i}>{text}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {!!lesson.intuition?.length && (
+        <>
+          <h3>The idea in everyday language</h3>
+          {lesson.intuition.map((text, i) => (
+            <p key={i}>{text}</p>
+          ))}
+        </>
+      )}
+      {lesson.worked_example && (
+        <div className="lab-example">
+          <h3>{lesson.worked_example.title}</h3>
+          <p>{lesson.worked_example.body}</p>
+        </div>
+      )}
+      {lesson.experiment && (
+        <>
+          <p>
+            <strong>Warm-up:</strong> Explore the concept in a small
+            illustrative model, then apply it to this lesson’s exercise.
+          </p>
+          <Experiment
+            key={lesson.id}
+            type={lesson.experiment}
+            disabled={preview || !running || busy}
+            onRun={(parameters) => onEvent("experiment", { parameters })}
+          />
+        </>
+      )}
+      {lesson.experiment_task && (
+        <p>
+          <strong>Apply it to this lesson:</strong> {lesson.experiment_task}
+        </p>
+      )}
+      {(lesson.activities || []).map((block) => (
+        <LabActivity
+          key={`${lesson.id}:${block.id}:${run?.id || "draft"}`}
+          block={block}
+          run={run}
+          running={running}
+          preview={preview}
+          onEvent={onEvent}
+          onPractice={onPractice}
+          onCoursework={onCoursework}
+          onDiscuss={onDiscuss}
+          draftKey={`gym-lab-block:${lab.id}:${lesson.id}:${block.id}`}
+        />
+      ))}
+      {(legacy || lesson.reflection) && (
+        <div className="lab-reflection">
+          <label htmlFor="lab-reflection">
+            <h3>Leave a piece of reasoning</h3>
+            <p>
+              {lesson.reflection ||
+                "What changed, why did it change, and which assumption matters?"}
+            </p>
+          </label>
+          <textarea
+            id="lab-reflection"
+            placeholder="My prediction was… What changed was… The assumption that matters is…"
+            value={reflection || ""}
+            readOnly={preview}
+            onChange={(e) => setReflection?.(e.target.value)}
+          />
+          <button
+            className="button secondary"
+            disabled={preview || !run || run.status === "finished" || busy}
+            onClick={onSaveReflection}
+          >
+            <Check size={16} />
+            Save reflection
+          </button>
+          <small>
+            {preview
+              ? "Saving is disabled in preview."
+              : "Your reflection is study evidence; it is not automatically graded."}
+          </small>
+        </div>
+      )}
+      {!!lesson.takeaways?.length && (
+        <>
+          <h3>Keep these distinctions</h3>
+          <ul>
+            {lesson.takeaways.map((text, i) => (
+              <li key={i}>{text}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {lesson.pitfall && (
+        <p className="lab-pitfall">
+          <strong>Common mistake:</strong> {lesson.pitfall}
+        </p>
+      )}
+      {lesson.paper_bridge && (
+        <section className="lab-paper">
+          <div className="row">
+            <BookOpen size={21} />
+            <h3>Your bridge to the paper</h3>
+          </div>
+          {paper && (
+            <p>
+              <a
+                href={/^https?:\/\//i.test(paper.url) ? paper.url : undefined}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => {
+                  if (!preview && running)
+                    onEvent("reading", {
+                      parameters: { source_id: paper.id },
+                    }).catch(() => {});
+                }}
+              >
+                {paper.title}
+              </a>
+              <small>
+                {paper.year ? `${paper.year} · ` : ""}
+                {paper.status || paper.kind}
+              </small>
+            </p>
+          )}
+          <p>{lesson.paper_bridge.why_it_matters}</p>
+          <p>
+            <strong>Read first:</strong> {lesson.paper_bridge.read_first}
+          </p>
+          <details>
+            <summary>Claim, assumptions, and limits</summary>
+            <p>{lesson.paper_bridge.claim}</p>
+            <h4>What it assumes</h4>
+            <ul>
+              {(lesson.paper_bridge.assumptions || []).map((v, i) => (
+                <li key={i}>{v}</li>
+              ))}
+            </ul>
+            <h4>What it does not establish</h4>
+            <ul>
+              {(lesson.paper_bridge.limits || []).map((v, i) => (
+                <li key={i}>{v}</li>
+              ))}
+            </ul>
+          </details>
+          <p>
+            <strong>Reading task:</strong> {lesson.paper_bridge.exercise}
+          </p>
+        </section>
+      )}
+      {legacy &&
+        !(lesson.activities || []).some((b) => b.type === "assessment") && (
+          <div className="lab-next">
+            <h3>Now test your explanation</h3>
+            <p>
+              Three questions use the gym’s existing timers, confidence, hints,
+              and scoring. Linked practice records the support received here.
+              Revisit later for an independent check.
+            </p>
+            <button
+              className="button"
+              disabled={preview || busy || !running}
+              onClick={() => onPractice({ mode: "practice", count: 3 })}
+            >
+              <Play size={16} />
+              Start linked practice
+            </button>
+            {!preview && (
+              <button className="text-button" onClick={() => onCoursework()}>
+                Open longer coursework exercises
+              </button>
+            )}
+          </div>
+        )}
+    </>
+  );
+}
+
+export function LabPreview({ lab }) {
+  const [selected, setSelected] = useState(lab.lessons[0]?.id);
+  const lesson = lab.lessons.find((l) => l.id === selected) || lab.lessons[0];
+  if (!lesson) return <p>No lessons in this preview.</p>;
+  return (
+    <div className="guided-lab lab-preview">
+      <div className="notice">
+        <strong>Preview only.</strong> No study time, responses, practice
+        sessions, or learner outcomes are recorded.
+      </div>
+      <div className="lab-heading">
+        <div>
+          <p className="muted">{lab.course_title || "Lab preview"}</p>
+          <h2>{lab.title}</h2>
+          <p>{lab.description}</p>
+        </div>
+      </div>
+      <div className="lab-layout">
+        <aside className="lab-path" aria-label="Preview lesson sequence">
+          {lab.lessons.map((l, i) => (
+            <button
+              key={l.id}
+              className={l.id === lesson.id ? "current" : ""}
+              onClick={() => setSelected(l.id)}
+            >
+              <span>{i + 1}</span>
+              <span>
+                {l.title}
+                <small>{l.minutes} min suggested</small>
+              </span>
+            </button>
+          ))}
+        </aside>
+        <article className="lab-lesson">
+          <LabLessonContent
+            key={lesson.id}
+            lab={lab}
+            lesson={lesson}
+            preview
+            onChoose={setSelected}
+          />
+        </article>
+      </div>
+    </div>
+  );
+}
+
+export default function GuidedLab({ labId, api, start, navigate, onEdit }) {
   const [lab, setLab] = useState(null),
-    [module, setModule] = useState("C01"),
+    [lessonId, setLessonId] = useState(null),
     [run, setRun] = useState(null);
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -412,33 +689,50 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
     autoResume = useRef(false),
     mounted = useRef(true);
   currentRun.current = run;
-  const load = () => api(`/labs/${courseId}`).then(setLab);
+  const load = () =>
+    api(`/labs/${encodeURIComponent(labId)}`).then((value) => {
+      if (mounted.current) {
+        setLab(value);
+        setLessonId((old) =>
+          value.lessons.some((l) => l.id === old) ||
+          (currentRun.current?.status !== "finished" &&
+            currentRun.current?.lesson_snapshot?.id === old)
+            ? old
+            : value.lessons[0]?.id,
+        );
+      }
+      return value;
+    });
   useEffect(() => {
     let live = true;
     mounted.current = true;
     load().catch((e) => setError(e.message));
-    const saved = sessionStorage.getItem(`gym-lab-run:${courseId}`);
+    const saved = sessionStorage.getItem(`gym-lab-run:${labId}`);
     if (saved)
       api(`/lab-activities/${saved}`)
         .then((record) => {
-          if (live && record.status !== "finished") {
+          if (
+            live &&
+            record.status !== "finished" &&
+            (!record.lab_id || record.lab_id === labId)
+          ) {
             setRun(record);
-            setModule(record.module);
+            currentRun.current = record;
+            const id = record.lesson_id || record.module;
+            setLessonId(id);
             setReflection(
-              sessionStorage.getItem(
-                `gym-lab-note:${courseId}:${record.module}`,
-              ) ??
+              sessionStorage.getItem(`gym-lab-note:${labId}:${id}`) ??
                 record.reflection ??
                 "",
             );
           }
         })
-        .catch(() => sessionStorage.removeItem(`gym-lab-run:${courseId}`));
+        .catch(() => sessionStorage.removeItem(`gym-lab-run:${labId}`));
     return () => {
       live = false;
       mounted.current = false;
     };
-  }, [courseId]);
+  }, [labId]);
   const event = (action, extra = {}) => {
     const id = currentRun.current?.id;
     if (!id)
@@ -454,12 +748,26 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
       return record;
     });
   };
+  const discuss = async (request) => {
+    const id = currentRun.current?.id;
+    if (!id) throw new Error("Start a learning session first.");
+    try {
+      await api(`/lab-activities/${id}/discussion`, request);
+    } finally {
+      // Re-read after the model call so concurrent timer/pause events are retained.
+      const record = await api(`/lab-activities/${id}`);
+      if (mounted.current && currentRun.current?.id === id) {
+        setRun(record);
+        currentRun.current = record;
+      }
+    }
+  };
   useEffect(() => {
     const interval = setInterval(() => {
       if (currentRun.current?.running && !document.hidden)
         event("heartbeat").catch((e) => setError(e.message));
     }, 15000);
-    const displayTimer = setInterval(() => setTick(Date.now()), 1000);
+    const display = setInterval(() => setTick(Date.now()), 1000);
     const visibility = () => {
       if (document.hidden && currentRun.current?.running) {
         autoResume.current = true;
@@ -476,7 +784,7 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
     document.addEventListener("visibilitychange", visibility);
     return () => {
       clearInterval(interval);
-      clearInterval(displayTimer);
+      clearInterval(display);
       document.removeEventListener("visibilitychange", visibility);
       if (currentRun.current?.running) event("pause").catch(() => {});
     };
@@ -485,16 +793,25 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
     setBusy(true);
     setError("");
     try {
-      await fn();
+      return await fn();
     } catch (e) {
       setError(e.message);
     } finally {
       setBusy(false);
     }
   };
-  const lesson = lab?.lessons.find((entry) => entry.id === module);
-  const active = run?.module === module && run.status !== "finished";
-  const running = active && run.running;
+  const active =
+    run &&
+    (run.lesson_id || run.module) === lessonId &&
+    run.status !== "finished";
+  const lesson =
+    (active && run.lesson_snapshot) ||
+    lab?.lessons.find((l) => l.id === lessonId);
+  const presentationLab =
+    active && run.source_catalog_snapshot
+      ? { ...lab, sources: run.source_catalog_snapshot }
+      : lab;
+  const running = Boolean(active && run.running);
   const activeSeconds = active
     ? run.active_seconds +
       (running
@@ -510,83 +827,107 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
         await event("resume");
         return;
       }
-      const record = await api(`/labs/${courseId}/activities`, {
-        module,
-        idempotency_key: key(),
-      });
+      const record = await api(
+        `/labs/${encodeURIComponent(labId)}/activities`,
+        {
+          module: lesson.module || lesson.id,
+          lesson_id: lesson.id,
+          idempotency_key: key(),
+        },
+      );
       setRun(record);
       currentRun.current = record;
-      sessionStorage.setItem(`gym-lab-run:${courseId}`, record.id);
+      sessionStorage.setItem(`gym-lab-run:${labId}`, record.id);
       await event("reading", { parameters: { section: "lesson" } });
     });
   const choose = (next) =>
     act(async () => {
-      if (next === module) return;
+      if (next === lessonId) return;
       if (active) await event("pause", { reflection });
-      const refreshed = await api(`/labs/${courseId}`);
-      setLab(refreshed);
-      const previous =
+      const refreshed = await load();
+      const prior =
         (refreshed.activities || [])
           .slice()
           .reverse()
           .find(
-            (activity) =>
-              activity.module === next && activity.status === "active",
+            (a) => (a.lesson_id || a.module) === next && a.status === "active",
           ) || null;
-      setModule(next);
+      const previous = prior ? await api(`/lab-activities/${prior.id}`) : null;
+      setLessonId(next);
       setRun(previous);
       currentRun.current = previous;
       setReflection(
-        sessionStorage.getItem(`gym-lab-note:${courseId}:${next}`) ??
+        sessionStorage.getItem(`gym-lab-note:${labId}:${next}`) ??
           previous?.reflection ??
           "",
       );
-      if (previous)
-        sessionStorage.setItem(`gym-lab-run:${courseId}`, previous.id);
-      else sessionStorage.removeItem(`gym-lab-run:${courseId}`);
+      if (previous) sessionStorage.setItem(`gym-lab-run:${labId}`, previous.id);
+      else sessionStorage.removeItem(`gym-lab-run:${labId}`);
     });
-  const practice = () =>
+  const practice = (block) =>
     act(async () => {
-      if (active)
+      if (active) {
         await event("reading", {
           parameters: { section: "lesson_before_practice" },
         });
-      if (active) await event("pause", { reflection });
-      const linked = currentRun.current?.id;
+        await event("pause", { reflection });
+      }
+      if (currentRun.current?.session_id) {
+        navigate("session", currentRun.current.session_id);
+        return;
+      }
       await start(
-        { course_id: courseId, mode: "practice", module, count: 3 },
-        linked,
+        {
+          course_id: lab.course_id,
+          mode: block.mode || "practice",
+          module: lesson.module || lesson.id,
+          count: block.count || 3,
+        },
+        currentRun.current?.id,
       );
+    });
+  const coursework = (assignmentId) =>
+    act(async () => {
+      if (running) await event("pause", { reflection });
+      navigate("coursework", null, assignmentId);
     });
   if (!lab)
     return (
       <div className="section">
-        {error ? <p role="alert">{error}</p> : "Loading the guided lab…"}
+        {error ? <p role="alert">{error}</p> : "Loading the lab…"}
       </div>
     );
   if (!lesson)
     return (
-      <p role="alert">
-        This lesson could not be found. Return to the workbench.
-      </p>
+      <div className="section">
+        <p>This lab has no available lesson.</p>
+        <button
+          className="text-button"
+          onClick={() => navigate("labs", lab.course_id)}
+        >
+          Return to labs
+        </button>
+      </div>
     );
-  const paper = lab.sources.find((s) => s.id === lesson.paper_bridge.source_id);
   const sessions = lab.activities || [];
   return (
     <div className="guided-lab">
-      <button className="text-button" onClick={() => navigate("home")}>
-        <ArrowLeft size={16} /> Workbench
+      <button
+        className="text-button"
+        onClick={() => navigate("labs", lab.course_id)}
+      >
+        <ArrowLeft size={16} />
+        Labs in {lab.course_title || "this gym"}
       </button>
       <div className="lab-heading">
         <div>
-          <p className="muted">Your causality learning path</p>
-          <h1>Learn to ask “what would change?”</h1>
-          <p>
-            Explore a small model, explain your reasoning, then connect it to a
-            research paper.
-          </p>
+          <p className="muted">{lab.course_title || "Guided learning"}</p>
+          <h1>{active ? run.lab_title || lab.title : lab.title}</h1>
+          <p>{lab.description}</p>
         </div>
-        <BookOpen size={34} />
+        <button className="button secondary" onClick={() => onEdit(lab)}>
+          Edit lab
+        </button>
       </div>
       {error && (
         <p role="alert" className="error">
@@ -595,17 +936,27 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
       )}
       <div className="lab-layout">
         <aside className="lab-path" aria-label="Lesson sequence">
+          {active && !lab.lessons.some((entry) => entry.id === lessonId) && (
+            <button className="current" onClick={() => {}}>
+              <span>•</span>
+              <span>
+                {lesson.title}
+                <small>Current study visit</small>
+              </span>
+            </button>
+          )}
           {lab.lessons.map((entry, index) => (
             <React.Fragment key={entry.id}>
-              {(index === 0 ||
-                lab.lessons[index - 1].stage !== entry.stage) && (
-                <h3>{entry.stage}</h3>
-              )}
+              {entry.stage &&
+                (index === 0 ||
+                  lab.lessons[index - 1].stage !== entry.stage) && (
+                  <h3>{entry.stage}</h3>
+                )}
               <button
-                className={module === entry.id ? "current" : ""}
+                className={lessonId === entry.id ? "current" : ""}
                 onClick={() => choose(entry.id)}
                 disabled={busy}
-                aria-current={module === entry.id ? "step" : undefined}
+                aria-current={lessonId === entry.id ? "step" : undefined}
               >
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <span>
@@ -643,7 +994,8 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
                 disabled={busy}
                 onClick={() => act(() => event("pause", { reflection }))}
               >
-                <Pause size={15} /> Pause
+                <Pause size={15} />
+                Pause
               </button>
             ) : (
               <button className="button" disabled={busy} onClick={startRun}>
@@ -653,195 +1005,64 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
             )}
           </div>
           <article className="lab-lesson">
-            <p className="muted">
-              {lesson.stage} · {module}
-            </p>
-            <h2>{lesson.question}</h2>
-            {!!lesson.prerequisites.length && (
-              <p className="lab-prerequisites">
-                Builds on{" "}
-                {lesson.prerequisites.map((prerequisite) => (
-                  <button
-                    key={prerequisite}
-                    className="text-button"
-                    onClick={() => choose(prerequisite)}
-                    disabled={busy}
-                  >
-                    {prerequisite}
-                  </button>
-                ))}
+            {active && run.lab_revision !== lab.revision && (
+              <p className="notice">
+                This study visit keeps the lesson you started with. Published
+                edits apply to new visits.
               </p>
             )}
-            <details>
-              <summary>What you will be able to explain</summary>
-              <ul>
-                {lesson.objectives.map((value) => (
-                  <li key={value}>{value}</li>
-                ))}
-              </ul>
-            </details>
-            <h3>The idea in everyday language</h3>
-            {lesson.intuition.map((value, i) => (
-              <p key={i}>{value}</p>
-            ))}
-            <div className="lab-example">
-              <h3>{lesson.worked_example.title}</h3>
-              <p>{lesson.worked_example.body}</p>
-            </div>
-            {lesson.experiment && (
-              <p>
-                <strong>Warm-up:</strong> Explore the concept in a small
-                illustrative model, then apply it to this lesson’s exercise.
-              </p>
-            )}
-            {lesson.experiment && (
-              <Experiment
-                key={module}
-                type={lesson.experiment}
-                disabled={!running || busy}
-                onRun={(parameters) => event("experiment", { parameters })}
-              />
-            )}
-            <p>
-              <strong>Apply it to this lesson:</strong> {lesson.experiment_task}
-            </p>
-            <div className="lab-reflection">
-              <label htmlFor="lab-reflection">
-                <h3>Leave a piece of reasoning</h3>
-                <p>
-                  {lesson.reflection ||
-                    "What changed, why did it change, and which assumption matters?"}
-                </p>
-              </label>
-              <textarea
-                id="lab-reflection"
-                placeholder="My prediction was… What changed was… The assumption that matters is…"
-                value={reflection}
-                onChange={(e) => {
-                  setReflection(e.target.value);
-                  sessionStorage.setItem(
-                    `gym-lab-note:${courseId}:${module}`,
-                    e.target.value,
-                  );
-                }}
-              />
-              <button
-                className="button secondary"
-                disabled={!active || busy}
-                onClick={() =>
-                  act(async () => {
-                    await event("heartbeat", { reflection });
-                    await load();
-                  })
-                }
-              >
-                <Check size={16} /> Save reflection
-              </button>
-              <small>
-                {active
-                  ? "Your reflection is an artifact of this activity; it is not automatically graded."
-                  : "Your draft stays in this tab. Start a learning session to save it to the gym."}
-              </small>
-            </div>
-            <h3>Keep these distinctions</h3>
-            <ul>
-              {lesson.takeaways.map((value) => (
-                <li key={value}>{value}</li>
-              ))}
-            </ul>
-            <p className="lab-pitfall">
-              <strong>Common mistake:</strong> {lesson.pitfall}
-            </p>
-            <section className="lab-paper">
-              <div className="row">
-                <BookOpen size={21} />
-                <h3>Your bridge to the paper</h3>
-              </div>
-              {paper && (
-                <p>
-                  <a
-                    href={paper.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => {
-                      if (active)
-                        event("reading", {
-                          parameters: { source_id: paper.id },
-                        }).catch((e) => setError(e.message));
-                    }}
-                  >
-                    {paper.title}
-                  </a>
-                  <small>
-                    {paper.year} · {paper.status || paper.kind}
-                  </small>
-                </p>
-              )}
-              <p>{lesson.paper_bridge.why_it_matters}</p>
-              <p>
-                <strong>Read first:</strong> {lesson.paper_bridge.read_first}
-              </p>
-              <details>
-                <summary>Claim, assumptions, and limits</summary>
-                <p>{lesson.paper_bridge.claim}</p>
-                <h4>What it assumes</h4>
-                <ul>
-                  {lesson.paper_bridge.assumptions.map((v) => (
-                    <li key={v}>{v}</li>
-                  ))}
-                </ul>
-                <h4>What it does not establish</h4>
-                <ul>
-                  {lesson.paper_bridge.limits.map((v) => (
-                    <li key={v}>{v}</li>
-                  ))}
-                </ul>
-              </details>
-              <p>
-                <strong>Reading task:</strong> {lesson.paper_bridge.exercise}
-              </p>
-            </section>
-            <div className="lab-next">
-              <h3>Now test your explanation</h3>
-              <p>
-                Three questions use the gym’s existing timers, confidence,
-                hints, and scoring. A session linked to this guided lesson is
-                recorded as supported practice. Revisit later for an independent
-                check.
-              </p>
-              <button
-                className="button"
-                disabled={busy || !active}
-                onClick={practice}
-              >
-                <Play size={16} /> Start linked practice
-              </button>
-              <button
-                className="text-button"
-                onClick={() => navigate("coursework")}
-              >
-                Open longer coursework exercises
-              </button>
-              {active && (
+            <LabLessonContent
+              key={lesson.id}
+              lab={presentationLab}
+              lesson={lesson}
+              run={active ? run : null}
+              running={running}
+              busy={busy}
+              reflection={reflection}
+              setReflection={(value) => {
+                setReflection(value);
+                sessionStorage.setItem(
+                  `gym-lab-note:${labId}:${lessonId}`,
+                  value,
+                );
+              }}
+              onEvent={event}
+              onPractice={practice}
+              onCoursework={coursework}
+              onDiscuss={discuss}
+              onChoose={choose}
+              onSaveReflection={() =>
+                act(async () => {
+                  await event("heartbeat", { reflection });
+                  await load();
+                })
+              }
+            />
+            {active && (
+              <div className="lab-finish">
                 <button
-                  className="text-button"
+                  className="button secondary"
                   disabled={busy}
                   onClick={() =>
                     act(async () => {
                       await event("finish", { reflection });
-                      sessionStorage.removeItem(`gym-lab-run:${courseId}`);
+                      sessionStorage.removeItem(`gym-lab-run:${labId}`);
                       await load();
                     })
                   }
                 >
+                  <Check size={16} />
                   Finish this study activity
                 </button>
-              )}
-            </div>
+                <small>
+                  Keep this visit and its responses in your learning evidence.
+                </small>
+              </div>
+            )}
           </article>
           <details className="lab-history">
             <summary>
-              Activity evidence for this gym ({sessions.length})
+              Activity evidence for this lab ({sessions.length})
             </summary>
             <p>
               Study duration and later scores are linked observations. They do
@@ -854,9 +1075,49 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
                 .slice(0, 10)
                 .map((activity) => (
                   <div key={activity.id}>
-                    <strong>{activity.module}</strong> ·{" "}
-                    {elapsed(activity.active_seconds)} active ·{" "}
+                    <strong>
+                      {activity.lesson_title ||
+                        lab.lessons.find(
+                          (l) =>
+                            l.id === (activity.lesson_id || activity.module),
+                        )?.title ||
+                        activity.module}
+                    </strong>{" "}
+                    · {elapsed(activity.active_seconds)} active ·{" "}
                     {activity.status}
+                    {activity.status === "active" &&
+                      activity.id !== run?.id && (
+                        <button
+                          className="text-button"
+                          disabled={busy}
+                          onClick={() =>
+                            act(async () => {
+                              if (running) await event("pause", { reflection });
+                              const restored = await api(
+                                `/lab-activities/${activity.id}`,
+                              );
+                              setRun(restored);
+                              currentRun.current = restored;
+                              const restoredLesson =
+                                restored.lesson_id || restored.module;
+                              setLessonId(restoredLesson);
+                              setReflection(
+                                sessionStorage.getItem(
+                                  `gym-lab-note:${labId}:${restoredLesson}`,
+                                ) ??
+                                  restored.reflection ??
+                                  "",
+                              );
+                              sessionStorage.setItem(
+                                `gym-lab-run:${labId}`,
+                                restored.id,
+                              );
+                            })
+                          }
+                        >
+                          Open this study visit
+                        </button>
+                      )}
                     {activity.practice_outcome && (
                       <span>
                         {" "}
@@ -865,6 +1126,9 @@ export default function GuidedLab({ courseId, api, start, navigate }) {
                         {activity.practice_outcome.max_score} points so far
                         {activity.practice_outcome.pending_count
                           ? `, ${activity.practice_outcome.pending_count} awaiting assessment`
+                          : ""}
+                        {activity.practice_outcome.invalidated_count
+                          ? `; ${activity.practice_outcome.invalidated_count} invalidated attempts excluded from points`
                           : ""}
                       </span>
                     )}

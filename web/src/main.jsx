@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import "./style.css";
 import GuidedLab from "./GuidedLab.jsx";
+import Labs from "./Labs.jsx";
 
 async function api(path, data, method) {
   const options = {
@@ -192,7 +193,10 @@ function TokenGate({ reload }) {
 
 function App() {
   const [page, setPage] = useState("home"),
-    [labCourseId, setLabCourseId] = useState("causality-lab"),
+    [labId, setLabId] = useState(null),
+    [labFilter, setLabFilter] = useState(""),
+    [labEdit, setLabEdit] = useState(null),
+    [courseworkAssignmentId, setCourseworkAssignmentId] = useState(null),
     [sessionId, setSessionId] = useState(sessionStorage.getItem("gym-session")),
     [refresh, setRefresh] = useState(0),
     [error, setError] = useState(""),
@@ -210,8 +214,17 @@ function App() {
       setBusy(false);
     }
   };
-  const navigate = (p, courseId) => {
-    if (courseId) setLabCourseId(courseId);
+  const navigate = (p, contextId, assignmentId) => {
+    if (p === "labs") {
+      setLabFilter(contextId || "");
+      setLabEdit(null);
+    }
+    if (p === "lab" && contextId) setLabId(contextId);
+    if (p === "session" && contextId) {
+      setSessionId(contextId);
+      sessionStorage.setItem("gym-session", contextId);
+    }
+    if (p === "coursework") setCourseworkAssignmentId(assignmentId || null);
     setError("");
     setPage(p);
     setRefresh((x) => x + 1);
@@ -251,9 +264,7 @@ function App() {
     });
   const nav = [
     ["home", Compass, "Workbench"],
-    ...(overview?.courses.some((c) => c.has_lab)
-      ? [["lab", FlaskConical, "Guided lab"]]
-      : []),
+    ["labs", FlaskConical, "Labs"],
     ["create", Plus, "Sources & create"],
     ["coursework", FileText, "Coursework & rubrics"],
     ["plan", CalendarDays, "Plan my time"],
@@ -286,7 +297,11 @@ function App() {
           {nav.map(([id, Icon, title]) => (
             <button
               key={id}
-              className={page === id ? "selected" : ""}
+              className={
+                page === id || (page === "lab" && id === "labs")
+                  ? "selected"
+                  : ""
+              }
               onClick={() => navigate(id)}
             >
               <Icon size={19} />
@@ -311,7 +326,9 @@ function App() {
             Personal learning lab <ChevronRight size={14} />
             {page === "session"
               ? "Session"
-              : nav.find((x) => x[0] === page)?.[2]}
+              : page === "lab"
+                ? "Lab"
+                : nav.find((x) => x[0] === page)?.[2]}
           </div>
           <div className="row">
             <span className="desktop-only">
@@ -343,12 +360,29 @@ function App() {
                   busy={busy}
                 />
               )}
-              {page === "lab" && (
+              {page === "labs" && (
+                <Labs
+                  api={api}
+                  courses={overview.courses}
+                  initialCourseId={labFilter}
+                  navigate={navigate}
+                  editLab={labEdit}
+                  onEdit={setLabEdit}
+                  onPublished={reload}
+                />
+              )}
+              {page === "lab" && labId && (
                 <GuidedLab
-                  courseId={labCourseId}
+                  key={labId}
+                  labId={labId}
                   api={api}
                   start={start}
                   navigate={navigate}
+                  onEdit={(lab) => {
+                    setLabEdit(lab);
+                    setLabFilter(lab.course_id);
+                    setPage("labs");
+                  }}
                 />
               )}
               {page === "session" && sessionId && (
@@ -372,7 +406,12 @@ function App() {
                 />
               )}
               {page === "coursework" && (
-                <Coursework overview={overview} act={act} busy={busy} />
+                <Coursework
+                  overview={overview}
+                  act={act}
+                  busy={busy}
+                  initialAssignmentId={courseworkAssignmentId}
+                />
               )}
               {page === "plan" && (
                 <Planner act={act} busy={busy} overview={overview} />
@@ -523,14 +562,14 @@ function Home({ overview, start, navigate, resume, busy }) {
                       <strong>{course.counts.transfer}</strong> transfer items
                     </span>
                   </div>
-                  {course.has_lab && (
+                  {
                     <Action
                       className="secondary"
-                      onClick={() => navigate("lab", course.id)}
+                      onClick={() => navigate("labs", course.id)}
                     >
-                      <FlaskConical size={17} /> Open guided lab
+                      <FlaskConical size={17} /> Browse labs in this gym
                     </Action>
-                  )}
+                  }
                   <div className="segmented" aria-label="Activity mode">
                     {["practice", "simulation", "transfer"].map((m) => (
                       <button
@@ -2155,12 +2194,12 @@ function RubricEditor({ value, onSave, close, busy, courses }) {
   );
 }
 
-function Coursework({ overview, act, busy }) {
+function Coursework({ overview, act, busy, initialAssignmentId }) {
   const [data, reload, error] = useLoad("/coursework"),
     [sources] = useLoad("/sources"),
     [rubricEdit, setRubricEdit] = useState(undefined),
     [newAssignment, setNewAssignment] = useState(false),
-    [active, setActive] = useState(null);
+    [active, setActive] = useState(initialAssignmentId || null);
   const [draft, setDraft] = useState({
     title: "",
     course_id: overview.courses[0]?.id || "",
@@ -2175,7 +2214,7 @@ function Coursework({ overview, act, busy }) {
     effort_minutes: 60,
   });
   const set = (k, v) => setDraft({ ...draft, [k]: v });
-  if (active && data) {
+  if (active && data && data.assignment.some((x) => x.id === active)) {
     const a = data.assignment.find((x) => x.id === active);
     return (
       <AssignmentWorkbench
@@ -3759,7 +3798,10 @@ function Progress({ act, start }) {
               <div className="panel" key={activity.id}>
                 <div className="row between">
                   <strong>
-                    {activity.module} ·{" "}
+                    {activity.lab_title ||
+                      activity.course_title ||
+                      "Guided lab"}{" "}
+                    / {activity.lesson_title || activity.module} ·{" "}
                     {activity.status === "finished"
                       ? "Study activity finished"
                       : "Study activity unfinished"}
@@ -3787,10 +3829,32 @@ function Progress({ act, start }) {
                 ) : (
                   <p>No scored practice linked yet.</p>
                 )}
+                {activity.practice_outcome?.invalidated_count > 0 && (
+                  <p className="notice">
+                    {activity.practice_outcome.invalidated_count} invalidated
+                    attempts are excluded from the points shown.
+                  </p>
+                )}
                 {activity.reflection && (
                   <details>
                     <summary>Saved reasoning</summary>
                     <p className="preserve">{activity.reflection}</p>
+                  </details>
+                )}
+                {Object.keys(activity.responses || {}).length > 0 && (
+                  <details>
+                    <summary>
+                      Saved activity responses (
+                      {Object.keys(activity.responses).length})
+                    </summary>
+                    {Object.values(activity.responses).map(
+                      (response, index) => (
+                        <div key={index}>
+                          <strong>Response {index + 1}</strong>
+                          <p className="preserve">{response.value}</p>
+                        </div>
+                      ),
+                    )}
                   </details>
                 )}
               </div>

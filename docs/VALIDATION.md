@@ -1,6 +1,14 @@
 # Validation record
 
-Validation performed September 19–20, 2026. All practice and paid-model exercises used isolated workspaces or temporary databases. The delivered workspace contains the imported AI Strategy and causality courses and zero learner sessions or attempts.
+Validation performed September 19–20, 2026. All practice and paid-model exercises used isolated workspaces or temporary databases. The delivered workspace contains the AI Strategy and causality courses; test activity is kept separate from the learner's own recorded work.
+
+## Reusable labs
+
+- **102 tests passed on SQLite** after generalization. Ruff, the architecture boundary check and Vite production build passed. The PostgreSQL checks below predate these additions. No committed-diff coverage or remote CI enforcement is claimed for the current uncommitted workspace.
+- Regression tests cover multiple labs per course, multiple courses, arbitrary module and lesson identities, preview without any database writes, immutable ownership, reference and revision validation, source/rubric scope, prerequisite cycles, bounded server-computed experiments, and authentic practice outcomes. Resumed visits keep their original lesson/configuration version; invalidated attempts are excluded from displayed scores without deleting historical evidence.
+- A real stdio MCP client created a synthetic course, uploaded and inspected source text, confirmed it, and validated, previewed and published two generic labs in the isolated workspace on port 8788. No practice attempts were manufactured by authoring.
+- Browser verification created a third lab and a new topic through ordinary forms, selected a reviewed source, added reading/reflection activities, validated and previewed, then published. A separate study visit saved reasoning. Another lab saved a prediction and ran a configured spring model with input 0.1 and coefficient 40, displaying 4 N. Finished visits appeared separately in Learning evidence with their saved responses and zero assessed attempts from these activities.
+- The live causality records need no migration. The pre-change workspace snapshot is `data/before-reusable-labs.zip`; no synthetic physics content is published in the learner's actual workspace. The reusable example and agent skill document the normal course/source/validate/preview/publish workflow.
 
 ## Causality lab and agent access
 

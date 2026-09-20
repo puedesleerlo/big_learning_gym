@@ -1,0 +1,39 @@
+{
+  "summary": "Generalize the causality-specific guided screen into a catalog of named labs across gyms, reusable typed activities, and shared validation, preview and publication workflows while preserving old content and learner evidence.",
+  "type": "preserving",
+  "paths": [
+    "gym/lab_activity.py",
+    "gym/lab_blocks.py",
+    "gym/authoring.py",
+    "gym/agent_api.py",
+    "tests/test_lab_catalog.py",
+    "web/src/GuidedLab.jsx",
+    "web/src/main.jsx",
+    "web/src/guided-lab.css",
+    "web/src/Labs.jsx",
+    "web/src/LabActivities.jsx",
+    "docs/ARCHITECTURE.md",
+    "docs/AGENT_API.md",
+    "docs/VALIDATION.md",
+    "skills/learning-gym/SKILL.md",
+    "content/examples/general-lab.json",
+    "gym/api.py",
+    "README.md"
+  ],
+  "decisions": [
+    "D-001",
+    "D-002",
+    "D-004",
+    "D-005",
+    "D-006",
+    "D-008",
+    "D-009",
+    "D-010"
+  ],
+  "architecture": "updated",
+  "algorithms": "unchanged",
+  "rationale": "Labs become independently named content within the same application and storage. Typed activity configuration reuses timing, source validation, assessment, rubric and assistance workflows. No scheduler authority, model role, scoring weights, evidence meaning or access permissions change. Old IDs and snapshots remain valid through read-time compatibility.",
+  "authorization": "The user asked how labs could be generalized to more gyms; after the concrete proposal Gym\u2192multiple labs\u2192activities, reusable activity types, Labs catalog and agent validate/preview/publish workflow, the user explicitly replied 'Yes, do it' in this task.",
+  "validation": "102 backend tests pass on SQLite; Ruff and architecture boundary checks pass; Vite production build passes. Real stdio MCP created a course, reviewed a source, validated/previewed and published two labs in an isolated workspace. Browser created a third lab and a new topic, previewed/published it, saved a reflection, ran the generic spring model (0.1 \u00d7 40 = 4 N), and displayed separate lab histories with zero fabricated assessed attempts. Regression tests preserve legacy records, pinned lesson/configuration versions and exclude quarantined scores. Architecture committed-diff coverage was not checked because unrelated pre-existing work remains uncommitted.",
+  "rollback": "A coherent pre-change database backup is data/before-reusable-labs.zip. Existing causal records need no migration. Revert this change's code to restore the original screen; generic labs stay stored and require the new renderer. Do not overwrite later learner activity with the old database; preserve all evidence and snapshots. Work is isolated on feat/reusable-labs with prior uncommitted work preserved."
+}

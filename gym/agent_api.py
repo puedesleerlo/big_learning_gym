@@ -38,6 +38,15 @@ def register_agent_api(app, store):
                 if isinstance(route, APIRoute) and route.path.startswith("/api/")
             ],
             "authoring": {
+                "labs": {
+                    "catalog": "GET /api/labs; optional course_id filter",
+                    "activity_types": "GET /api/lab-activity-types; schemas and starter templates",
+                    "validate": "POST /api/labs/{lab_id}/validate; LabWrite body; no writes",
+                    "preview": "POST /api/labs/{lab_id}/preview; same body; read-only learner presentation",
+                    "publish": "PUT /api/labs/{lab_id}; same validated LabWrite body and expected_revision",
+                    "identity": "Globally unique lab_id, immutable course_id; many labs per gym; lesson.id separate from lesson.module.",
+                    "learner_activity": "Start with module and lesson_id; events reference activity_id from the pinned lesson version. Never start visits during authoring.",
+                },
                 "course": "PUT /api/authoring/courses/{id}; expected_revision=0 creates",
                 "guide": "PUT /api/authoring/guides/{id}; expected_revision=0 creates",
                 "term": "PUT /api/authoring/terms/{id}; expected_revision=0 creates",

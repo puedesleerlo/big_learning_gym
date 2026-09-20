@@ -1,0 +1,110 @@
+{
+  "course_id": "REPLACE_WITH_COURSE_ID",
+  "expected_revision": 0,
+  "title": "An ideal spring: predict, vary, explain",
+  "description": "A non-causal example lab about proportional relationships. Two lessons share one course module. This template requires real course, module, and reviewed source-version IDs before validation or publication. Its numerical output is a declared idealized model, not measured experimental evidence.",
+  "objectives": [
+    "Predict how changing extension affects force in a stated linear model.",
+    "Distinguish a model calculation from a real measurement and recognize a limit of the model."
+  ],
+  "prerequisite_lab_ids": [],
+  "sources": [],
+  "lessons": [
+    {
+      "id": "spring-intuition",
+      "module": "REPLACE_WITH_MODULE_ID",
+      "title": "Predict the spring's response",
+      "stage": "Explore",
+      "minutes": 15,
+      "objectives": [
+        "Use force magnitude = 40 N/m × extension to make and check a prediction."
+      ],
+      "prerequisites": [],
+      "source_ids": ["REPLACE_WITH_CONFIRMED_SOURCE_VERSION_ID"],
+      "activities": [
+        {
+          "id": "spring-model-reading",
+          "type": "reading",
+          "title": "The model we will use",
+          "body": "Treat the spring as ideal over extensions from 0 to 0.30 metres, with fixed stiffness k = 40 newtons per metre. The restoring-force magnitude is F = k × x, where x is extension from the relaxed length. The force acts opposite the extension; this lab displays only its nonnegative magnitude. These are declared model assumptions, not measurements of a particular spring."
+        },
+        {
+          "id": "spring-prediction",
+          "type": "prediction",
+          "title": "Predict before changing the input",
+          "prompt": "If extension doubles from 0.05 m to 0.10 m, how should the force magnitude change under this model? Explain the relationship before using the experiment."
+        },
+        {
+          "id": "spring-example",
+          "type": "worked_example",
+          "title": "Calculate one point",
+          "body": "At x = 0.10 m, the model gives F = 40 N/m × 0.10 m = 4 N. Metres cancel, leaving newtons. This is a model output. A measured force of 4 N would be a separate observation obtained from an actual experiment."
+        },
+        {
+          "id": "spring-extension-experiment",
+          "type": "parameter_experiment",
+          "title": "Vary extension",
+          "description": "Hold stiffness fixed at 40 N/m and vary extension. Compare the output at 0.05, 0.10, and 0.20 m. Explain whether your prediction matched the declared model. The platform computes an affine weighted sum; it does not execute a physics engine or collect physical measurements.",
+          "inputs": [
+            {
+              "key": "extension_m",
+              "label": "Extension (m)",
+              "min": 0,
+              "max": 0.3,
+              "step": 0.01,
+              "initial": 0.05,
+              "coefficient": 40
+            }
+          ],
+          "offset": 0,
+          "output_label": "Restoring-force magnitude",
+          "unit": "N"
+        },
+        {
+          "id": "spring-first-reflection",
+          "type": "reflection",
+          "title": "Explain the pattern",
+          "prompt": "State the relationship between extension and force using both words and units. What did varying the input demonstrate about this model, and what did it leave untested about a real spring?"
+        }
+      ]
+    },
+    {
+      "id": "spring-model-limits",
+      "module": "REPLACE_WITH_MODULE_ID",
+      "title": "Decide when the model is useful",
+      "stage": "Reason",
+      "minutes": 10,
+      "objectives": [
+        "Propose a measurement that could reveal a limit of the proportional model."
+      ],
+      "prerequisites": ["spring-intuition"],
+      "source_ids": ["REPLACE_WITH_CONFIRMED_SOURCE_VERSION_ID"],
+      "activities": [
+        {
+          "id": "spring-limits-reading",
+          "type": "reading",
+          "title": "A model has a range of use",
+          "body": "A real spring may approximately follow a proportional force-extension relationship only over a suitable range. Measurement noise, a force offset, and systematic curvature are different possible explanations for disagreement with a simple model. A slider that always computes 40 × x cannot test which explanation describes a physical spring."
+        },
+        {
+          "id": "spring-limits-prediction",
+          "type": "prediction",
+          "title": "Interpret a hypothetical discrepancy",
+          "prompt": "Imagine a future measurement gives approximately 4 N at 0.10 m but 10 N at 0.20 m. Would both values fit the stated fixed-stiffness model exactly? Describe one possible explanation and one further measurement that would help investigate it. These numbers are hypothetical, not observations collected by this lab."
+        },
+        {
+          "id": "spring-limits-reflection",
+          "type": "reflection",
+          "title": "Design the next check",
+          "prompt": "Propose a small set of extension and force measurements to compare with the model. Explain how repeated measurements or a wider set of extensions could help distinguish random noise from a systematic mismatch. State what conclusion the proposed evidence would and would not support."
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "author": "Learning Gym example author",
+    "method": "agent",
+    "rationale": "Original teaching example illustrating a declared proportional model and its limits; replace all placeholder references and review the uploaded instructional source before publication.",
+    "reference_urls": []
+  }
+}

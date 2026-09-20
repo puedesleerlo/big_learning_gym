@@ -28,9 +28,15 @@ uv run python -m gym.cli import-legacy ../learning_gym
 
 The importer preserves 314 practice items, four 16-item / 100-point mock exams, shared cases and tables, matching questions, explanations, hints, plain-English aids, eight guides, and 331 glossary entries. The legacy style specification is imported as a **proposed** assessment profile to review. It does not fabricate practice sessions.
 
+## Reusable labs
+
+Open **Labs** to browse across gyms or filter to one gym. **Create lab** lets you choose a gym, add lessons linked to its topics and reviewed sources, and arrange readings, predictions, worked examples, parameter experiments, reflections, practice checks and coursework. Each gym can have multiple named labs. Validate and preview before publishing; the preview does not record learner activity. Edit a published lab through a new revision; ongoing visits retain their original lesson.
+
+New labs using these activity types need content and configuration, not application code. Parameter experiments currently calculate a weighted sum of bounded inputs; new kinds of simulation need a reviewed component. Research-paper sections are optional. For agents, use the [API workflow](docs/AGENT_API.md) and adapt the [non-causality example](content/examples/general-lab.json) with real course, topic and confirmed source IDs.
+
 ## Causality learning gym
 
-The causality curriculum uses the existing workbench, study library, practice sessions, sources, coursework, and rubrics. Select **Causality: from first questions to frontier research** and **Open guided lab**. Follow modules C01–C12: read the explanation, run a small illustrative experiment, save your reasoning, and start linked practice. The same content is available in the study library. Four longer exercises are in **Coursework & rubrics**.
+The causality curriculum uses the existing workbench, study library, practice sessions, sources, coursework, and rubrics. Open **Labs** and select **Causality: from first questions to frontier research**. Follow modules C01–C12: read the explanation, run a small illustrative experiment, save your reasoning, and start linked practice. The same content is available in the study library. Four longer exercises are in **Coursework & rubrics**.
 
 The guided lab records explicit start/pause/finish events, capped server-measured active time, elapsed time, reading exposure, experiment parameters, and reflections. Hiding the tab pauses its timer. Linked practice uses the existing session, scoring, and learner model; guided exposure is recorded as support before answers are submitted. **Learning evidence** shows preparation beside actual practice outcomes. Study completion earns no mastery, and linked time/outcome observations do not establish a causal teaching effect. The four widgets explain exact toy models; they do not execute causal-learn algorithms or claim real-world causal identification.
 

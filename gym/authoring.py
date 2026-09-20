@@ -211,6 +211,10 @@ def _save_course(store, c, ident, model):
         for kind, key in (("guide", "code"), ("term", "module"), ("item", "module")):
             if any(x["course_id"] == ident and x.get(key) in removed for x in store.list(c, kind)):
                 raise ValueError("Cannot remove modules referenced by existing learning material")
+        if any(lab["course_id"] == ident and any(
+            (lesson.get("module") or lesson["id"]) in removed for lesson in lab["lessons"]
+        ) for lab in store.list(c, "lab")):
+            raise ValueError("Cannot remove modules referenced by published labs")
     result = store.put(c, "course", ident, {**(old or {}), **data, "updated_at": now()})
     _event(store, c, "course.saved", result, old)
     return result
