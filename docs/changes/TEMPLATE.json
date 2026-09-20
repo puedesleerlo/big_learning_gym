@@ -1,0 +1,12 @@
+{
+  "summary": "Describe the concrete before/after behavior.",
+  "type": "preserving",
+  "paths": ["gym/example.py", "tests/test_example.py"],
+  "decisions": ["D-001"],
+  "architecture": "unchanged",
+  "algorithms": "unchanged",
+  "rationale": "Explain why the change preserves or intentionally revises these decisions.",
+  "authorization": "Link or identify the exact user request/review if revising a decision; preserving work needs no extra permission.",
+  "validation": "Record commands, results and any comparison against the prior baseline.",
+  "rollback": "Describe how to restore prior behavior and whether data migration is involved."
+}

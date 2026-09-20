@@ -1,0 +1,23 @@
+# Code ownership requests review; it only blocks merging when enabled in GitHub rules.
+/AGENTS.md @puedesleerlo
+/DECISIONS.md @puedesleerlo
+/.cursor/ @puedesleerlo
+/.github/ @puedesleerlo
+/docs/ARCHITECTURE.md @puedesleerlo
+/docs/ALGORITHMS.md @puedesleerlo
+/docs/CHANGE_CONTROL.md @puedesleerlo
+/docs/changes/ @puedesleerlo
+/gym/ @puedesleerlo
+/config/ @puedesleerlo
+/tests/ @puedesleerlo
+/scripts/ @puedesleerlo
+/pyproject.toml @puedesleerlo
+/uv.lock @puedesleerlo
+/Dockerfile @puedesleerlo
+/compose.yaml @puedesleerlo
+/web/src/ @puedesleerlo
+/web/package.json @puedesleerlo
+/web/package-lock.json @puedesleerlo
+/.gitignore @puedesleerlo
+/.dockerignore @puedesleerlo
+/web/vite.config.* @puedesleerlo

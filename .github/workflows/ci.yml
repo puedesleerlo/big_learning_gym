@@ -1,0 +1,82 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  architecture:
+    name: Architecture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check boundaries and PR change coverage
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ]; then
+            python scripts/check_architecture.py --base "$BASE_SHA"
+          else
+            python scripts/check_architecture.py
+          fi
+  backend:
+    name: Backend (${{ matrix.database }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: gym
+          POSTGRES_PASSWORD: gym-ci-only
+          POSTGRES_DB: gym
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U gym -d gym"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install uv
+      - run: uv sync --frozen
+      - name: Run backend and architecture contracts
+        env:
+          TEST_DATABASE: ${{ matrix.database }}
+        run: |
+          if [ "$TEST_DATABASE" = postgres ]; then
+            export GYM_TEST_DATABASE_URL='postgresql+psycopg://gym:gym-ci-only@localhost:5432/gym'
+          fi
+          uv run pytest -q
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run build

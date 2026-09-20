@@ -1,0 +1,10 @@
+---
+description: Preserve Learning Gym architectural decisions and algorithm contracts on every change
+alwaysApply: true
+---
+
+Read and follow the repository-root `AGENTS.md` before editing.
+Read `DECISIONS.md` and `docs/ARCHITECTURE.md`; for behavioral changes also read `docs/ALGORITHMS.md`.
+Reference applicable decision IDs and preserve accepted behavior unless the user explicitly authorizes a revision.
+Document protected changes under `docs/changes/` and run the architecture and behavioral checks.
+These references are the source of truth; do not maintain a second conflicting policy here.

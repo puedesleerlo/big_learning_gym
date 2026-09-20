@@ -1,0 +1,37 @@
+{
+  "summary": "Add decision-led agent instructions, architecture and algorithm contracts, behavioral checks, CI, and review ownership without changing application behavior.",
+  "type": "preserving",
+  "paths": [
+    "AGENTS.md",
+    "DECISIONS.md",
+    ".cursor/rules/architecture.mdc",
+    ".github/CODEOWNERS",
+    ".github/pull_request_template.md",
+    ".github/workflows/ci.yml",
+    "docs/ARCHITECTURE.md",
+    "docs/ALGORITHMS.md",
+    "docs/CHANGE_CONTROL.md",
+    "docs/changes/TEMPLATE.json",
+    "scripts/check_architecture.py",
+    "tests/test_architecture_contracts.py",
+    "tests/test_change_control.py"
+  ],
+  "decisions": [
+    "D-001",
+    "D-002",
+    "D-003",
+    "D-004",
+    "D-005",
+    "D-006",
+    "D-007",
+    "D-008",
+    "D-009",
+    "D-010"
+  ],
+  "architecture": "updated",
+  "algorithms": "updated",
+  "rationale": "Record the current architecture and algorithm baselines and add checks for future drift. Documentation of current formulas does not change them or claim scientific calibration. No application runtime files are changed.",
+  "authorization": "The repository owner requested on 2026-09-20 that every coding agent align changes with DECISIONS.md and the current architecture, and asked how to control unexpected architecture and algorithm changes. Remote rulesets and credential changes are not activated by this record.",
+  "validation": "The isolated checkout passed all 52 backend tests (including 13 new governance cases), the architecture boundary checker, and Ruff on the three added Python files. PR CI checks committed change coverage, SQLite/PostgreSQL tests and the frontend build. This record does not authenticate approval.",
+  "rollback": "Revert the governance commit to remove these repository checks. There are no database migrations or runtime algorithm changes. GitHub settings are separate and unchanged."
+}

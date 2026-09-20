@@ -1,5 +1,7 @@
 # Architecture and invariants
 
+This is the descriptive source of truth for the implemented system. Read the accepted constraints in [`DECISIONS.md`](../DECISIONS.md) and the current behavioral contracts in [`ALGORITHMS.md`](ALGORITHMS.md). Update this file when implementation boundaries or data flows change; do not use a documentation edit as authorization to change a decision.
+
 This is an event-driven modular monolith with shared transactional storage and a React client. The implementation is intentionally small enough to inspect and operate for one learner. It implements the two loops and authority boundaries in the supplied architecture; it does not claim every long-term connector, training method or research workflow is implemented.
 
 ## Authority and memory
@@ -22,6 +24,14 @@ A database transaction serializes a mutation with its evidence and outgoing job.
 - `worker.py` handles priorities, leases with renewal, bounded retries/backoff, idempotency and failed-job inspection. Schedule repairs debounce over 30-second windows. Daily planning and weekly deterministic evaluation catch up while the worker runs. These are application jobs, not desktop app automations.
 - `llm.py` routes each role independently, bounds input/calls/retries, validates responses and records redacted provenance. OpenAI-compatible and native Anthropic transports are separate adapters. Providers cannot manipulate the calendar or execute learner code.
 - `backup.py` produces a coherent portable snapshot and checksums referenced originals. Restore refuses a nonempty destination and recovers interrupted leases.
+- `authoring.py` validates curriculum, guides, terms and authored items with provenance, revision checks and atomic imports. Item replacement preserves historical identities. Authoring produces content, not learner evidence.
+- `agent_api.py` exposes live capabilities, schemas and validated authoring routes through the existing API. `agent_client.py` is an HTTP client. Agent transport extensions must delegate to these workflows and must not introduce direct database writes or independent domain rules (D-009).
+
+## Change control
+
+`AGENTS.md` and the always-applied Cursor rule instruct coding agents to read the decision register and this architecture before edits. `docs/ALGORITHMS.md` records formulas, cutoffs, versions and validation expectations. Protected changes require a path-specific record under `docs/changes/`; the architecture checker and behavioral tests detect selected boundary violations and unrecorded changes. These are repository controls, not a substitute for independent review.
+
+The proposed CI workflow runs the checker, backend tests on SQLite/PostgreSQL and the frontend build. GitHub enforcement is separate: required checks, owner review, protected `main`, and limited agent credentials must be configured by the maintainer. See [`CHANGE_CONTROL.md`](CHANGE_CONTROL.md) for the activation procedure and its limits. Adding these files does not itself enable GitHub protection.
 
 ## Operational sequence
 
