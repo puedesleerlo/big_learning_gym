@@ -375,6 +375,53 @@ export function ProfileReview({ value, onSave, busy }) {
   );
 }
 
+export function CourseworkFile({ sourceId, sources, api, act }) {
+  const [fragments, setFragments] = useState(null);
+  const source = sources?.find((s) => s.id === sourceId);
+  useEffect(() => setFragments(null), [sourceId]);
+  if (!sourceId) return null;
+  return (
+    <details className="vignette">
+      <summary>{source?.name || "Attached coursework document"}</summary>
+      <p className="small muted">
+        Preserved document · version {source?.version || 1}
+      </p>
+      {source?.quality_flags?.map((flag, i) => (
+        <p key={i}>{flag}</p>
+      ))}
+      {fragments ? (
+        fragments.map((f) => (
+          <p className="preserve" key={f.id}>
+            {f.text}
+          </p>
+        ))
+      ) : (
+        <button
+          className="text-button"
+          onClick={() =>
+            act(async () => {
+              setFragments(await api(`/sources/${sourceId}/fragments`));
+            })
+          }
+        >
+          Read document text
+        </button>
+      )}
+    </details>
+  );
+}
+
+export function courseworkGrades(data, assignmentId) {
+  const records = [
+    ...(data.coursework_outcome || []),
+    ...(data.official_grade || []),
+  ].filter((o) => o.assignment_id === assignmentId);
+  const superseded = new Set(records.map((o) => o.supersedes).filter(Boolean));
+  return records
+    .filter((o) => !superseded.has(o.id))
+    .sort((a, b) => (a.received_at || "").localeCompare(b.received_at || ""));
+}
+
 export function CourseworkOutcomes({
   assignment,
   data,
@@ -382,6 +429,8 @@ export function CourseworkOutcomes({
   act,
   busy,
   reload,
+  sources,
+  reloadSources,
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
@@ -398,8 +447,10 @@ export function CourseworkOutcomes({
       attribution:
         previous?.attribution || "Instructor / TA feedback entered by learner",
       source_url: previous?.source_url || "",
+      source_id: previous?.source_id || null,
+      artifact_version_id: previous?.artifact_version_id || null,
       observed_at: new Date().toISOString(),
-      occurred_at: null,
+      occurred_at: previous?.occurred_at || null,
       learner_comment: previous?.learner_comment || "",
       limitations: previous?.limitations || "",
       mark_completed: assignment.status === "completed",
@@ -408,31 +459,61 @@ export function CourseworkOutcomes({
     setEditing(true);
   };
   return (
-    <section className="section" aria-label="Instructor outcomes">
+    <section className="section" aria-label="Instructor grades and feedback">
       <div className="row between">
         <h2>Instructor grades & feedback</h2>
         <button className="button secondary" onClick={() => open()}>
-          Record instructor outcome
+          Add grade or feedback
         </button>
       </div>
       <p>
         {assignment.status === "completed"
           ? "Coursework completed externally. "
           : ""}
-        Record actual instructor feedback even before uploading your own work to
-        the Gym.
+        Grades and TA comments are saved here. You can add them before uploading
+        your submitted work.
       </p>
+      {courseworkGrades(data, assignment.id)
+        .filter((o) => o.submission_id)
+        .map((o) => (
+          <div className="official-grade" key={o.id}>
+            <strong>
+              Instructor grade: {o.score} / {o.max_score}
+            </strong>
+            <p className="preserve">{o.feedback}</p>
+            <p className="small muted">
+              Entered by you · {o.individual ? "Individual" : "Team"} outcome ·
+              Linked to a saved submission
+            </p>
+            <CourseworkFile
+              sourceId={o.source_id}
+              sources={sources}
+              api={api}
+              act={act}
+            />
+          </div>
+        ))}
       {outcomes.map((o) => (
-        <div className="official-grade" key={o.id}>
-          <strong>
-            {o.score == null
-              ? "Feedback received · no grade reported"
-              : `Instructor grade: ${o.score} / ${o.max_score}`}
-          </strong>
-          {superseded.has(o.id) && (
-            <span className="badge">Superseded · retained history</span>
+        <details
+          className="official-grade"
+          key={o.id}
+          open={!superseded.has(o.id)}
+        >
+          <summary>
+            <strong>
+              {o.score == null
+                ? "Feedback received · no grade reported"
+                : `Instructor grade: ${o.score} / ${o.max_score}`}
+            </strong>
+            {superseded.has(o.id) && (
+              <span className="badge">Superseded · retained history</span>
+            )}
+          </summary>
+          {o.feedback ? (
+            <p className="preserve">{o.feedback}</p>
+          ) : (
+            <p className="muted">No written feedback recorded.</p>
           )}
-          <p className="preserve">{o.feedback}</p>
           <p>{o.attribution}</p>
           {o.source_url && (
             <a href={o.source_url} target="_blank" rel="noreferrer">
@@ -444,7 +525,7 @@ export function CourseworkOutcomes({
             {o.occurred_at
               ? `Feedback dated ${new Date(o.occurred_at).toLocaleString()}`
               : "Original feedback date not recorded"}{" "}
-            · local submission not linked
+            · Saved in Coursework
           </p>
           {o.learner_comment && (
             <details>
@@ -455,21 +536,97 @@ export function CourseworkOutcomes({
             </details>
           )}
           {o.limitations && <p className="muted">{o.limitations}</p>}
+          <CourseworkFile
+            sourceId={o.source_id}
+            sources={sources}
+            api={api}
+            act={act}
+          />
           {o.original_record_snapshot && (
             <details>
-              <summary>Preserved import record</summary>
+              <summary>Imported grade and feedback record</summary>
               <p className="preserve">{o.original_record_snapshot.body}</p>
             </details>
           )}
           {!superseded.has(o.id) && (
             <button className="text-button" onClick={() => open(o)}>
-              Correct with a new outcome version
+              Update grade, feedback or attachment
             </button>
           )}
-        </div>
+        </details>
       ))}
       {editing && draft && (
         <div className="panel">
+          <h3>
+            {draft.supersedes
+              ? "Update grade & feedback"
+              : "Add grade & feedback"}
+          </h3>
+          <label className="field">
+            <span>Upload instructor feedback or grade file</span>
+            <input
+              type="file"
+              aria-label="Upload instructor feedback or grade file"
+              accept=".pdf,.docx,.pptx,.txt,.md,.csv,.ipynb"
+              disabled={busy}
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                act(async () => {
+                  const form = new FormData();
+                  form.append("course_id", assignment.course_id);
+                  form.append("role", "feedback");
+                  form.append("file", file);
+                  const source = await api("/sources", form);
+                  if (source.role !== "feedback")
+                    throw new Error(
+                      "This file was previously uploaded for another purpose. Give the feedback copy a distinct filename and upload it here.",
+                    );
+                  setDraft((d) => ({ ...d, source_id: source.id }));
+                  await reloadSources();
+                });
+              }}
+            />
+            <small>
+              Attach the instructor's document here, then enter its grade or
+              comments below. File text is not automatically treated as a grade.
+              Text-based PDFs, Word files or text are supported; scans need a
+              text extraction.
+            </small>
+          </label>
+          {sources?.some(
+            (s) =>
+              s.course_id === assignment.course_id && s.role === "feedback",
+          ) && (
+            <label className="field">
+              <span>Saved feedback file (optional)</span>
+              <select
+                aria-label="Saved feedback file (optional)"
+                value={draft.source_id || ""}
+                onChange={(e) => set("source_id", e.target.value || null)}
+              >
+                <option value="">No file attached</option>
+                {sources
+                  .filter(
+                    (s) =>
+                      s.course_id === assignment.course_id &&
+                      s.role === "feedback" &&
+                      (s.latest || s.id === draft.source_id),
+                  )
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} · v{s.version}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
+          <CourseworkFile
+            sourceId={draft.source_id}
+            sources={sources}
+            api={api}
+            act={act}
+          />
           <label className="field">
             <span>
               Grade (out of {assignment.points}; leave blank for feedback only)
@@ -487,6 +644,7 @@ export function CourseworkOutcomes({
             <span>Instructor / TA feedback</span>
             <textarea
               rows={6}
+              aria-label="Instructor / TA feedback"
               value={draft.feedback}
               onChange={(e) => set("feedback", e.target.value)}
             />
@@ -536,7 +694,7 @@ export function CourseworkOutcomes({
                 })
               }
             >
-              Save instructor outcome
+              Save grade & feedback
             </button>
             <button
               className="button secondary"

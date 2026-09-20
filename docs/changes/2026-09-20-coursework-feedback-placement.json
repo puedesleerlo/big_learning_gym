@@ -1,0 +1,24 @@
+{
+  "summary": "Completed coursework opens with saved instructor grades and feedback. Replace the abstract source-instructions control with explained supporting-document links, and upload feedback files beside grades through the existing API.",
+  "type": "preserving",
+  "paths": [
+    "web/src/main.jsx",
+    "web/src/AuthoringControls.jsx",
+    "web/tests/authoring.mjs",
+    "skills/learning-gym/references/profiles-and-coursework.md",
+    "docs/ARCHITECTURE.md"
+  ],
+  "decisions": [
+    "D-002",
+    "D-004",
+    "D-005",
+    "D-009",
+    "D-013"
+  ],
+  "architecture": "updated",
+  "algorithms": "unchanged",
+  "rationale": "Uses existing source uploads with role=feedback and versioned coursework outcomes. Feedback files are excluded from the assignment-document picker. Corrections retain original source IDs, artifact versions and known occurrence dates. Historical instructor grades remain distinct from submissions and model reviews. There is no persistence migration, inference of grades from uploaded text, or fabricated learner work.",
+  "authorization": "The user explicitly asked why Preparation Plan #1 feedback and grades were presented around the awkward Attach existing source instructions control and requested grades uploaded in Coursework; their earlier request authorized versioned coursework outcomes before learner work is imported.",
+  "validation": "pnpm --dir web build passed. pnpm --dir web test:authoring passed: feedback upload, readback, correction with preserved attachment and history, exclusion from assignment instructions, completed-work layout, zero invented drafts/submissions, and narrow viewport. The test waits for displayed profile revisions before reruns to avoid stale UI fixtures; revision-conflict checks remain unchanged. .venv/bin/python -m pytest -q: 156 passed with two dependency deprecation warnings. Skill quick_validate and architecture structural checks passed. Live read-only verification confirmed the preserved grade and TA feedback on the Preparation Plan coursework page. Run committed-diff coverage against 48533c0 after committing.",
+  "rollback": "Revert this UI/documentation commit and rebuild web. Existing outcomes, source uploads, source versions and learner data remain readable through the unchanged API; no data migration or removal is required."
+}

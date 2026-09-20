@@ -116,6 +116,24 @@ review limits. Use `mark_completed=true` only for explicitly completed external
 coursework. This closes the obligation without inventing work time, a local
 submission or mastery. Existing submission-linked grades still use their route.
 
+For a returned feedback or grade file, upload through `/api/sources` with
+`role=feedback` and the coursework's `course_id`, then attach the returned
+source-version ID as the outcome's `source_id`. Inspect its fragments before
+transcribing the actual score or comments; uploading a file does not extract or
+award a grade automatically. Keep original assignment briefs and course material
+in assignment `source_ids`, and learner work in draft/submission attachments.
+Do not place feedback files in either of those lists or use them for profiles.
+The UI offers this upload under **Instructor grades & feedback**; completed
+coursework opens with its saved results, with instructions and learner work
+available separately. A recorded grade is already saved even if no original
+feedback file or learner submission has been uploaded.
+
+When adding an attachment or correcting a saved outcome, preserve its existing
+source ID, original artifact version, known occurrence date, attribution and
+review limits unless the correction explicitly changes them. Use `supersedes`
+to retain the earlier record. Unknown original files must remain unknown;
+an imported transcription is not an original instructor document.
+
 A misplaced feedback artifact can be preserved through `artifact_version_id`.
 Set `reclassify_artifact=true` when moving that record to Coursework is requested;
 the original version is preserved and its current projection leaves research.

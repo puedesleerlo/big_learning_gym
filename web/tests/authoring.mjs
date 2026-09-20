@@ -39,6 +39,16 @@ try {
   });
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  page.on("response", async (response) => {
+    if (response.status() >= 400 && response.url().includes("/api/")) {
+      console.error(
+        "Fixture API failure",
+        response.status(),
+        response.url(),
+        await response.text(),
+      );
+    }
+  });
   await page.goto(url);
   await page.getByRole("button", { name: "Authoring", exact: true }).click();
   await page.getByLabel("Select Prior lecture.md", { exact: true }).check();
@@ -73,6 +83,9 @@ try {
   assert.equal(original.assignment_ids.length, 1);
   assert.ok(original.target_assignment_id);
   await page
+    .getByText(`Run 1 · r${original.revision} · confirmed`, { exact: true })
+    .waitFor();
+  await page
     .getByRole("button", { name: "Evidence, versions & rerun", exact: true })
     .click();
   const sources = await get("/sources");
@@ -86,6 +99,10 @@ try {
       exact: true,
     })
     .click();
+  await page.locator(".modal-shade").waitFor({ state: "hidden" });
+  await page
+    .getByText(/Run 2 · r\d+ · needs_review/, { exact: true })
+    .waitFor({ timeout: 15000 });
   await page
     .getByRole("button", { name: "Review & edit", exact: true })
     .waitFor({ timeout: 15000 });
@@ -136,9 +153,25 @@ try {
     .getByRole("button", { name: "Coursework & rubrics", exact: true })
     .click();
   await page.getByRole("button", { name: /Prior Quiz 1.*completed/ }).click();
+  assert.equal(
+    await page.getByLabel("Assignment draft", { exact: true }).isVisible(),
+    false,
+  );
   await page
-    .getByRole("button", { name: "Record instructor outcome", exact: true })
+    .getByRole("button", { name: "Add grade or feedback", exact: true })
     .click();
+  await page
+    .getByLabel("Upload instructor feedback or grade file", { exact: true })
+    .setInputFiles({
+      name: "Quiz 1 instructor feedback.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from(
+        "Synthetic TA record: 91/100. Explain the assumption more precisely.",
+      ),
+    });
+  await page
+    .getByLabel("Saved feedback file (optional)", { exact: true })
+    .waitFor();
   await page
     .getByLabel("Grade (out of 100; leave blank for feedback only)", {
       exact: true,
@@ -148,12 +181,87 @@ try {
     .getByLabel("Instructor / TA feedback", { exact: true })
     .fill("Observed TA comment from a synthetic course record.");
   await page
-    .getByRole("button", { name: "Save instructor outcome", exact: true })
+    .getByRole("button", { name: "Save grade & feedback", exact: true })
     .click();
   await page.getByText("Instructor grade: 91 / 100", { exact: true }).waitFor();
   cw = await get("/coursework");
   assert.equal(cw.submission.length, 0);
+  assert.equal(cw.assignment_draft.length, 0);
   assert.equal(cw.coursework_outcome.length, 1);
+  const feedbackSource = (await get("/sources")).find(
+    (s) => s.name === "Quiz 1 instructor feedback.txt",
+  );
+  assert.equal(feedbackSource.role, "feedback");
+  assert.equal(cw.coursework_outcome[0].source_id, feedbackSource.id);
+  assert.deepEqual(
+    cw.assignment.find((a) => a.title === "Prior Quiz 1").source_ids,
+    [],
+  );
+  await page.getByText(feedbackSource.name, { exact: true }).click();
+  await page
+    .getByRole("button", { name: "Read document text", exact: true })
+    .click();
+  await page
+    .getByText(
+      "Synthetic TA record: 91/100. Explain the assumption more precisely.",
+      { exact: true },
+    )
+    .waitFor();
+  await page
+    .getByRole("button", {
+      name: "Update grade, feedback or attachment",
+      exact: true,
+    })
+    .click();
+  assert.equal(
+    await page
+      .getByLabel("Saved feedback file (optional)", { exact: true })
+      .inputValue(),
+    feedbackSource.id,
+  );
+  await page
+    .getByLabel("Instructor / TA feedback", { exact: true })
+    .fill("Corrected transcription of the synthetic TA comment.");
+  await page
+    .getByRole("button", { name: "Save grade & feedback", exact: true })
+    .click();
+  await page
+    .getByText("Corrected transcription of the synthetic TA comment.", {
+      exact: true,
+    })
+    .waitFor();
+  cw = await get("/coursework");
+  assert.equal(cw.coursework_outcome.length, 2);
+  const correction = cw.coursework_outcome.find((o) => o.supersedes);
+  assert.equal(correction.source_id, feedbackSource.id);
+  assert.equal(
+    cw.coursework_outcome.find((o) => o.id === correction.supersedes).feedback,
+    "Observed TA comment from a synthetic course record.",
+  );
+  await page
+    .getByText("Assignment instructions & rubric", { exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Edit assignment details", exact: true })
+    .click();
+  await page.getByText(/Supporting assignment documents \(optional\)/).click();
+  const modal = page.locator(".modal");
+  assert.equal(
+    await modal.getByText(feedbackSource.name, { exact: true }).count(),
+    0,
+  );
+  assert.equal(
+    await modal.getByRole("checkbox", { name: /Prior lecture.md/ }).count(),
+    1,
+  );
+  await modal
+    .getByRole("button", { name: "Save coursework revision", exact: true })
+    .click();
+  await page
+    .getByText("Corrected transcription of the synthetic TA comment.", {
+      exact: true,
+    })
+    .waitFor();
   await page.screenshot({
     path: "/tmp/gym-authoring-coursework.png",
     fullPage: true,
@@ -167,8 +275,18 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "Authoring browser journey passed: goal, prior/emergent evidence, profile versions/rerun, practice regeneration, external outcome, narrow screen.",
+    "Authoring browser journey passed: goal, prior/emergent evidence, profile versions/rerun, practice regeneration, feedback upload and correction, completed coursework, narrow screen.",
   );
+} catch (error) {
+  const page = browser.contexts()[0]?.pages()[0];
+  if (page) {
+    await page.screenshot({
+      path: "/tmp/gym-authoring-failure.png",
+      fullPage: true,
+    });
+    console.error(await page.locator("main").innerText());
+  }
+  throw error;
 } finally {
   await browser.close();
   server.kill("SIGTERM");

@@ -38,6 +38,8 @@ import {
   ProfileBuilder,
   ProfileReview,
   CourseworkOutcomes,
+  CourseworkFile,
+  courseworkGrades,
   ProfileEvolution,
   RegeneratePractice,
 } from "./AuthoringControls.jsx";
@@ -2348,7 +2350,7 @@ function RubricEditor({ value, onSave, close, busy, courses }) {
 
 function Coursework({ overview, act, busy, initialAssignmentId }) {
   const [data, reload, error] = useLoad("/coursework"),
-    [sources] = useLoad("/sources"),
+    [sources, reloadSources] = useLoad("/sources"),
     [rubricEdit, setRubricEdit] = useState(undefined),
     [newAssignment, setNewAssignment] = useState(false),
     [editingAssignment, setEditingAssignment] = useState(null),
@@ -2377,6 +2379,8 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
         assignment={a}
         data={data}
         reload={reload}
+        sources={sources}
+        reloadSources={reloadSources}
         act={act}
         busy={busy}
         back={() => setActive(null)}
@@ -2454,15 +2458,15 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
                   </p>
                 </div>
                 <Badge>
-                  {
-                    data.submission.filter((s) => s.assignment_id === a.id)
-                      .length
-                  }{" "}
-                  local submissions ·{" "}
-                  {data.coursework_outcome?.filter(
-                    (o) => o.assignment_id === a.id,
-                  ).length || 0}{" "}
-                  instructor outcomes
+                  {(() => {
+                    const current = courseworkGrades(data, a.id);
+                    const grade = current.findLast((o) => o.score != null);
+                    return grade
+                      ? `Grade: ${grade.score} / ${grade.max_score}`
+                      : current.length
+                        ? "Feedback saved"
+                        : "No grade recorded";
+                  })()}
                 </Badge>
                 <ChevronRight size={19} />
               </button>
@@ -2617,51 +2621,52 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
               onChange={(e) => set("prompt", e.target.value)}
             />
           </Field>
-          <Field label="Attach existing source instructions">
-            <select
-              multiple
-              value={draft.source_ids}
-              onChange={(e) =>
-                set(
-                  "source_ids",
-                  Array.from(e.target.selectedOptions, (o) => o.value),
-                )
-              }
-            >
-              {sources
-                ?.filter((s) => s.course_id === draft.course_id && s.latest)
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-            </select>
-          </Field>
-          {draft.source_ids.length > 0 && (
-            <Action
-              className="secondary"
-              disabled={busy}
-              onClick={() =>
-                act(async () => {
-                  const blocks = await Promise.all(
-                    draft.source_ids.map((id) =>
-                      api("/sources/" + id + "/fragments"),
-                    ),
-                  );
-                  set(
-                    "prompt",
-                    blocks
-                      .flat()
-                      .map((f) => f.anchor + "\n" + f.text)
-                      .join("\n\n")
-                      .slice(0, 30000),
-                  );
-                })
-              }
-            >
-              Use selected source instructions
-            </Action>
-          )}
+          <details className="vignette">
+            <summary>
+              Supporting assignment documents (optional) ·{" "}
+              {draft.source_ids.length} linked
+            </summary>
+            <p>
+              Link the original assignment brief, questions or course material
+              from your library. These explain what the task required and remain
+              available after completion. Add returned grades and TA comments in
+              Instructor grades & feedback.
+            </p>
+            {sources
+              ?.filter(
+                (s) =>
+                  s.course_id === draft.course_id &&
+                  (s.latest || draft.source_ids.includes(s.id)) &&
+                  !["feedback", "submission"].includes(s.role),
+              )
+              .map((s) => (
+                <label className="checkbox" key={s.id}>
+                  <input
+                    type="checkbox"
+                    checked={draft.source_ids.includes(s.id)}
+                    onChange={(e) =>
+                      set(
+                        "source_ids",
+                        e.target.checked
+                          ? [...draft.source_ids, s.id]
+                          : draft.source_ids.filter((id) => id !== s.id),
+                      )
+                    }
+                  />
+                  {s.name} · v{s.version}
+                </label>
+              ))}
+            {!sources?.some(
+              (s) =>
+                s.course_id === draft.course_id &&
+                !["feedback", "submission"].includes(s.role),
+            ) && (
+              <p className="muted">
+                No supporting documents in this gym's material library yet. The
+                instructions above are enough to create coursework.
+              </p>
+            )}
+          </details>
           <Field label="Rubric">
             <select
               value={draft.rubric_id}
@@ -2762,6 +2767,8 @@ function AssignmentWorkbench({
   busy,
   back,
   edit,
+  sources,
+  reloadSources,
 }) {
   const saved = data.assignment_draft.find((d) => d.id === a.id),
     [body, setBody] = useState(saved?.body || ""),
@@ -2782,6 +2789,8 @@ function AssignmentWorkbench({
   attachedRef.current = attached;
   const rubric = data.rubric_version.find((r) => r.id === a.rubric_version_id);
   const submissions = data.submission.filter((s) => s.assignment_id === a.id);
+  const results = courseworkGrades(data, a.id);
+  const recordedGrade = results.findLast((o) => o.score != null);
   const save = (event) => {
     if (!running && !bodyRef.current && !attachedRef.current.length && !saved)
       return Promise.resolve();
@@ -2836,16 +2845,16 @@ function AssignmentWorkbench({
         title={a.title}
         actions={
           <Badge>
-            {a.kind.replace("_", " ")} · {a.points} points
+            {recordedGrade
+              ? `Grade: ${recordedGrade.score} / ${recordedGrade.max_score}`
+              : `${a.kind.replace("_", " ")} · ${a.points} points`}
           </Badge>
         }
       >
-        {fmtDate(a.deadline)} · Work is saved locally; you control submission to
-        your institution.
+        {a.status === "completed"
+          ? "Completed coursework · Review or add instructor grades and feedback below. Your submitted work can be added separately."
+          : `${fmtDate(a.deadline)} · Work is saved locally; you control submission to your institution.`}
       </PageHead>
-      <Action className="secondary" onClick={edit}>
-        Edit coursework details & rubric
-      </Action>
       {a.purpose === "self_study" ? (
         <p className="notice">
           Optional self-study exercise linked from a learning lab. This is not a
@@ -2859,223 +2868,252 @@ function AssignmentWorkbench({
           act={act}
           busy={busy}
           reload={reload}
+          sources={sources}
+          reloadSources={reloadSources}
         />
       )}
-      {!rubric && (
-        <p className="notice">
-          Official rubric not yet available. You can preserve feedback and
-          grades now. Attach an explicit rubric before requesting assessment of
-          your work.
+      <details className="section" open={a.status !== "completed"}>
+        <summary>Assignment instructions & rubric</summary>
+        <p className="muted">
+          The original requirements and grading criteria for this task.
         </p>
-      )}
-      <div className="study-layout">
-        <section>
-          <details className="vignette" open>
-            <summary>Assignment instructions</summary>
+        <Action className="secondary" onClick={edit}>
+          Edit assignment details
+        </Action>
+        {!rubric && (
+          <p className="notice">
+            Official rubric not yet available. You can preserve feedback and
+            grades now. Attach an explicit rubric before requesting assessment
+            of your work.
+          </p>
+        )}
+        <div className="study-layout">
+          <section>
             <p className="preserve">{a.prompt}</p>
-          </details>
-          <div className="editor-toolbar">
-            <span>{saveLabel}</span>
-            <button
-              className="text-button"
-              onClick={() =>
-                act(async () => {
-                  await save(running ? "pause" : "start");
-                  last.current = Date.now();
-                  setRunning(!running);
-                })
-              }
-            >
-              {running ? <Pause size={16} /> : <Play size={16} />}{" "}
-              {running ? "Pause work timer" : "Start work timer"}
-            </button>
-          </div>
-          <textarea
-            className="assignment-editor"
-            aria-label="Assignment draft"
-            placeholder="Develop your answer, derivation, code or analysis here…"
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
-              setSaveLabel("Unsaved changes");
-            }}
-          />
-          <div className="form-row">
-            <Field label="AI contribution to this version">
-              <select value={ai} onChange={(e) => setAi(e.target.value)}>
-                <option value="none">No AI contribution</option>
-                <option value="hints">Hints or conceptual coaching</option>
-                <option value="editing">Editing or language assistance</option>
-                <option value="substantive">
-                  Substantive generated content or code
-                </option>
-              </select>
-            </Field>
-            <label className="button secondary">
-              <Upload size={16} />
-              Attach file
-              <input
-                hidden
-                type="file"
-                onChange={(e) =>
-                  act(async () => {
-                    const f = new FormData();
-                    f.append("course_id", a.course_id);
-                    f.append("role", "submission");
-                    f.append("file", e.target.files[0]);
-                    const result = await api("/sources", f);
-                    setAttached([...attached, result.id]);
-                  })
-                }
+            {a.source_ids?.map((id) => (
+              <CourseworkFile
+                key={id}
+                sourceId={id}
+                sources={sources}
+                api={api}
+                act={act}
               />
-            </label>
-          </div>
-          {attached.length > 0 && (
-            <p>{attached.length} file(s) attached to the next submission.</p>
-          )}
-          <div className="row">
-            <Action
-              className="secondary"
-              onClick={() => act(() => save("save"))}
-            >
-              Save draft
-            </Action>
-            <Action
-              disabled={
-                busy || !rubric || (body.length < 10 && !attached.length)
-              }
-              onClick={() =>
+            ))}
+          </section>
+          <aside className="context-rail">
+            <h3>{rubric?.title || "Rubric unavailable"}</h3>
+            {rubric && (
+              <Badge>
+                {rubric.authority} ·{" "}
+                {a.follow_shared_rubric
+                  ? "Follows shared rubric"
+                  : "Pinned rubric version"}
+              </Badge>
+            )}
+            <p>{rubric?.permitted_assistance}</p>
+            {rubric?.criteria.map((c) => (
+              <div className="rubric-criterion" key={c.name}>
+                <strong>
+                  {c.name} · {percent(c.weight)}
+                </strong>
+                <ul>
+                  {c.anchors.map((x, i) => (
+                    <li key={i}>{x}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div className="rail-note">
+              <ShieldCheck size={20} />
+              <p>
+                AI rubric feedback and official grades are separate records. Old
+                submissions keep their original rubric.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </details>
+      <details className="section" open={a.status !== "completed"}>
+        <summary>
+          {a.status === "completed"
+            ? "Your submitted work (optional upload)"
+            : "Your work & submission versions"}
+        </summary>
+        {a.status === "completed" && (
+          <p className="muted">
+            {submissions.length
+              ? "Your saved submission versions appear below."
+              : "Your work has not been recorded as a submission in the Gym yet."}{" "}
+            You can add a copy here.
+            {results.length > 0 &&
+              " The instructor's grade and feedback above are already saved."}
+          </p>
+        )}
+        <div className="editor-toolbar">
+          <span>{saveLabel}</span>
+          <button
+            className="text-button"
+            onClick={() =>
+              act(async () => {
+                await save(running ? "pause" : "start");
+                last.current = Date.now();
+                setRunning(!running);
+              })
+            }
+          >
+            {running ? <Pause size={16} /> : <Play size={16} />}{" "}
+            {running ? "Pause work timer" : "Start work timer"}
+          </button>
+        </div>
+        <textarea
+          className="assignment-editor"
+          aria-label="Assignment draft"
+          placeholder="Develop your answer, derivation, code or analysis here…"
+          value={body}
+          onChange={(e) => {
+            setBody(e.target.value);
+            setSaveLabel("Unsaved changes");
+          }}
+        />
+        <div className="form-row">
+          <Field label="AI contribution to this version">
+            <select value={ai} onChange={(e) => setAi(e.target.value)}>
+              <option value="none">No AI contribution</option>
+              <option value="hints">Hints or conceptual coaching</option>
+              <option value="editing">Editing or language assistance</option>
+              <option value="substantive">
+                Substantive generated content or code
+              </option>
+            </select>
+          </Field>
+          <label className="button secondary">
+            <Upload size={16} />
+            Attach your work
+            <input
+              hidden
+              type="file"
+              onChange={(e) =>
                 act(async () => {
-                  await save("save");
-                  await api("/assignments/" + a.id + "/submit", {
-                    idempotency_key: crypto.randomUUID(),
-                    ai_contribution: ai,
-                    file_source_ids: attached,
-                  });
-                  setRunning(false);
-                  await reload();
+                  const f = new FormData();
+                  f.append("course_id", a.course_id);
+                  f.append("role", "submission");
+                  f.append("file", e.target.files[0]);
+                  const result = await api("/sources", f);
+                  setAttached([...attached, result.id]);
                 })
               }
-            >
-              Record submission version
-            </Action>
-          </div>
-          <section className="section">
-            <h2>Submissions & feedback</h2>
-            {submissions
-              .slice()
-              .reverse()
-              .map((s, i) => (
-                <div className="submission" key={s.id}>
-                  <div className="row between">
-                    <h3>Version {submissions.length - i}</h3>
-                    <span>{fmtDate(s.created_at)}</span>
-                  </div>
-                  <p>
-                    {minutes(s.active_seconds)} active work · AI:{" "}
-                    {s.ai_contribution} · rubric {s.rubric_snapshot.title} v
-                    {s.rubric_snapshot.version}
-                  </p>
-                  <details>
-                    <summary>Read this submission</summary>
-                    <p className="preserve">{s.body}</p>
-                    {s.attachment_snapshots?.map((f) => (
-                      <section key={f.source_id}>
-                        <h4>{f.name}</h4>
-                        {f.quality_flags.map((flag, i) => (
-                          <p key={i}>{flag}</p>
-                        ))}
-                        <pre className="preserve">{f.text}</pre>
-                      </section>
-                    ))}
-                  </details>
-                  <div className="row">
-                    <Action
-                      className="secondary"
-                      onClick={() =>
-                        act(async () => {
-                          await api("/submissions/" + s.id + "/assess", {});
-                          setSaveLabel(
-                            "Rubric review queued. Refresh feedback in a moment.",
-                          );
-                          reload();
-                        })
-                      }
-                    >
-                      Request rubric review
-                    </Action>
-                    <button className="text-button" onClick={() => setGrade(s)}>
-                      Add instructor grade
-                    </button>
-                  </div>
-                  {data.submission_assessment
-                    .filter((x) => x.submission_id === s.id)
-                    .map((x) => (
-                      <div key={x.id}>
-                        {x.stale_for_current_rubric && (
-                          <Badge tone="warm">Historical rubric version</Badge>
-                        )}
-                        <Feedback
-                          value={x.feedback}
-                          score={x.score}
-                          points={x.max_score}
-                        />
-                      </div>
-                    ))}
-                  {data.official_grade
-                    .filter((g) => g.submission_id === s.id)
-                    .map((g) => (
-                      <div className="official-grade" key={g.id}>
-                        <strong>
-                          Instructor grade: {g.score} / {g.max_score}
-                        </strong>
-                        <p>{g.feedback}</p>
-                        <small>
-                          Entered by you ·{" "}
-                          {g.individual ? "Individual" : "Team"} outcome
-                        </small>
-                      </div>
-                    ))}
+            />
+          </label>
+        </div>
+        {attached.length > 0 && (
+          <p>{attached.length} file(s) attached to the next submission.</p>
+        )}
+        <div className="row">
+          <Action className="secondary" onClick={() => act(() => save("save"))}>
+            Save draft
+          </Action>
+          <Action
+            disabled={busy || !rubric || (body.length < 10 && !attached.length)}
+            onClick={() =>
+              act(async () => {
+                await save("save");
+                await api("/assignments/" + a.id + "/submit", {
+                  idempotency_key: crypto.randomUUID(),
+                  ai_contribution: ai,
+                  file_source_ids: attached,
+                });
+                setRunning(false);
+                await reload();
+              })
+            }
+          >
+            Record submission version
+          </Action>
+        </div>
+        <section className="section">
+          <h2>Saved work & rubric reviews</h2>
+          {submissions
+            .slice()
+            .reverse()
+            .map((s, i) => (
+              <div className="submission" key={s.id}>
+                <div className="row between">
+                  <h3>Version {submissions.length - i}</h3>
+                  <span>{fmtDate(s.created_at)}</span>
                 </div>
-              ))}
-            <button className="text-button" onClick={reload}>
-              <RefreshCw size={15} />
-              Refresh feedback
-            </button>
-          </section>
+                <p>
+                  {minutes(s.active_seconds)} active work · AI:{" "}
+                  {s.ai_contribution} · rubric {s.rubric_snapshot.title} v
+                  {s.rubric_snapshot.version}
+                </p>
+                <details>
+                  <summary>Read this submission</summary>
+                  <p className="preserve">{s.body}</p>
+                  {s.attachment_snapshots?.map((f) => (
+                    <section key={f.source_id}>
+                      <h4>{f.name}</h4>
+                      {f.quality_flags.map((flag, i) => (
+                        <p key={i}>{flag}</p>
+                      ))}
+                      <pre className="preserve">{f.text}</pre>
+                    </section>
+                  ))}
+                </details>
+                <div className="row">
+                  <Action
+                    className="secondary"
+                    onClick={() =>
+                      act(async () => {
+                        await api("/submissions/" + s.id + "/assess", {});
+                        setSaveLabel(
+                          "Rubric review queued. Refresh feedback in a moment.",
+                        );
+                        reload();
+                      })
+                    }
+                  >
+                    Request rubric review
+                  </Action>
+                  <button className="text-button" onClick={() => setGrade(s)}>
+                    Add instructor grade
+                  </button>
+                </div>
+                {data.submission_assessment
+                  .filter((x) => x.submission_id === s.id)
+                  .map((x) => (
+                    <div key={x.id}>
+                      {x.stale_for_current_rubric && (
+                        <Badge tone="warm">Historical rubric version</Badge>
+                      )}
+                      <Feedback
+                        value={x.feedback}
+                        score={x.score}
+                        points={x.max_score}
+                      />
+                    </div>
+                  ))}
+                {data.official_grade
+                  .filter((g) => g.submission_id === s.id)
+                  .map((g) => (
+                    <div className="official-grade" key={g.id}>
+                      <strong>
+                        Instructor grade: {g.score} / {g.max_score}
+                      </strong>
+                      <p>{g.feedback}</p>
+                      <small>
+                        Entered by you · {g.individual ? "Individual" : "Team"}{" "}
+                        outcome
+                      </small>
+                    </div>
+                  ))}
+              </div>
+            ))}
+          <button className="text-button" onClick={reload}>
+            <RefreshCw size={15} />
+            Refresh feedback
+          </button>
         </section>
-        <aside className="context-rail">
-          <h3>{rubric?.title || "Rubric unavailable"}</h3>
-          {rubric && (
-            <Badge>
-              {rubric.authority} ·{" "}
-              {a.follow_shared_rubric
-                ? "Follows shared rubric"
-                : "Pinned rubric version"}
-            </Badge>
-          )}
-          <p>{rubric?.permitted_assistance}</p>
-          {rubric?.criteria.map((c) => (
-            <div className="rubric-criterion" key={c.name}>
-              <strong>
-                {c.name} · {percent(c.weight)}
-              </strong>
-              <ul>
-                {c.anchors.map((x, i) => (
-                  <li key={i}>{x}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <div className="rail-note">
-            <ShieldCheck size={20} />
-            <p>
-              AI rubric feedback and official grades are separate records. Old
-              submissions keep their original rubric.
-            </p>
-          </div>
-        </aside>
-      </div>
+      </details>
       {grade && (
         <Modal
           title="Record the instructor's feedback"
