@@ -1,0 +1,24 @@
+{
+  "summary": "Place coursework context, expanded instructions and rubric before instructor results. Keep the grade badge at the beginning and show one current grade/feedback with collapsed provenance and history.",
+  "type": "preserving",
+  "paths": [
+    "web/src/main.jsx",
+    "web/src/AuthoringControls.jsx",
+    "web/tests/authoring.mjs",
+    "docs/ARCHITECTURE.md",
+    "skills/learning-gym/references/profiles-and-coursework.md"
+  ],
+  "decisions": [
+    "D-002",
+    "D-004",
+    "D-005",
+    "D-009",
+    "D-013"
+  ],
+  "architecture": "updated",
+  "algorithms": "unchanged",
+  "rationale": "One current displayed result is selected from existing attributed records. UI edits supersede the current external outcome or submission-linked grade through existing routes. Original records and sources are retained in hidden history, not erased. No API uniqueness constraint, grade inference, persistence migration or scoring change is introduced.",
+  "authorization": "User browser comments explicitly request coursework description/instructions/rubric first, grades/feedback last, retaining the initial grade badge, hiding the full history, and showing only one current grade and feedback per coursework.",
+  "validation": "Frontend build passed; authoring browser journey passed including instruction order, one current grade, no duplicate add action, hidden prior feedback, upload and correction with preserved attachment, and narrow-screen layout. Full backend suite: 156 passed with two dependency deprecation warnings. Live browser verified reordered coursework and collapsed history. Architecture structural and committed-diff coverage checks run before completion.",
+  "rollback": "Revert this UI and documentation commit and rebuild web. All source versions, coursework outcomes and submission-linked grades remain stored; no learner data migration or deletion occurs."
+}

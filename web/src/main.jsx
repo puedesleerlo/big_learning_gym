@@ -2775,9 +2775,6 @@ function AssignmentWorkbench({
     [running, setRunning] = useState(false),
     [ai, setAi] = useState(saved?.assistance?.at(-1) || "none"),
     [attached, setAttached] = useState(saved?.file_source_ids || []),
-    [grade, setGrade] = useState(null),
-    [score, setScore] = useState(""),
-    [feedback, setFeedback] = useState(""),
     [saveLabel, setSaveLabel] = useState(
       saved ? "Draft saved" : "Not saved yet",
     );
@@ -2851,28 +2848,14 @@ function AssignmentWorkbench({
           </Badge>
         }
       >
-        {a.status === "completed"
-          ? "Completed coursework · Review or add instructor grades and feedback below. Your submitted work can be added separately."
-          : `${fmtDate(a.deadline)} · Work is saved locally; you control submission to your institution.`}
+        {a.description ||
+          `${a.kind.replace("_", " ")} coursework · ${a.points} points`}
+        <span className="small muted">
+          {" "}
+          · {a.status === "completed" ? "Completed" : fmtDate(a.deadline)}
+        </span>
       </PageHead>
-      {a.purpose === "self_study" ? (
-        <p className="notice">
-          Optional self-study exercise linked from a learning lab. This is not a
-          course obligation.
-        </p>
-      ) : (
-        <CourseworkOutcomes
-          assignment={a}
-          data={data}
-          api={api}
-          act={act}
-          busy={busy}
-          reload={reload}
-          sources={sources}
-          reloadSources={reloadSources}
-        />
-      )}
-      <details className="section" open={a.status !== "completed"}>
+      <details className="section" open>
         <summary>Assignment instructions & rubric</summary>
         <p className="muted">
           The original requirements and grading criteria for this task.
@@ -2945,8 +2928,6 @@ function AssignmentWorkbench({
               ? "Your saved submission versions appear below."
               : "Your work has not been recorded as a submission in the Gym yet."}{" "}
             You can add a copy here.
-            {results.length > 0 &&
-              " The instructor's grade and feedback above are already saved."}
           </p>
         )}
         <div className="editor-toolbar">
@@ -3074,9 +3055,6 @@ function AssignmentWorkbench({
                   >
                     Request rubric review
                   </Action>
-                  <button className="text-button" onClick={() => setGrade(s)}>
-                    Add instructor grade
-                  </button>
                 </div>
                 {data.submission_assessment
                   .filter((x) => x.submission_id === s.id)
@@ -3092,20 +3070,6 @@ function AssignmentWorkbench({
                       />
                     </div>
                   ))}
-                {data.official_grade
-                  .filter((g) => g.submission_id === s.id)
-                  .map((g) => (
-                    <div className="official-grade" key={g.id}>
-                      <strong>
-                        Instructor grade: {g.score} / {g.max_score}
-                      </strong>
-                      <p>{g.feedback}</p>
-                      <small>
-                        Entered by you · {g.individual ? "Individual" : "Team"}{" "}
-                        outcome
-                      </small>
-                    </div>
-                  ))}
               </div>
             ))}
           <button className="text-button" onClick={reload}>
@@ -3114,42 +3078,22 @@ function AssignmentWorkbench({
           </button>
         </section>
       </details>
-      {grade && (
-        <Modal
-          title="Record the instructor's feedback"
-          close={() => setGrade(null)}
-        >
-          <Field label={`Grade (out of ${a.points})`}>
-            <input
-              type="number"
-              min="0"
-              max={a.points}
-              value={score}
-              onChange={(e) => setScore(e.target.value)}
-            />
-          </Field>
-          <Field label="Instructor feedback">
-            <textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-            />
-          </Field>
-          <Action
-            disabled={busy || score === ""}
-            onClick={() =>
-              act(async () => {
-                await api("/submissions/" + grade.id + "/grade", {
-                  score: +score,
-                  feedback,
-                });
-                setGrade(null);
-                reload();
-              })
-            }
-          >
-            Save official outcome
-          </Action>
-        </Modal>
+      {a.purpose === "self_study" ? (
+        <p className="notice">
+          Optional self-study exercise linked from a learning lab. This is not a
+          course obligation.
+        </p>
+      ) : (
+        <CourseworkOutcomes
+          assignment={a}
+          data={data}
+          api={api}
+          act={act}
+          busy={busy}
+          reload={reload}
+          sources={sources}
+          reloadSources={reloadSources}
+        />
       )}
     </>
   );

@@ -183,6 +183,9 @@ try {
   await page
     .getByRole("button", { name: "Save grade & feedback", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Save grade & feedback", exact: true })
+    .waitFor({ state: "hidden" });
   await page.getByText("Instructor grade: 91 / 100", { exact: true }).waitFor();
   cw = await get("/coursework");
   assert.equal(cw.submission.length, 0);
@@ -197,6 +200,7 @@ try {
     cw.assignment.find((a) => a.title === "Prior Quiz 1").source_ids,
     [],
   );
+  await page.getByText("Record details & history", { exact: true }).click();
   await page.getByText(feedbackSource.name, { exact: true }).click();
   await page
     .getByRole("button", { name: "Read document text", exact: true })
@@ -209,7 +213,7 @@ try {
     .waitFor();
   await page
     .getByRole("button", {
-      name: "Update grade, feedback or attachment",
+      name: "Edit grade & feedback",
       exact: true,
     })
     .click();
@@ -226,6 +230,9 @@ try {
     .getByRole("button", { name: "Save grade & feedback", exact: true })
     .click();
   await page
+    .getByRole("button", { name: "Save grade & feedback", exact: true })
+    .waitFor({ state: "hidden" });
+  await page
     .getByText("Corrected transcription of the synthetic TA comment.", {
       exact: true,
     })
@@ -238,9 +245,40 @@ try {
     cw.coursework_outcome.find((o) => o.id === correction.supersedes).feedback,
     "Observed TA comment from a synthetic course record.",
   );
-  await page
-    .getByText("Assignment instructions & rubric", { exact: true })
-    .click();
+  assert.equal(
+    await page
+      .getByText("Observed TA comment from a synthetic course record.", {
+        exact: true,
+      })
+      .isVisible(),
+    false,
+  );
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Add grade or feedback", exact: true })
+      .count(),
+    0,
+  );
+  assert.equal(await page.locator(".official-grade > strong").count(), 1);
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Edit assignment details", exact: true })
+      .isVisible(),
+    true,
+  );
+  const order = await page.locator("main").evaluate((main) => {
+    const instructions = [...main.querySelectorAll("summary")].find(
+      (e) => e.textContent === "Assignment instructions & rubric",
+    );
+    const feedback = main.querySelector(
+      '[aria-label="Instructor grades and feedback"]',
+    );
+    return !!(
+      instructions.compareDocumentPosition(feedback) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+  });
+  assert.equal(order, true);
   await page
     .getByRole("button", { name: "Edit assignment details", exact: true })
     .click();

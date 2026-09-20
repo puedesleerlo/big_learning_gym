@@ -419,7 +419,8 @@ export function courseworkGrades(data, assignmentId) {
   const superseded = new Set(records.map((o) => o.supersedes).filter(Boolean));
   return records
     .filter((o) => !superseded.has(o.id))
-    .sort((a, b) => (a.received_at || "").localeCompare(b.received_at || ""));
+    .sort((a, b) => (a.received_at || "").localeCompare(b.received_at || ""))
+    .slice(-1);
 }
 
 export function CourseworkOutcomes({
@@ -434,10 +435,13 @@ export function CourseworkOutcomes({
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
-  const outcomes =
-    data.coursework_outcome?.filter((o) => o.assignment_id === assignment.id) ||
-    [];
-  const superseded = new Set(outcomes.map((o) => o.supersedes).filter(Boolean));
+  const current = courseworkGrades(data, assignment.id)[0];
+  const history = [
+    ...(data.coursework_outcome || []),
+    ...(data.official_grade || []),
+  ]
+    .filter((o) => o.assignment_id === assignment.id && o.id !== current?.id)
+    .sort((a, b) => (b.received_at || "").localeCompare(a.received_at || ""));
   const set = (k, v) => setDraft({ ...draft, [k]: v });
   const open = (previous = null) => {
     setDraft({
@@ -454,107 +458,118 @@ export function CourseworkOutcomes({
       learner_comment: previous?.learner_comment || "",
       limitations: previous?.limitations || "",
       mark_completed: assignment.status === "completed",
-      supersedes: previous?.id || null,
+      supersedes: previous?.submission_id ? null : previous?.id || null,
     });
     setEditing(true);
   };
   return (
     <section className="section" aria-label="Instructor grades and feedback">
       <div className="row between">
-        <h2>Instructor grades & feedback</h2>
-        <button className="button secondary" onClick={() => open()}>
-          Add grade or feedback
+        <h2>Instructor grade & feedback</h2>
+        <button className="button secondary" onClick={() => open(current)}>
+          {current ? "Edit grade & feedback" : "Add grade or feedback"}
         </button>
       </div>
-      <p>
-        {assignment.status === "completed"
-          ? "Coursework completed externally. "
-          : ""}
-        Grades and TA comments are saved here. You can add them before uploading
-        your submitted work.
-      </p>
-      {courseworkGrades(data, assignment.id)
-        .filter((o) => o.submission_id)
-        .map((o) => (
-          <div className="official-grade" key={o.id}>
-            <strong>
-              Instructor grade: {o.score} / {o.max_score}
-            </strong>
-            <p className="preserve">{o.feedback}</p>
+      {current ? (
+        <div className="official-grade" key={current.id}>
+          <strong>
+            {current.score == null
+              ? "No grade reported"
+              : `Instructor grade: ${current.score} / ${current.max_score}`}
+          </strong>
+          <p className="preserve">
+            {current.feedback || "No written feedback recorded."}
+          </p>
+          <details>
+            <summary>Record details & history</summary>
+            <p>{current.attribution || "Instructor grade entered by you"}</p>
+            {current.source_url && (
+              <a href={current.source_url} target="_blank" rel="noreferrer">
+                Original course record
+              </a>
+            )}
             <p className="small muted">
-              Entered by you · {o.individual ? "Individual" : "Team"} outcome ·
-              Linked to a saved submission
+              Recorded{" "}
+              {new Date(
+                current.observed_at || current.received_at,
+              ).toLocaleString()}
             </p>
+            {current.occurred_at && (
+              <p className="small muted">
+                Feedback dated {new Date(current.occurred_at).toLocaleString()}
+              </p>
+            )}
+            {current.learner_comment && (
+              <>
+                <h3>Your comments</h3>
+                <p className="preserve">{current.learner_comment}</p>
+              </>
+            )}
+            {current.limitations && (
+              <p className="muted">{current.limitations}</p>
+            )}
             <CourseworkFile
-              sourceId={o.source_id}
+              sourceId={current.source_id}
               sources={sources}
               api={api}
               act={act}
             />
-          </div>
-        ))}
-      {outcomes.map((o) => (
-        <details
-          className="official-grade"
-          key={o.id}
-          open={!superseded.has(o.id)}
-        >
-          <summary>
-            <strong>
-              {o.score == null
-                ? "Feedback received · no grade reported"
-                : `Instructor grade: ${o.score} / ${o.max_score}`}
-            </strong>
-            {superseded.has(o.id) && (
-              <span className="badge">Superseded · retained history</span>
+            {current.original_record_snapshot && (
+              <details>
+                <summary>Imported grade and feedback record</summary>
+                <p className="preserve">
+                  {current.original_record_snapshot.body}
+                </p>
+              </details>
             )}
-          </summary>
-          {o.feedback ? (
-            <p className="preserve">{o.feedback}</p>
-          ) : (
-            <p className="muted">No written feedback recorded.</p>
-          )}
-          <p>{o.attribution}</p>
-          {o.source_url && (
-            <a href={o.source_url} target="_blank" rel="noreferrer">
-              Original course record
-            </a>
-          )}
-          <p className="small muted">
-            Observed {new Date(o.observed_at).toLocaleString()} ·{" "}
-            {o.occurred_at
-              ? `Feedback dated ${new Date(o.occurred_at).toLocaleString()}`
-              : "Original feedback date not recorded"}{" "}
-            · Saved in Coursework
-          </p>
-          {o.learner_comment && (
-            <details>
-              <summary>
-                Your comments (separate from instructor feedback)
-              </summary>
-              <p className="preserve">{o.learner_comment}</p>
-            </details>
-          )}
-          {o.limitations && <p className="muted">{o.limitations}</p>}
-          <CourseworkFile
-            sourceId={o.source_id}
-            sources={sources}
-            api={api}
-            act={act}
-          />
-          {o.original_record_snapshot && (
-            <details>
-              <summary>Imported grade and feedback record</summary>
-              <p className="preserve">{o.original_record_snapshot.body}</p>
-            </details>
-          )}
-          {!superseded.has(o.id) && (
-            <button className="text-button" onClick={() => open(o)}>
-              Update grade, feedback or attachment
-            </button>
-          )}
-        </details>
-      ))}
+            {history.length > 0 && (
+              <details>
+                <summary>Previous versions ({history.length})</summary>
+                {history.map((o) => (
+                  <div key={o.id}>
+                    <h3>
+                      {o.score == null
+                        ? "Feedback only"
+                        : `Previous grade: ${o.score} / ${o.max_score}`}
+                    </h3>
+                    <p className="preserve">{o.feedback}</p>
+                    <p>{o.attribution}</p>
+                    <p className="small muted">
+                      Recorded{" "}
+                      {new Date(
+                        o.observed_at || o.received_at,
+                      ).toLocaleString()}
+                    </p>
+                    {o.source_url && (
+                      <a href={o.source_url} target="_blank" rel="noreferrer">
+                        Original course record
+                      </a>
+                    )}
+                    <p className="preserve">{o.learner_comment}</p>
+                    <p>{o.limitations}</p>
+                    <CourseworkFile
+                      sourceId={o.source_id}
+                      sources={sources}
+                      api={api}
+                      act={act}
+                    />
+                    {o.original_record_snapshot && (
+                      <details>
+                        <summary>Imported record</summary>
+                        <p className="preserve">
+                          {o.original_record_snapshot.body}
+                        </p>
+                      </details>
+                    )}
+                  </div>
+                ))}
+              </details>
+            )}
+          </details>
+        </div>
+      ) : (
+        <p className="muted">No instructor grade or feedback recorded yet.</p>
+      )}
       {editing && draft && (
         <div className="panel">
           <h3>
@@ -682,13 +697,28 @@ export function CourseworkOutcomes({
           <div className="row">
             <button
               className="button"
-              disabled={busy || (draft.score === "" && !draft.feedback.trim())}
+              disabled={
+                busy ||
+                (current?.submission_id && draft.score === "") ||
+                (draft.score === "" && !draft.feedback.trim())
+              }
               onClick={() =>
                 act(async () => {
-                  await api(`/assignments/${assignment.id}/outcomes`, {
+                  const payload = {
                     ...draft,
                     score: draft.score === "" ? null : Number(draft.score),
-                  });
+                  };
+                  if (current?.submission_id) {
+                    await api(`/submissions/${current.submission_id}/grade`, {
+                      ...payload,
+                      supersedes: current.id,
+                    });
+                  } else {
+                    await api(
+                      `/assignments/${assignment.id}/outcomes`,
+                      payload,
+                    );
+                  }
                   setEditing(false);
                   await reload();
                 })

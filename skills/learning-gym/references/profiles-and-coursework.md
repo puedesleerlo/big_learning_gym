@@ -123,9 +123,10 @@ transcribing the actual score or comments; uploading a file does not extract or
 award a grade automatically. Keep original assignment briefs and course material
 in assignment `source_ids`, and learner work in draft/submission attachments.
 Do not place feedback files in either of those lists or use them for profiles.
-The UI offers this upload under **Instructor grades & feedback**; completed
-coursework opens with its saved results, with instructions and learner work
-available separately. A recorded grade is already saved even if no original
+The UI offers this upload under **Instructor grade & feedback**; completed
+coursework shows its description, instructions and rubric before the current
+grade and feedback. Each coursework has one current displayed result; edit that
+result with supersession, preserving older versions under hidden history. A recorded grade is already saved even if no original
 feedback file or learner submission has been uploaded.
 
 When adding an attachment or correcting a saved outcome, preserve its existing
