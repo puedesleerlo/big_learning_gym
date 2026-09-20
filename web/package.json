@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test:rich-labs": "node tests/rich-labs.mjs",
-    "test:experiences": "node tests/experiences.mjs"
+    "test:experiences": "node tests/experiences.mjs",
+    "test:authoring": "node tests/authoring.mjs"
   },
   "dependencies": {
     "@learning-gym/frontend": "file:../packages/gym-frontend",

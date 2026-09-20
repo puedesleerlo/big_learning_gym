@@ -3,7 +3,8 @@
 import json
 import re
 
-from .contracts import GeneratedItem, GenerationInput, SharedCase
+from .authoring import RevisionConflict
+from .contracts import GeneratedItem, GenerationInput, GenerationRerunInput, SharedCase
 from .ingestion import retrieve
 from .store import digest, now, uid
 
@@ -14,30 +15,74 @@ Difficulty must come from reasoning, not missing facts or confusing language. Qu
 be self-contained. Return valid JSON only. Never assert statistical equivalence to a real exam."""
 
 
-def request_generation(store, specification):
+def request_generation(store, specification, _rerun=None):
     spec = GenerationInput.model_validate(specification).model_dump()
     with store.tx() as c:
+        receipt_id = (
+            "generation_rerun_" + digest([_rerun["parent_id"], _rerun["key"]])[:32] if _rerun else None
+        )
+        if receipt_id:
+            receipt = store.get(c, "generation_rerun", receipt_id, False)
+            if receipt:
+                if receipt["request_hash"] != _rerun["request_hash"]:
+                    raise RevisionConflict("Generation rerun key was used with different inputs")
+                return receipt["response"]
         store.get(c, "course", spec["course_id"])
         for ident in spec["source_ids"]:
             source = store.get(c, "source", ident)
             if source["course_id"] != spec["course_id"]:
                 raise ValueError("All selected sources must belong to this gym")
-            if source.get("role") in {"assessment", "submission"}:
+            if source.get("role", "instruction") not in {"instruction", "research"}:
                 raise ValueError(
                     "Use assessment material to build a profile; generate new questions from instructional sources"
                 )
         if spec.get("profile_id"):
             profile = store.get(c, "assessment_profile", spec["profile_id"])
+            if spec.get("profile_version_id"):
+                profile = store.get(c, "assessment_profile_version", spec["profile_version_id"])
+                if profile.get("profile_id") != spec["profile_id"]:
+                    raise ValueError("Profile version belongs to a different profile")
             if profile["course_id"] != spec["course_id"] or profile["status"] != "confirmed":
                 raise ValueError("Confirm a profile for this course before using it")
             spec["profile_snapshot"] = {
-                "id": profile["id"],
-                "revision": profile["revision"],
+                "id": spec["profile_id"],
+                "revision": profile.get("profile_revision", profile["revision"]),
+                "profile_version_id": profile.get("profile_version_id"),
+                "run_version": profile.get("run_version", 1),
                 "profile": profile["profile"],
+                "contract_version": profile.get("contract_version", "legacy-style-v1"),
+                "target": profile.get("target", ""),
+                "assignment_ids": profile.get("assignment_ids", []),
+                "material_source_ids": profile.get("material_source_ids", []),
+                "emergent_source_ids": profile.get("emergent_source_ids", []),
+                "target_assignment_id": profile.get("target_assignment_id"),
+                "target_assignment_snapshot": profile.get("target_assignment_snapshot"),
             }
+            if profile.get("contract_version") == "targeted-profile-v1":
+                if not set(spec["source_ids"]) <= set(
+                    profile.get("generation_source_ids", profile["material_source_ids"])
+                ):
+                    raise ValueError(
+                        "Select content within this profile's material scope, or create a new profile"
+                    )
+                spec["rubric_snapshot"] = profile["profile"]["practice_rubric"]
+                spec["rubric_basis"] = profile["profile"]["rubric_basis"]
+                spec["target"] = profile["target"]
+        elif spec.get("profile_version_id"):
+            raise ValueError("Select the profile owning this version")
         if spec.get("rubric_id"):
             rubric = store.get(c, "rubric", spec["rubric_id"])
+            if rubric.get("course_id") not in {None, spec["course_id"]}:
+                raise ValueError("Rubric belongs to another course")
+            if spec.get("rubric_snapshot") and rubric["criteria"] != spec["rubric_snapshot"]["criteria"]:
+                raise ValueError(
+                    "Rubric differs from the reviewed profile; revise the profile before generation"
+                )
             spec["rubric_snapshot"] = rubric
+        spec["source_snapshot"] = retrieve(
+            store, c, spec["course_id"], spec["topic"], spec["source_ids"], limit=12
+        )
+        spec["generation_version"] = "grounded-practice-v3"
         ident = uid("blueprint_")
         blueprint = store.put(
             c,
@@ -45,6 +90,7 @@ def request_generation(store, specification):
             ident,
             {
                 **spec,
+                "parent_blueprint_id": _rerun["parent_id"] if _rerun else None,
                 "status": "queued",
                 "created_at": now(),
                 "assessment_contract": {
@@ -57,7 +103,42 @@ def request_generation(store, specification):
         )
         store.emit(c, "blueprint.created", ident, spec)
         job = store.enqueue(c, "generate", {"blueprint_id": ident}, key="generate:" + ident, priority=5)
-        return {**blueprint, "job_id": job}
+        response = {**blueprint, "job_id": job}
+        if receipt_id:
+            store.put(
+                c,
+                "generation_rerun",
+                receipt_id,
+                {"request_hash": _rerun["request_hash"], "response": response},
+            )
+        return response
+
+
+def rerun_generation(store, blueprint_id, payload):
+    data = GenerationRerunInput.model_validate(payload).model_dump(exclude_unset=True)
+    key = data.pop("idempotency_key")
+    request_hash = digest(data)
+    with store.tx() as c:
+        old = store.get(c, "blueprint", blueprint_id)
+        spec = {k: v for k, v in old.items() if k in GenerationInput.model_fields}
+        spec.update(data)
+        # A rerun defaults to the latest confirmed profile, while an explicit version replays that target.
+        spec["profile_version_id"] = data.get("profile_version_id")
+        if spec.get("profile_id"):
+            profile = (
+                store.get(c, "assessment_profile_version", spec["profile_version_id"])
+                if spec["profile_version_id"]
+                else store.get(c, "assessment_profile", spec["profile_id"])
+            )
+            if profile.get("profile_version_id"):
+                spec["profile_version_id"] = profile["profile_version_id"]
+            if profile.get("contract_version") == "targeted-profile-v1":
+                if "source_ids" not in data:
+                    spec["source_ids"] = profile["generation_source_ids"]
+                spec["rubric_id"] = None
+    return request_generation(
+        store, spec, _rerun={"parent_id": blueprint_id, "key": key, "request_hash": request_hash}
+    )
 
 
 def generate(store, router, blueprint_id):
@@ -65,7 +146,9 @@ def generate(store, router, blueprint_id):
         bp = store.get(c, "blueprint", blueprint_id)
         if bp["status"] in {"ready", "review_required"}:
             return bp
-        fragments = retrieve(store, c, bp["course_id"], bp["topic"], bp["source_ids"], limit=12)
+        fragments = bp.get("source_snapshot")
+        if fragments is None:
+            fragments = retrieve(store, c, bp["course_id"], bp["topic"], bp["source_ids"], limit=12)
         store.put(c, "blueprint", blueprint_id, {**bp, "status": "generating"})
     if not fragments:
         raise ValueError("No readable fragments were found in the selected sources")
@@ -79,6 +162,8 @@ def generate(store, router, blueprint_id):
         {k: v for k, v in profile.items() if k != "supporting_fragment_ids"} if profile else None
     )
     spec["required_rubric"] = bp.get("rubric_snapshot")
+    spec["counterfactual_count"] = bp.get("counterfactual_count", 0)
+    spec["target"] = bp.get("target", "")
     type_counts = bp.get("type_counts") or {
         kind: bp["count"] // len(bp["question_types"]) + int(i < bp["count"] % len(bp["question_types"]))
         for i, kind in enumerate(bp["question_types"])
@@ -116,6 +201,11 @@ def generate(store, router, blueprint_id):
             "shared_case_item_indices_in_batch": [
                 i for i in range(len(chunk_types)) if offset + i >= first_case
             ],
+            "counterfactual_item_indices_in_batch": [
+                i
+                for i in range(len(chunk_types))
+                if offset + i >= bp["count"] - bp.get("counterfactual_count", 0)
+            ],
         }
         prompt = json.dumps(
             {
@@ -131,6 +221,12 @@ def generate(store, router, blueprint_id):
                 "A profile specifies style and cognitive demands, never source question content. "
                 "When a required rubric is provided, copy its criteria and weights exactly into open items. "
                 "Follow required_item_types_in_order exactly; do not include other types in this batch. "
+                "For counterfactual_item_indices_in_batch, preserve the assigned question format but set cognitive_operation "
+                "to counterfactual and provide counterfactual_derivation with changed_assumption, reasoning, uncertainty "
+                "and source_fragment_ids. Change a stated assumption or use a new context derivable from the course. "
+                "Explain the inference from source premises, what remains uncertain, and what additional information would "
+                "resolve it. Supply scenario facts explicitly; never treat missing course knowledge as a trick. "
+                "Do not copy an existing coursework question. These items belong inside this practice set or mock exam. "
                 "Items in shared_case_item_indices_in_batch must use the identical supplied shared case and table. Other items must stand alone.",
             }
         )
@@ -140,7 +236,7 @@ def generate(store, router, blueprint_id):
             raise ValueError("Generated batch did not match its type allocation")
         raw_items.extend(batch)
         generation_calls.append(provenance)
-    provenance = {"calls": generation_calls, "prompt_version": "gym-v2"}
+    provenance = {"calls": generation_calls, "prompt_version": "grounded-practice-v3"}
     if len(raw_items) != bp["count"]:
         raise ValueError("Generated count did not match blueprint")
     parsed = [GeneratedItem.model_validate(x).model_dump() for x in raw_items]
@@ -148,7 +244,13 @@ def generate(store, router, blueprint_id):
         if shared_case and index >= first_case:
             item["vignette"] = shared_case
     available = {f["id"] for f in fragments}
-    for item in parsed:
+    for index, item in enumerate(parsed):
+        derivation = item.get("counterfactual_derivation")
+        if index >= bp["count"] - bp.get("counterfactual_count", 0):
+            if not derivation or item["cognitive_operation"] != "counterfactual":
+                raise ValueError("Required counterfactual item lacks its source-grounded derivation")
+        if derivation and not set(derivation["source_fragment_ids"]) <= available:
+            raise ValueError("Counterfactual derivation cited a fragment outside the source context")
         if not set(item["source_fragment_ids"]) <= available:
             raise ValueError("Generated item cited a fragment outside the source context")
         if item["type"] not in bp["question_types"]:
@@ -177,6 +279,9 @@ def generate(store, router, blueprint_id):
                     "for EVERY zero-based item. Check support, correctness, ambiguity, hidden assumptions, rubric, "
                     "and source citations. valid must be false for incorrect or unsupported items. "
                     "For MCQ supply solved_key from your independent solution. For matching supply solved_matches "
+                    "For every counterfactual_derivation, independently check that the changed assumption is explicit, "
+                    "the reasoning follows from cited course premises, and uncertainty is acknowledged without invented "
+                    "course facts. Return counterfactual_valid:true only when this check passes; otherwise false. "
                     "as an object mapping prompt IDs to term IDs. For open items use solved_key:''.",
                 }
             ),
@@ -186,7 +291,7 @@ def generate(store, router, blueprint_id):
             raise ValueError("Verifier omitted an item")
         reviews.extend({**r, "index": r["index"] + offset} for r in batch_reviews)
         reviewer_calls.append(reviewer)
-    reviewer = {"calls": reviewer_calls, "prompt_version": "verify-v2"}
+    reviewer = {"calls": reviewer_calls, "prompt_version": "verify-v3"}
     if len(reviews) != len(parsed) or {r.get("index") for r in reviews} != set(range(len(parsed))):
         raise ValueError("Verifier did not review every generated item")
     review_map = {r["index"]: r for r in reviews}
@@ -201,6 +306,8 @@ def generate(store, router, blueprint_id):
             ident = blueprint_id + f":{index}"
             r = review_map[index]
             supported = r.get("valid") is True and not r.get("issues") and bool(r.get("rationale"))
+            if item.get("counterfactual_derivation"):
+                supported = supported and r.get("counterfactual_valid") is True
             if item["type"] == "mcq":
                 supported = supported and r.get("solved_key") == item["key"]
             if item["type"] == "matching":

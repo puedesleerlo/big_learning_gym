@@ -1,6 +1,6 @@
 ---
 name: learning-gym
-description: Create or maintain courses, named interactive labs, grounded lessons, practice questions, rubrics, and assignments in the existing Learning Gym through its API or MCP tools. Use for Learning Gym authoring and maintenance, not for building a separate learning platform.
+description: Create or maintain courses, named interactive labs, grounded lessons, goal-directed versioned assessment profiles, practice questions, rubrics, and coursework outcomes in the existing Learning Gym through its API or MCP tools. Use for Learning Gym authoring and maintenance, not for building a separate learning platform.
 ---
 
 # Learning Gym
@@ -47,13 +47,25 @@ Correct rubrics with the existing versioned `/api/rubrics` routes. Submitted
 work retains its rubric snapshot. Use the existing assignment draft/submission
 routes only for requested learner work, disclose AI assistance, and record no
 invented learner time. Curriculum setup must not answer practice questions,
-manufacture submissions, enter grades, or alter mastery. Authoring/import make
+manufacture submissions, invent grades, or alter mastery. When the user explicitly
+asks to record an actual instructor grade or TA feedback, use the coursework
+outcome workflow; a local learner submission is not required. Authoring/import make
 no model calls; the manifest identifies model-backed generation and assessment
 operations.
 
 Verify writes through the same API and report the resulting course/material
 IDs, what changed, and unresolved source or assessment limitations. Keep the
 learner's platform and existing evidence intact.
+
+## Coursework, targeted profiles and evolving evidence
+
+For profile creation/reruns, practice regeneration or coursework feedback, read
+[profiles-and-coursework.md](references/profiles-and-coursework.md). It explains
+future-task intention, prior and emergent evidence, reviewed proposed rubrics,
+immutable profile history, exact-key reruns, and actual instructor outcomes
+without fabricated local submissions. Discover the corresponding live REST
+schemas and use the same routes through MCP. Teaching labs, actual obligations
+and research artifacts have distinct purposes even when they share sources.
 
 ## Named labs and activity blocks
 

@@ -18,8 +18,9 @@ class SessionInput(Strict):
     course_id: str
     mode: Literal["practice", "simulation", "transfer"] = "practice"
     module: str = "all"
-    count: int = Field(default=8, ge=1, le=30)
+    count: int = Field(default=8, ge=1, le=40)
     form: str | None = None
+    blueprint_id: str | None = None
 
 
 class AnswerInput(Strict):
@@ -81,10 +82,14 @@ class GenerationInput(Strict):
     capabilities: list[str] = Field(default_factory=list)
     instructions: str = Field(default="", max_length=3000)
     profile_id: str | None = None
+    profile_version_id: str | None = None
     rubric_id: str | None = None
+    counterfactual_count: int = Field(default=0, ge=0, le=40)
 
     @model_validator(mode="after")
     def coverage(self):
+        if self.counterfactual_count > self.count:
+            raise ValueError("Counterfactual items cannot exceed total items")
         if self.shared_case_items > self.count:
             raise ValueError("Shared case items cannot exceed total items")
         if not self.question_types or len(set(self.question_types)) != len(self.question_types):
@@ -130,12 +135,91 @@ class AssignmentInput(Strict):
     kind: Literal["homework", "practice_quiz", "worksheet", "lab", "essay", "coding", "project"] = "homework"
     prompt: str = Field(min_length=10, max_length=30000)
     source_ids: list[str] = Field(default_factory=list)
-    rubric_id: str
+    rubric_id: str | None = None
+    purpose: Literal["coursework", "self_study"] = "coursework"
+    status: Literal["open", "completed"] = "open"
     follow_shared_rubric: bool = False
     deadline: str | None = None
     points: float = Field(default=100, gt=0, le=10000)
     individual: bool = True
     effort_minutes: int = Field(default=60, ge=5, le=10000)
+
+
+class CourseworkOutcomeInput(Strict):
+    idempotency_key: str = Field(min_length=5, max_length=200)
+    score: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    feedback: str = Field(default="", max_length=50000)
+    attribution: str = Field(min_length=3, max_length=500)
+    source_url: str = Field(default="", max_length=2000)
+    source_id: str | None = None
+    artifact_version_id: str | None = None
+    reclassify_artifact: bool = False
+    occurred_at: str | None = None
+    observed_at: str
+    learner_comment: str = Field(default="", max_length=10000)
+    limitations: str = Field(default="", max_length=5000)
+    mark_completed: bool = False
+    supersedes: str | None = None
+
+    @model_validator(mode="after")
+    def evidence(self):
+        from datetime import datetime
+        from urllib.parse import urlsplit
+
+        if self.score is None and not self.feedback.strip():
+            raise ValueError("Supply an observed grade or instructor feedback")
+        for value in (self.observed_at, self.occurred_at):
+            if value and datetime.fromisoformat(value).tzinfo is None:
+                raise ValueError("Outcome timestamps need a timezone")
+        if self.source_url:
+            url = urlsplit(self.source_url)
+            if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password:
+                raise ValueError("Source URL must be an HTTP(S) reference without credentials")
+        if self.reclassify_artifact and not self.artifact_version_id:
+            raise ValueError("Choose the artifact version to reclassify")
+        return self
+
+
+class ProfileInput(Strict):
+    course_id: str
+    source_ids: list[str] = Field(default_factory=list, max_length=20)
+    assignment_ids: list[str] = Field(default_factory=list, max_length=10)
+    target_assignment_id: str | None = None
+    material_source_ids: list[str] = Field(default_factory=list, max_length=30)
+    emergent_source_ids: list[str] = Field(default_factory=list, max_length=30)
+    rubric_ids: list[str] = Field(default_factory=list, max_length=10)
+    title: str = Field(default="", max_length=200)
+    target: str = Field(default="", max_length=3000)
+    profile: dict | None = None
+
+
+class ProfileRerunInput(Strict):
+    expected_revision: int = Field(ge=1)
+    idempotency_key: str = Field(min_length=5, max_length=200)
+    title: str | None = Field(default=None, max_length=200)
+    target: str | None = Field(default=None, max_length=3000)
+    target_assignment_id: str | None = None
+    assignment_ids: list[str] | None = Field(default=None, max_length=10)
+    source_ids: list[str] | None = Field(default=None, max_length=20)
+    material_source_ids: list[str] | None = Field(default=None, max_length=30)
+    emergent_source_ids: list[str] | None = Field(default=None, max_length=30)
+    rubric_ids: list[str] | None = Field(default=None, max_length=10)
+
+
+class GenerationRerunInput(Strict):
+    idempotency_key: str = Field(min_length=5, max_length=200)
+    profile_id: str | None = None
+    profile_version_id: str | None = None
+    source_ids: list[str] | None = None
+    topic: str | None = Field(default=None, min_length=2, max_length=300)
+    instructions: str | None = Field(default=None, max_length=3000)
+
+
+class CounterfactualDerivation(Strict):
+    changed_assumption: str = Field(min_length=10, max_length=2000)
+    reasoning: str = Field(min_length=20, max_length=5000)
+    uncertainty: str = Field(min_length=10, max_length=2000)
+    source_fragment_ids: list[str] = Field(min_length=1, max_length=20)
 
 
 class Option(Strict):
@@ -171,6 +255,7 @@ class GeneratedItem(Strict):
     cognitive_operation: Literal["recall", "application", "transfer", "counterfactual", "communication"]
     rubric: list[Criterion] = Field(default_factory=list)
     points: int = Field(default=5, ge=1, le=100)
+    counterfactual_derivation: CounterfactualDerivation | None = None
 
     @model_validator(mode="after")
     def check_answer(self):

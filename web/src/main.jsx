@@ -34,6 +34,13 @@ import {
 import "./style.css";
 import GuidedLab from "./GuidedLab.jsx";
 import Labs from "./Labs.jsx";
+import {
+  ProfileBuilder,
+  ProfileReview,
+  CourseworkOutcomes,
+  ProfileEvolution,
+  RegeneratePractice,
+} from "./AuthoringControls.jsx";
 
 async function api(path, data, method) {
   const options = {
@@ -271,7 +278,7 @@ function App() {
   const nav = [
     ["home", Compass, "Workbench"],
     ["labs", FlaskConical, "Labs"],
-    ["create", Plus, "Sources & create"],
+    ["create", Plus, "Authoring"],
     ["coursework", FileText, "Coursework & rubrics"],
     ["plan", CalendarDays, "Plan my time"],
     ["research", FlaskConical, "Research & writing"],
@@ -467,6 +474,7 @@ function App() {
               )}
               {page === "create" && (
                 <CreateGym
+                  navigate={navigate}
                   overview={overview}
                   act={act}
                   busy={busy}
@@ -625,7 +633,10 @@ function Home({ overview, start, navigate, resume, busy }) {
                   )}
                   <div className="counts">
                     <span>
-                      <strong>{course.counts.practice}</strong> practice items
+                      <strong>
+                        {course.counts.practice + course.counts.transfer}
+                      </strong>{" "}
+                      practice items (including transfer)
                     </span>
                     <span>
                       <strong>{course.forms.length}</strong> fixed simulations
@@ -643,7 +654,7 @@ function Home({ overview, start, navigate, resume, busy }) {
                     </Action>
                   }
                   <div className="segmented" aria-label="Activity mode">
-                    {["practice", "simulation", "transfer"].map((m) => (
+                    {["practice", "simulation"].map((m) => (
                       <button
                         className={mode === m ? "active" : ""}
                         onClick={() => setMode(m)}
@@ -659,7 +670,7 @@ function Home({ overview, start, navigate, resume, busy }) {
                   </div>
                   <p className="mode-description">
                     {mode === "practice"
-                      ? "Questions favor unseen material and recent mistakes. Hints are available and recorded."
+                      ? "Practice includes familiar and unfamiliar contexts, changed assumptions and recent mistakes. Hints are available and recorded."
                       : mode === "simulation"
                         ? "A fixed, timed form. Answer keys and feedback stay sealed until you finish."
                         : "Unfamiliar contexts and changed assumptions. Create transfer items from your sources first."}
@@ -1446,7 +1457,7 @@ function Session({ ident, act, busy, done }) {
   );
 }
 
-function CreateGym({ overview, act, busy, refresh, start }) {
+function CreateGym({ overview, act, busy, refresh, start, navigate }) {
   const [courseId, setCourseId] = useState(overview.courses[0]?.id || ""),
     [sources, loadSources, sourceError] = useLoad("/sources"),
     [generations, loadGenerations] = useLoad("/generations"),
@@ -1461,15 +1472,17 @@ function CreateGym({ overview, act, busy, refresh, start }) {
     [count, setCount] = useState(4),
     [duration, setDuration] = useState(30),
     [sharedCase, setSharedCase] = useState(0),
+    [counterfactualCount, setCounterfactualCount] = useState(1),
     [mix, setMix] = useState({}),
     [mode, setMode] = useState("practice"),
     [types, setTypes] = useState(["mcq"]),
     [instructions, setInstructions] = useState(""),
     [profileId, setProfileId] = useState(""),
     [rubricId, setRubricId] = useState(""),
-    [profileEdit, setProfileEdit] = useState(null);
+    [profileEdit, setProfileEdit] = useState(null),
+    [profileEvolution, setProfileEvolution] = useState(null);
   const courseSources =
-    sources?.filter((s) => s.course_id === courseId && s.latest) || [];
+    sources?.filter((s) => s.course_id === courseId && (s.latest || selected.includes(s.id))) || [];
   const selectedSources = courseSources.filter((s) => selected.includes(s.id));
   const instructionIds = selectedSources
     .filter((s) =>
@@ -1489,7 +1502,9 @@ function CreateGym({ overview, act, busy, refresh, start }) {
       !generations?.some((g) =>
         ["queued", "generating", "retrying"].includes(g.status),
       ) &&
-      !coursework?.assessment_profile.some((p) => p.status === "queued")
+      !coursework?.assessment_profile.some((p) =>
+        ["queued", "retrying"].includes(p.status),
+      )
     )
       return;
     const t = setInterval(() => {
@@ -1528,24 +1543,45 @@ function CreateGym({ overview, act, busy, refresh, start }) {
           </Action>
         }
       >
-        Teach the gym what to cover and what your course expects you to do.
+        Course material and coursework define a reviewed assessment profile. A
+        blueprint uses that profile to generate a particular practice set or
+        mock exam.
       </PageHead>
       <ErrorBox message={sourceError} />
+      <div className="notice stack">
+        <p>
+          <strong>Learning labs</strong> explain and explore the material.{" "}
+          <strong>Coursework</strong> holds actual duties, deadlines, instructor
+          rubrics, feedback and grades. Uploading a file adds a source; it does
+          not create an obligation.
+        </p>
+        <div className="row">
+          <Action className="secondary" onClick={() => navigate("coursework")}>
+            Add or manage coursework
+          </Action>
+          <Action
+            className="secondary"
+            onClick={() => navigate("labs", courseId)}
+          >
+            Author learning labs
+          </Action>
+        </div>
+      </div>
       <div className="creation-steps">
         <div>
           <span>1</span>
-          <strong>Add material</strong>
-          <small>Sources and assessment examples</small>
+          <strong>Material & coursework</strong>
+          <small>Course concepts, actual duties and available rubrics</small>
         </div>
         <div>
           <span>2</span>
           <strong>Define the target</strong>
-          <small>Profile, rubric and practice format</small>
+          <small>Specific content scope and explicit practice rubric</small>
         </div>
         <div>
           <span>3</span>
           <strong>Generate & verify</strong>
-          <small>Source-grounded, reviewable items</small>
+          <small>Practice and counterfactual reasoning in one set</small>
         </div>
       </div>
       <Field label="Learning environment">
@@ -1577,8 +1613,9 @@ function CreateGym({ overview, act, busy, refresh, start }) {
                 Official rubric or grading instructions
               </option>
               <option value="research">Research paper or notes</option>
-              <option value="submission">
-                Your submission or graded feedback
+              <option value="submission">Your own submitted work</option>
+              <option value="feedback">
+                Instructor feedback or grade record
               </option>
             </select>
           </Field>
@@ -1638,36 +1675,17 @@ function CreateGym({ overview, act, busy, refresh, start }) {
               </Empty>
             )}
           </div>
-          {assessmentIds.length > 0 && (
-            <div className="notice stack">
-              <strong>
-                {assessmentIds.length} assessment sources selected
-              </strong>
-              <p>
-                Review each extraction, then infer an archetype. The profile
-                carries form and reasoning demands into new practice.
-              </p>
-              <Action
-                disabled={
-                  busy ||
-                  selectedSources
-                    .filter((s) => assessmentIds.includes(s.id))
-                    .some((s) => s.reconstruction_status !== "confirmed")
-                }
-                onClick={() =>
-                  act(async () => {
-                    await api("/profiles", {
-                      course_id: courseId,
-                      source_ids: assessmentIds,
-                    });
-                    loadCoursework();
-                  })
-                }
-              >
-                Infer assessment profile
-              </Action>
-            </div>
-          )}
+          <ProfileBuilder
+            courseId={courseId}
+            coursework={coursework}
+            sources={sources}
+            materialIds={instructionIds}
+            assessmentIds={assessmentIds}
+            api={api}
+            act={act}
+            busy={busy}
+            reload={loadCoursework}
+          />
         </section>
         <section className="panel">
           <h2>Practice blueprint</h2>
@@ -1687,7 +1705,9 @@ function CreateGym({ overview, act, busy, refresh, start }) {
               <select value={mode} onChange={(e) => setMode(e.target.value)}>
                 <option value="practice">Practice with feedback</option>
                 <option value="simulation">Fixed simulation</option>
-                <option value="transfer">Unfamiliar transfer tasks</option>
+                <option value="transfer">
+                  Focused transfer practice (legacy bank)
+                </option>
               </select>
             </Field>
             <Field label="Items">
@@ -1726,6 +1746,18 @@ function CreateGym({ overview, act, busy, refresh, start }) {
               ))}
             </div>
           </fieldset>
+          <Field
+            label="Counterfactual / unfamiliar reasoning items"
+            hint="Included within the chosen formats and total. Each changes an assumption and requires a derivation from the course material, with explicit uncertainty."
+          >
+            <input
+              type="number"
+              min="0"
+              max={count}
+              value={counterfactualCount}
+              onChange={(e) => setCounterfactualCount(+e.target.value)}
+            />
+          </Field>
           <Field label="Items using one shared case (0 for none)">
             <input
               type="number"
@@ -1762,12 +1794,24 @@ function CreateGym({ overview, act, busy, refresh, start }) {
               </Field>
             ))}
           </details>
-          <Field label="Assessment profile (optional)">
+          <Field label="Reviewed assessment profile">
             <select
+              aria-label="Reviewed assessment profile"
               value={profileId}
-              onChange={(e) => setProfileId(e.target.value)}
+              onChange={(e) => {
+                const p = coursework?.assessment_profile.find(
+                  (p) => p.id === e.target.value,
+                );
+                setProfileId(e.target.value);
+                setRubricId("");
+                if (p?.generation_source_ids?.length)
+                  setSelected(p.generation_source_ids);
+                else if (p?.material_source_ids?.length)
+                  setSelected(p.material_source_ids);
+                if (p?.target) setTopic(p.target.slice(0, 300));
+              }}
             >
-              <option value="">Use this blueprint directly</option>
+              <option value="">Create and confirm a profile first</option>
               {coursework?.assessment_profile
                 .filter(
                   (p) => p.course_id === courseId && p.status === "confirmed",
@@ -1784,7 +1828,9 @@ function CreateGym({ overview, act, busy, refresh, start }) {
               value={rubricId}
               onChange={(e) => setRubricId(e.target.value)}
             >
-              <option value="">Propose an explicit task rubric</option>
+              <option value="">
+                Use the reviewed profile's practice rubric
+              </option>
               {coursework?.rubric
                 .filter((r) => !r.course_id || r.course_id === courseId)
                 .map((r) => (
@@ -1805,6 +1851,8 @@ function CreateGym({ overview, act, busy, refresh, start }) {
             disabled={
               busy ||
               !instructionIds.length ||
+              !profileId ||
+              counterfactualCount > count ||
               topic.length < 2 ||
               !types.length ||
               count < types.length
@@ -1820,6 +1868,7 @@ function CreateGym({ overview, act, busy, refresh, start }) {
                   question_types: types,
                   minutes: duration,
                   shared_case_items: sharedCase,
+                  counterfactual_count: counterfactualCount,
                   type_counts: types.some(
                     (t) => mix[t] !== undefined && mix[t] !== "",
                   )
@@ -1855,11 +1904,26 @@ function CreateGym({ overview, act, busy, refresh, start }) {
                   {p.profile?.title || "Inferring an assessment archetype…"}
                 </strong>
                 <p>
-                  {p.profile?.difficulty_anchor ||
+                  {p.target ||
+                    p.profile?.difficulty_anchor ||
                     "The background worker will save a reviewable proposal."}
+                  {p.assignment_ids?.length > 0 &&
+                    ` · ${p.assignment_ids.length} coursework references`}
+                  {p.material_source_ids?.length > 0 &&
+                    ` · ${p.material_source_ids.length} instructional sources`}
+                  {p.profile?.practice_rubric && " · explicit proposed rubric"}
                 </p>
               </div>
-              <Badge>{p.status}</Badge>
+              <Badge>
+                Run {p.run_version || 1} · r{p.revision} · {p.status}
+              </Badge>
+              <Action
+                className="secondary"
+                onClick={() => setProfileEvolution(p)}
+              >
+                Evidence, versions & rerun
+              </Action>
+              {p.error && <p className="error-text">{p.error}</p>}
               {p.profile && (
                 <Action className="secondary" onClick={() => setProfileEdit(p)}>
                   Review & edit
@@ -1891,6 +1955,11 @@ function CreateGym({ overview, act, busy, refresh, start }) {
                 <strong>{g.topic}</strong>
                 <p>
                   {g.count} {g.mode} tasks · {g.question_types.join(", ")}
+                  {g.profile_snapshot &&
+                    ` · profile run ${g.profile_snapshot.run_version || 1}, r${g.profile_snapshot.revision}`}
+                  {g.counterfactual_count > 0 &&
+                    ` · ${g.counterfactual_count} counterfactual items`}
+                  {g.parent_blueprint_id && " · regenerated set"}
                   {g.error && <span className="error-text"> · {g.error}</span>}
                 </p>
                 {g.quarantined_count > 0 && (
@@ -1911,6 +1980,14 @@ function CreateGym({ overview, act, busy, refresh, start }) {
               >
                 {g.status.replaceAll("_", " ")}
               </Badge>
+              <RegeneratePractice
+                blueprint={g}
+                profiles={coursework?.assessment_profile || []}
+                api={api}
+                act={act}
+                busy={busy}
+                reload={loadGenerations}
+              />
               {["ready", "review_required"].includes(g.status) && (
                 <Action
                   className="secondary"
@@ -1919,6 +1996,7 @@ function CreateGym({ overview, act, busy, refresh, start }) {
                       course_id: courseId,
                       mode: g.mode,
                       module: g.topic,
+                      blueprint_id: g.id,
                       count: g.count,
                       form: g.mode === "simulation" ? g.id : null,
                     })
@@ -2039,59 +2117,45 @@ function CreateGym({ overview, act, busy, refresh, start }) {
             )}
         </Modal>
       )}
+      {profileEvolution && (
+        <Modal
+          title="Evolve the assessment profile"
+          close={() => setProfileEvolution(null)}
+        >
+          <ProfileEvolution
+            key={profileEvolution.id}
+            profile={profileEvolution}
+            coursework={coursework}
+            sources={sources}
+            api={api}
+            act={act}
+            busy={busy}
+            reload={loadCoursework}
+            close={() => setProfileEvolution(null)}
+          />
+        </Modal>
+      )}
       {profileEdit && (
         <Modal
           title="Edit the assessment archetype"
           close={() => setProfileEdit(null)}
         >
-          <p>
-            Keep reusable form and reasoning demands. Remove any source question
-            content before confirming.
-          </p>
-          {Object.entries(profileEdit.profile)
-            .filter(([k]) => k !== "supporting_fragment_ids")
-            .map(([k, v]) => (
-              <Field key={k} label={k.replaceAll("_", " ")}>
-                <textarea
-                  value={
-                    Array.isArray(v)
-                      ? v.join("\n")
-                      : typeof v === "object"
-                        ? JSON.stringify(v)
-                        : v
-                  }
-                  onChange={(e) =>
-                    setProfileEdit({
-                      ...profileEdit,
-                      profile: {
-                        ...profileEdit.profile,
-                        [k]: Array.isArray(v)
-                          ? e.target.value.split("\n")
-                          : e.target.value,
-                      },
-                    })
-                  }
-                />
-              </Field>
-            ))}
-          <Action
-            onClick={() =>
+          <ProfileReview
+            key={profileEdit.id}
+            value={profileEdit}
+            busy={busy}
+            onSave={(profile) =>
               act(async () => {
                 await api(
                   "/profiles/" + profileEdit.id,
-                  {
-                    profile: profileEdit.profile,
-                    expected_revision: profileEdit.revision,
-                  },
+                  { profile, expected_revision: profileEdit.revision },
                   "PUT",
                 );
                 setProfileEdit(null);
                 loadCoursework();
               })
             }
-          >
-            Confirm this profile
-          </Action>
+          />
         </Modal>
       )}
     </>
@@ -2287,6 +2351,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
     [sources] = useLoad("/sources"),
     [rubricEdit, setRubricEdit] = useState(undefined),
     [newAssignment, setNewAssignment] = useState(false),
+    [editingAssignment, setEditingAssignment] = useState(null),
     [active, setActive] = useState(initialAssignmentId || null);
   const [draft, setDraft] = useState({
     title: "",
@@ -2299,6 +2364,8 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
     deadline: null,
     points: 100,
     individual: true,
+    purpose: "coursework",
+    status: "open",
     effort_minutes: 60,
   });
   const set = (k, v) => setDraft({ ...draft, [k]: v });
@@ -2306,12 +2373,23 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
     const a = data.assignment.find((x) => x.id === active);
     return (
       <AssignmentWorkbench
+        key={a.id}
         assignment={a}
         data={data}
         reload={reload}
         act={act}
         busy={busy}
         back={() => setActive(null)}
+        edit={() => {
+          setEditingAssignment(a);
+          setDraft(
+            Object.fromEntries(
+              Object.keys(draft).map((k) => [k, a[k] ?? draft[k]]),
+            ),
+          );
+          setActive(null);
+          setNewAssignment(true);
+        }}
       />
     );
   }
@@ -2324,41 +2402,71 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
             <Action className="secondary" onClick={() => setRubricEdit(null)}>
               Create rubric
             </Action>
-            <Action onClick={() => setNewAssignment(true)}>
+            <Action
+              onClick={() => {
+                setEditingAssignment(null);
+                setDraft({
+                  title: "",
+                  course_id: overview.courses[0]?.id || "",
+                  kind: "homework",
+                  prompt: "",
+                  rubric_id: "",
+                  source_ids: [],
+                  follow_shared_rubric: false,
+                  deadline: null,
+                  points: 100,
+                  individual: true,
+                  purpose: "coursework",
+                  status: "open",
+                  effort_minutes: 60,
+                });
+                setNewAssignment(true);
+              }}
+            >
               <Plus size={17} />
               Add coursework
             </Action>
           </div>
         }
       >
-        Assignments, practice quizzes, worksheets and labs share the same
-        evidence trail.
+        Actual course duties, deadlines, rubrics and instructor outcomes live
+        here. A course-assigned lab is an obligation; learning labs are teaching
+        activities. Feedback can be recorded before your own work is uploaded.
       </PageHead>
       <ErrorBox message={error} />
       <section className="section">
         <h2>Coursework</h2>
         {data?.assignment.length ? (
-          data.assignment.map((a) => (
-            <button
-              className="assignment-row"
-              key={a.id}
-              onClick={() => setActive(a.id)}
-            >
-              <FileText size={24} />
-              <div>
-                <h3>{a.title}</h3>
-                <p>
-                  {a.kind.replace("_", " ")} · {a.points} points ·{" "}
-                  {fmtDate(a.deadline)}
-                </p>
-              </div>
-              <Badge>
-                {data.submission.filter((s) => s.assignment_id === a.id).length}{" "}
-                submissions
-              </Badge>
-              <ChevronRight size={19} />
-            </button>
-          ))
+          data.assignment
+            .filter((a) => a.purpose !== "self_study")
+            .map((a) => (
+              <button
+                className="assignment-row"
+                key={a.id}
+                onClick={() => setActive(a.id)}
+              >
+                <FileText size={24} />
+                <div>
+                  <h3>{a.title}</h3>
+                  <p>
+                    {a.kind.replace("_", " ")} · {a.status} · {a.points} points
+                    · {fmtDate(a.deadline)}
+                  </p>
+                </div>
+                <Badge>
+                  {
+                    data.submission.filter((s) => s.assignment_id === a.id)
+                      .length
+                  }{" "}
+                  local submissions ·{" "}
+                  {data.coursework_outcome?.filter(
+                    (o) => o.assignment_id === a.id,
+                  ).length || 0}{" "}
+                  instructor outcomes
+                </Badge>
+                <ChevronRight size={19} />
+              </button>
+            ))
         ) : (
           <Empty title="Bring an assignment into the loop">
             Upload its instructions and rubric, work on a draft, save
@@ -2387,6 +2495,26 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
           </div>
         ))}
       </section>
+      {data?.assignment.some((a) => a.purpose === "self_study") && (
+        <details className="section">
+          <summary>Self-study exercises linked from learning labs</summary>
+          <p>
+            These are optional study exercises and do not create course
+            obligations.
+          </p>
+          {data.assignment
+            .filter((a) => a.purpose === "self_study")
+            .map((a) => (
+              <button
+                className="assignment-row"
+                key={a.id}
+                onClick={() => setActive(a.id)}
+              >
+                {a.title}
+              </button>
+            ))}
+        </details>
+      )}
       {rubricEdit !== undefined && (
         <RubricEditor
           value={rubricEdit}
@@ -2417,7 +2545,10 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
         />
       )}
       {newAssignment && (
-        <Modal title="Add coursework" close={() => setNewAssignment(false)}>
+        <Modal
+          title={editingAssignment ? "Edit coursework" : "Add coursework"}
+          close={() => setNewAssignment(false)}
+        >
           <Field label="Title">
             <input
               value={draft.title}
@@ -2427,6 +2558,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
           <div className="form-row">
             <Field label="Gym">
               <select
+                disabled={!!editingAssignment}
                 value={draft.course_id}
                 onChange={(e) => set("course_id", e.target.value)}
               >
@@ -2455,6 +2587,26 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
                     {x.replace("_", " ")}
                   </option>
                 ))}
+              </select>
+            </Field>
+          </div>
+          <div className="form-row">
+            <Field label="Purpose">
+              <select
+                value={draft.purpose}
+                onChange={(e) => set("purpose", e.target.value)}
+              >
+                <option value="coursework">Actual coursework obligation</option>
+                <option value="self_study">Optional self-study exercise</option>
+              </select>
+            </Field>
+            <Field label="Status">
+              <select
+                value={draft.status}
+                onChange={(e) => set("status", e.target.value)}
+              >
+                <option value="open">Open</option>
+                <option value="completed">Completed externally</option>
               </select>
             </Field>
           </div>
@@ -2515,7 +2667,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
               value={draft.rubric_id}
               onChange={(e) => set("rubric_id", e.target.value)}
             >
-              <option value="">Select a rubric</option>
+              <option value="">Official rubric not available yet</option>
               {data?.rubric
                 .filter((r) => !r.course_id || r.course_id === draft.course_id)
                 .map((r) => (
@@ -2571,17 +2723,30 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
             Individual work (a team grade is not individual capability evidence)
           </label>
           <Action
-            disabled={busy || !draft.rubric_id || draft.prompt.length < 10}
+            disabled={busy || draft.prompt.length < 10}
             onClick={() =>
               act(async () => {
-                const a = await api("/assignments", draft);
+                const a = await api(
+                  "/assignments" +
+                    (editingAssignment ? "/" + editingAssignment.id : ""),
+                  {
+                    ...draft,
+                    rubric_id: draft.rubric_id || null,
+                    ...(editingAssignment
+                      ? { expected_revision: editingAssignment.revision }
+                      : {}),
+                  },
+                  editingAssignment ? "PUT" : "POST",
+                );
                 await reload();
                 setNewAssignment(false);
                 setActive(a.id);
               })
             }
           >
-            Create assignment
+            {editingAssignment
+              ? "Save coursework revision"
+              : "Create assignment"}
           </Action>
         </Modal>
       )}
@@ -2589,7 +2754,15 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
   );
 }
 
-function AssignmentWorkbench({ assignment: a, data, reload, act, busy, back }) {
+function AssignmentWorkbench({
+  assignment: a,
+  data,
+  reload,
+  act,
+  busy,
+  back,
+  edit,
+}) {
   const saved = data.assignment_draft.find((d) => d.id === a.id),
     [body, setBody] = useState(saved?.body || ""),
     [running, setRunning] = useState(false),
@@ -2610,6 +2783,8 @@ function AssignmentWorkbench({ assignment: a, data, reload, act, busy, back }) {
   const rubric = data.rubric_version.find((r) => r.id === a.rubric_version_id);
   const submissions = data.submission.filter((s) => s.assignment_id === a.id);
   const save = (event) => {
+    if (!running && !bodyRef.current && !attachedRef.current.length && !saved)
+      return Promise.resolve();
     const operation = saving.current
       .catch(() => {})
       .then(async () => {
@@ -2668,6 +2843,31 @@ function AssignmentWorkbench({ assignment: a, data, reload, act, busy, back }) {
         {fmtDate(a.deadline)} · Work is saved locally; you control submission to
         your institution.
       </PageHead>
+      <Action className="secondary" onClick={edit}>
+        Edit coursework details & rubric
+      </Action>
+      {a.purpose === "self_study" ? (
+        <p className="notice">
+          Optional self-study exercise linked from a learning lab. This is not a
+          course obligation.
+        </p>
+      ) : (
+        <CourseworkOutcomes
+          assignment={a}
+          data={data}
+          api={api}
+          act={act}
+          busy={busy}
+          reload={reload}
+        />
+      )}
+      {!rubric && (
+        <p className="notice">
+          Official rubric not yet available. You can preserve feedback and
+          grades now. Attach an explicit rubric before requesting assessment of
+          your work.
+        </p>
+      )}
       <div className="study-layout">
         <section>
           <details className="vignette" open>
@@ -2741,7 +2941,9 @@ function AssignmentWorkbench({ assignment: a, data, reload, act, busy, back }) {
               Save draft
             </Action>
             <Action
-              disabled={busy || (body.length < 10 && !attached.length)}
+              disabled={
+                busy || !rubric || (body.length < 10 && !attached.length)
+              }
               onClick={() =>
                 act(async () => {
                   await save("save");
@@ -2843,12 +3045,15 @@ function AssignmentWorkbench({ assignment: a, data, reload, act, busy, back }) {
           </section>
         </section>
         <aside className="context-rail">
-          <h3>{rubric?.title}</h3>
-          <Badge>
-            {a.follow_shared_rubric
-              ? "Follows shared rubric"
-              : "Pinned rubric version"}
-          </Badge>
+          <h3>{rubric?.title || "Rubric unavailable"}</h3>
+          {rubric && (
+            <Badge>
+              {rubric.authority} ·{" "}
+              {a.follow_shared_rubric
+                ? "Follows shared rubric"
+                : "Pinned rubric version"}
+            </Badge>
+          )}
           <p>{rubric?.permitted_assistance}</p>
           {rubric?.criteria.map((c) => (
             <div className="rubric-criterion" key={c.name}>
@@ -3619,8 +3824,9 @@ function Research({ act, busy, overview }) {
           </Action>
         }
       >
-        Turn course capabilities into arguments, experiments and reproducible
-        results.
+        Develop your own arguments, experiments and reproducible results.
+        Instructor feedback and grades belong to coursework; they are not
+        research artifacts.
       </PageHead>
       <ErrorBox message={error} />
       {editing ? (
@@ -3725,83 +3931,89 @@ function Research({ act, busy, overview }) {
                 }
               >
                 <option value="">No linked artifact</option>
-                {data?.artifacts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.title}
-                  </option>
-                ))}
+                {data?.artifacts
+                  .filter((a) => a.classification !== "coursework_record")
+                  .map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.title}
+                    </option>
+                  ))}
               </select>
             </Field>
           </aside>
         </div>
       ) : (
         <>
-          {data?.artifacts.length ? (
-            data.artifacts.map((a) => (
-              <section className="artifact panel" key={a.id}>
-                <div className="row between">
-                  <h2>{a.title}</h2>
-                  <Badge>
-                    {a.kind} · v{a.version}
-                  </Badge>
-                </div>
-                <p>
-                  <strong>Claim:</strong> {a.claim || "Not specified"}
-                </p>
-                <p>
-                  <strong>Objection:</strong> {a.objection || "Not specified"}
-                </p>
-                <details>
-                  <summary>Read artifact and provenance</summary>
-                  <p className="preserve">{a.body}</p>
-                  <p>AI contribution: {a.ai_contribution}</p>
-                  {a.relations.map((r, i) => (
-                    <small key={i}>
-                      {r.type}: {r.target_id}
-                    </small>
-                  ))}
-                </details>
-                <div className="row">
-                  <Action
-                    className="secondary"
-                    onClick={() => {
-                      setDraft({
-                        ...a,
-                        artifact_id: a.id,
-                        expected_revision: a.revision,
-                      });
-                      setEditing(true);
-                    }}
-                  >
-                    Revise
-                  </Action>
-                  <button
-                    className="text-button"
-                    onClick={() =>
-                      act(async () => {
-                        await api(
-                          "/artifacts/" + a.version_id + "/critique",
-                          {},
-                        );
-                        reload();
-                      })
-                    }
-                  >
-                    Request independent critique
-                  </button>
-                </div>
-                {data.reviews
-                  .filter((r) => r.version_id === a.version_id)
-                  .map((r) => (
-                    <Feedback
-                      key={r.id}
-                      value={r.feedback}
-                      score={r.score}
-                      points={100}
-                    />
-                  ))}
-              </section>
-            ))
+          {data?.artifacts.some(
+            (a) => a.classification !== "coursework_record",
+          ) ? (
+            data.artifacts
+              .filter((a) => a.classification !== "coursework_record")
+              .map((a) => (
+                <section className="artifact panel" key={a.id}>
+                  <div className="row between">
+                    <h2>{a.title}</h2>
+                    <Badge>
+                      {a.kind} · v{a.version}
+                    </Badge>
+                  </div>
+                  <p>
+                    <strong>Claim:</strong> {a.claim || "Not specified"}
+                  </p>
+                  <p>
+                    <strong>Objection:</strong> {a.objection || "Not specified"}
+                  </p>
+                  <details>
+                    <summary>Read artifact and provenance</summary>
+                    <p className="preserve">{a.body}</p>
+                    <p>AI contribution: {a.ai_contribution}</p>
+                    {a.relations.map((r, i) => (
+                      <small key={i}>
+                        {r.type}: {r.target_id}
+                      </small>
+                    ))}
+                  </details>
+                  <div className="row">
+                    <Action
+                      className="secondary"
+                      onClick={() => {
+                        setDraft({
+                          ...a,
+                          artifact_id: a.id,
+                          expected_revision: a.revision,
+                        });
+                        setEditing(true);
+                      }}
+                    >
+                      Revise
+                    </Action>
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        act(async () => {
+                          await api(
+                            "/artifacts/" + a.version_id + "/critique",
+                            {},
+                          );
+                          reload();
+                        })
+                      }
+                    >
+                      Request independent critique
+                    </button>
+                  </div>
+                  {data.reviews
+                    .filter((r) => r.version_id === a.version_id)
+                    .map((r) => (
+                      <Feedback
+                        key={r.id}
+                        value={r.feedback}
+                        score={r.score}
+                        points={100}
+                      />
+                    ))}
+                </section>
+              ))
           ) : (
             <Empty title="Start with one research bottleneck">
               A derivation, failed experiment, code fragment or rough argument

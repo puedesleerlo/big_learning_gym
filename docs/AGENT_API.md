@@ -493,3 +493,52 @@ workflow: course creation, source upload/review/confirmation, validation,
 preview, publication, and readback. Preview left the lab unpublished; the final
 lab contained two distinct lessons mapped to one module, with no sessions,
 attempts, study visits, submissions, or learner-state records created.
+
+
+## Goal-directed authoring and profile evolution (D-013)
+
+The standard UI's Authoring workspace, this REST API and generic MCP calls share
+one workflow. Uploading `/api/sources` creates source material; adding coursework
+uses `/api/assignments`. Teaching labs use `/api/labs`; course-assigned lab duties
+use assignments. Optional teaching exercises use `purpose=self_study`. Missing
+rubrics remain null and never block importing an actual external outcome.
+
+`POST /api/profiles` accepts the live `ProfileInput`: a specific `target`, optional
+`target_assignment_id` for the intended future duty, prior `assignment_ids`,
+prior assessment/rubric `source_ids`, prior `material_source_ids`,
+`emergent_source_ids`, and optional explicit rubric references. Source IDs are
+reviewed same-course versions. No grades, feedback or learner responses enter
+profiling. The reviewable proposal includes its content scope, explicit
+`practice_rubric` and `rubric_basis`; proposed criteria are not official criteria.
+An optional manual `profile` proposal avoids the model call. Confirm with the
+current revision using `PUT /api/profiles/{id}`.
+
+`GET /api/profiles/{id}/versions` returns the current profile and immutable saved
+revisions. `POST /api/profiles/{id}/rerun` requires `expected_revision` and
+`idempotency_key`, with optional input replacements using `ProfileRerunInput`.
+Omitted inputs persist; supplied arrays replace them. Each run pins refreshed
+coursework/rubric snapshots and selected source versions and needs review.
+
+`POST /api/generations` pins the confirmed profile and instructional context.
+Optional `profile_version_id` chooses a historical confirmed revision.
+`counterfactual_count` reserves changed-assumption and uncertainty reasoning
+inside the existing total/format allocation for practice or simulations.
+`POST /api/generations/{id}/rerun` uses `GenerationRerunInput` and an exact-payload
+idempotency key, creating a new blueprint with `parent_blueprint_id` and retaining
+old sets. A session's optional `blueprint_id` selects a specific set (up to 40
+items). Simulation publication and solution sealing are unchanged.
+
+`POST /api/assignments/{id}/outcomes` uses `CourseworkOutcomeInput` for actual
+instructor grades and/or feedback before local work is uploaded. Attribution,
+observation time, nullable original occurrence time, source reference, separate
+learner comment, limitations, optional completion and versioned correction are
+explicit. `artifact_version_id` preserves a previous import; explicitly setting
+`reclassify_artifact` moves its current projection out of research. No learner
+submission, timer, mastery or measured effort is fabricated. These unlinked
+outcomes remain outside the existing submission-based recommendation algorithm.
+
+The prepared-agent procedure and example payloads are in
+[`skills/learning-gym/references/profiles-and-coursework.md`](../skills/learning-gym/references/profiles-and-coursework.md).
+MCP `gym_schema`, `gym_read` and `gym_request` expose each REST workflow without a
+second implementation. Read capability schemas for field requirements and retry
+semantics; do not bypass them with direct database writes.

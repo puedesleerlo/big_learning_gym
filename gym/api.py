@@ -28,8 +28,12 @@ from . import (
 from .contracts import (
     AnswerInput,
     CourseInput,
+    CourseworkOutcomeInput,
     GenerationInput,
+    GenerationRerunInput,
     GoalInput,
+    ProfileInput,
+    ProfileRerunInput,
     SessionInput,
     TaskInput,
     TimerInput,
@@ -252,6 +256,7 @@ def create_app(store=None, router=None, embedded_worker=None, workspace=None):
                     "submission",
                     "submission_assessment",
                     "official_grade",
+                    "coursework_outcome",
                     "assessment_profile",
                 ]
             }
@@ -267,6 +272,14 @@ def create_app(store=None, router=None, embedded_worker=None, workspace=None):
     @app.post("/api/assignments")
     def create_assignment(data: dict):
         return assignments.create_assignment(store, data)
+
+    @app.put("/api/assignments/{ident}")
+    def revise_assignment(ident: str, data: dict):
+        return assignments.revise_assignment(store, ident, data)
+
+    @app.post("/api/assignments/{ident}/outcomes")
+    def record_coursework_outcome(ident: str, data: CourseworkOutcomeInput):
+        return assignments.record_coursework_outcome(store, ident, data.model_dump())
 
     @app.post("/api/assignments/{ident}/draft")
     def save_draft(ident: str, data: dict):
@@ -287,24 +300,25 @@ def create_app(store=None, router=None, embedded_worker=None, workspace=None):
         return assignments.official_grade(store, ident, data)
 
     @app.post("/api/profiles")
-    def profile(data: dict):
-        return assignments.request_profile(store, data["course_id"], data["source_ids"])
+    def profile(data: ProfileInput):
+        return assignments.request_profile(store, **data.model_dump())
 
     @app.put("/api/profiles/{ident}")
     def edit_profile(ident: str, data: dict):
+        return assignments.confirm_profile(store, ident, data)
+
+    @app.get("/api/profiles/{ident}/versions")
+    def profile_versions(ident: str):
         with store.tx() as c:
-            profile = store.get(c, "assessment_profile", ident)
-            if not isinstance(data.get("profile"), dict):
-                raise ValueError("Profile must be a structured object")
-            result = store.put(
-                c,
-                "assessment_profile",
-                ident,
-                {**profile, "profile": data["profile"], "status": "confirmed", "confirmed_at": now()},
-                expected_revision=data.get("expected_revision"),
-            )
-            store.emit(c, "profile.confirmed", ident, {"revision": result["revision"]})
-            return result
+            current = store.get(c, "assessment_profile", ident)
+            versions = [
+                v for v in store.list(c, "assessment_profile_version") if v.get("profile_id") == ident
+            ]
+            return {"current": current, "versions": versions}
+
+    @app.post("/api/profiles/{ident}/rerun")
+    def rerun_profile(ident: str, data: ProfileRerunInput):
+        return assignments.rerun_profile(store, ident, data.model_dump(exclude_unset=True))
 
     @app.post("/api/sources/{ident}/interpret")
     def interpret(ident: str):
@@ -326,6 +340,10 @@ def create_app(store=None, router=None, embedded_worker=None, workspace=None):
         with store.tx() as c:
             return store.list(c, "blueprint")
 
+    @app.post("/api/generations/{ident}/rerun")
+    def rerun_generation(ident: str, data: GenerationRerunInput):
+        return generation.rerun_generation(store, ident, data.model_dump(exclude_unset=True))
+
     @app.get("/api/progress")
     def progress():
         from .lab_activity import activity_view
@@ -344,7 +362,8 @@ def create_app(store=None, router=None, embedded_worker=None, workspace=None):
                 "evaluations": store.list(c, "evaluation"),
                 "interventions": store.list(c, "intervention"),
                 "lab_activities": [
-                    activity_view(store, c, activity, include_snapshot=False) for activity in store.list(c, "lab_activity")
+                    activity_view(store, c, activity, include_snapshot=False)
+                    for activity in store.list(c, "lab_activity")
                 ],
                 "adaptation": store.get(c, "adaptation_settings", "default", False) or {"enabled": True},
             }

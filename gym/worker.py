@@ -105,6 +105,23 @@ class Worker:
                         bp["id"],
                         {**bp, "status": "failed" if status == "failed" else "retrying", "error": safe[:600]},
                     )
+                if job["kind"] == "profile":
+                    from .assignments import _save_profile
+
+                    profile = self.store.get(c, "assessment_profile", job["payload"]["profile_id"])
+                    if profile.get("run_version", 1) == job["payload"].get("run_version", 1) and profile[
+                        "status"
+                    ] in {"queued", "retrying"}:
+                        _save_profile(
+                            self.store,
+                            c,
+                            profile["id"],
+                            {
+                                **profile,
+                                "status": "failed" if status == "failed" else "retrying",
+                                "error": safe[:600],
+                            },
+                        )
         else:
             with self.store.tx() as c:
                 c.execute(
@@ -134,7 +151,9 @@ class Worker:
         if kind == "profile":
             from .assignments import generate_profile
 
-            return generate_profile(self.store, self.router, payload["profile_id"])
+            return generate_profile(
+                self.store, self.router, payload["profile_id"], payload.get("run_version")
+            )
         if kind == "assess_submission":
             from .assignments import assess_submission
 

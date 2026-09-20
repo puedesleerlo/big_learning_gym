@@ -121,3 +121,66 @@ async def test_mcp_auth_and_error_redaction():
         assert "secret-test-token" not in result.content[0].text
         assert "401" in result.content[0].text
     assert requests[0].headers["authorization"] == "Bearer secret-test-token"
+
+
+@pytest.mark.anyio
+async def test_mcp_targeted_profile_history_rerun_and_external_outcome(store):
+    from gym.ingestion import ingest
+
+    source = ingest(store, "course", "prior.md", b"Random assignment supports a comparison in expectation.")
+    with store.tx() as c:
+        store.put(c, "source", source["id"], {**source, "reconstruction_status": "confirmed"})
+    server = create_server(
+        base_url="http://testserver",
+        token="",
+        transport=httpx.ASGITransport(app=create_app(store, embedded_worker=False)),
+    )
+    async with create_connected_server_and_client_session(server) as session:
+
+        async def write(path, payload):
+            return body(
+                await session.call_tool("gym_request", {"method": "POST", "path": path, "body": payload})
+            )
+
+        manifest = body(await session.call_tool("gym_capabilities", {}))
+        assert "profile_rerun" in manifest["existing_workflows"]
+        schema = body(await session.call_tool("gym_schema", {"path": "/api/profiles/{ident}/rerun"}))
+        assert "ProfileRerunInput" in schema["components"]["schemas"]
+        assignment = await write(
+            "/api/assignments",
+            {
+                "course_id": "course",
+                "title": "Future Quiz",
+                "prompt": "Prepare to explain a randomized comparison.",
+            },
+        )
+        profile = await write(
+            "/api/profiles",
+            {
+                "course_id": "course",
+                "target": "Prepare for the future quiz",
+                "target_assignment_id": assignment["id"],
+                "material_source_ids": [source["id"]],
+            },
+        )
+        history = body(
+            await session.call_tool("gym_read", {"path": f"/api/profiles/{profile['id']}/versions"})
+        )
+        assert history["versions"][0]["target_assignment_id"] == assignment["id"]
+        rerun = await write(
+            f"/api/profiles/{profile['id']}/rerun",
+            {"expected_revision": profile["revision"], "idempotency_key": "mcp-rerun-test"},
+        )
+        assert rerun["run_version"] == 2
+        outcome = await write(
+            f"/api/assignments/{assignment['id']}/outcomes",
+            {
+                "idempotency_key": "mcp-outcome-test",
+                "feedback": "An actual external instructor comment.",
+                "attribution": "Synthetic instructor record",
+                "observed_at": "2026-09-20T12:00:00-04:00",
+            },
+        )
+        assert outcome["score"] is None and outcome["submission_id"] is None
+        coursework = body(await session.call_tool("gym_read", {"path": "/api/coursework"}))
+        assert coursework["submission"] == [] and len(coursework["coursework_outcome"]) == 1

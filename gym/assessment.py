@@ -115,6 +115,8 @@ def save_artifact(store, data):
     with store.tx() as c:
         artifact_id = data.get("artifact_id") or uid("artifact_")
         old = store.get(c, "artifact", artifact_id, False)
+        if old and old.get("classification") == "coursework_record":
+            raise ValueError("This record was moved to coursework; update its attributed outcome there")
         for relation in data.get("relations", []):
             if relation.get("type") not in {
                 "requires",
@@ -159,6 +161,11 @@ def save_artifact(store, data):
 def critique_artifact(store, router, version_id):
     with store.tx() as c:
         artifact = store.get(c, "artifact_version", version_id)
+        current = store.get(c, "artifact", artifact["artifact_id"])
+        if current.get("classification") == "coursework_record":
+            raise ValueError(
+                "Instructor feedback belongs to coursework and cannot be critiqued as learner research"
+            )
         previous = store.get(c, "artifact_review", "review:" + version_id, False)
         if previous:
             return previous
@@ -169,6 +176,8 @@ def critique_artifact(store, router, version_id):
     }
     score, feedback = judge(router, item, artifact["body"], "research_coach")
     with store.tx() as c:
+        if store.get(c, "artifact", artifact["artifact_id"]).get("classification") == "coursework_record":
+            raise ValueError("Artifact was moved to coursework during critique")
         review = store.put(
             c,
             "artifact_review",

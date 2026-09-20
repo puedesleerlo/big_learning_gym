@@ -132,7 +132,7 @@ def parse_file(name, raw):
 
 
 def ingest(store, course_id, name, raw, role="instruction"):
-    if role not in {"instruction", "assessment", "rubric", "submission", "research"}:
+    if role not in {"instruction", "assessment", "rubric", "submission", "feedback", "research"}:
         raise ValueError("Unknown source role")
     fragments, flags = parse_file(name, raw)
     name = Path(name).name

@@ -48,7 +48,7 @@ A candidate passes only when holdout mean absolute error is strictly below 90% o
 
 Tests: `tests/test_llm_adaptation.py`, `tests/test_recovery_adaptation.py`.
 
-## A-006 — Scoring and publication
+## A-006 — Scoring and publication: `grounded-practice-v3`, `verify-v3`, `practice-selection-v2`
 
 Implementations: `gym/sessions.py`, `gym/assessment.py`, `gym/generation.py`, `gym/contracts.py`.
 
@@ -56,7 +56,13 @@ MCQ uses one exact key; matching earns the fraction of correctly matched prompts
 
 Generate up to 40 items in batches of four, enforcing requested format counts and source references. A shared case is reused for the configured trailing items. A separate verifier must agree on MCQ keys/matching mappings and return no issues. Unsupported, ambiguous or duplicate items are quarantined. Fixed simulations publish only if every item passes. These checks do not establish psychometric equivalence to an official exam.
 
-Tests: `tests/test_generation.py`, `tests/test_coursework.py`, `tests/test_sessions.py`.
+D-013 adds a counterfactual quota inside each practice or simulation format allocation (default zero for legacy API calls; one in the new UI, author-configurable). Reserved trailing items retain their format but have counterfactual cognitive operation, explicit changed-assumption/derivation/uncertainty metadata and cited source premises. Schema and source checks reject missing or foreign derivations; the independent verifier must explicitly return `counterfactual_valid=true`, in addition to all existing validity/key gates. Invalid items remain quarantined; simulation all-or-nothing publication and scoring formulas are unchanged. This tests derivation plausibility, not psychometric validity.
+
+Ordinary practice selection now includes both existing practice and transfer pools, retaining the existing unseen/error weighting. Explicit blueprint selection restricts sampling to one generated set. Simulation items remain excluded from practice. Item and learner dimensions are not relabeled. Legacy focused transfer mode continues to sample only its own pool. Session count supports up to 40 items, matching generation; no fixed simulation items are truncated.
+
+Targeted profiling `targeted-profile-v1` uses the future-task goal, allowlisted snapshots of intended/prior coursework, and up to 20 retrieved fragments per prior assessment, prior instructional and emergent source group. Each group is explicitly empty when unselected; it never falls back to all course sources. Grades, submissions, feedback and learner state are excluded. Current selected rubric versions are pinned. Proposals include an explicitly proposed practice rubric and its derivation; no fixed score weights are assumed to be official. Reruns snapshot refreshed evidence in immutable revisions and require review. Generation snapshots up to 12 instructional fragments before queuing, uses only its confirmed profile's material scope, and copies the reviewed open-response rubric exactly. Independent verification and factual review remain necessary.
+
+Tests: `tests/test_generation.py`, `tests/test_coursework.py`, `tests/test_sessions.py`, `tests/test_authoring_workflow.py`, `web/tests/authoring.mjs`.
 
 ## A-007 — Rich lab activities: registry `2.0`, tutor `lab-discussion-v1`
 

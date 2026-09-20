@@ -61,6 +61,15 @@ def create_session(store, spec):
             for i in store.list(c, "item")
             if i["course_id"] == spec["course_id"] and i["status"] == "active"
         ]
+        if spec.get("blueprint_id"):
+            blueprint = store.get(c, "blueprint", spec["blueprint_id"])
+            if blueprint["course_id"] != spec["course_id"]:
+                raise ValueError("Question set belongs to another course")
+            if blueprint["mode"] == "simulation" and spec["mode"] != "simulation":
+                raise ValueError("Simulation items require the sealed simulation workflow")
+            if spec["mode"] == "simulation" and spec.get("form") != blueprint["id"]:
+                raise ValueError("Simulation form must match the selected question set")
+            available = [i for i in available if i.get("blueprint_id") == blueprint["id"]]
         attempts = store.list(c, "attempt")
         mode = spec["mode"]
         limit = None
@@ -85,10 +94,11 @@ def create_session(store, spec):
             items = [
                 i
                 for i in available
-                if i["pool"] == mode and (spec["module"] == "all" or i["module"] == spec["module"])
+                if (i["pool"] in {"practice", "transfer"} if mode == "practice" else i["pool"] == mode)
+                and (spec["module"] == "all" or i["module"] == spec["module"])
             ]
             if not items:
-                raise ValueError("No verified items for this mode yet. Create a set from Sources & create.")
+                raise ValueError("No verified items for this mode yet. Create a set in Authoring.")
 
             # Weighted sampling without replacement: unseen and latest errors are favored.
             def weight(item):

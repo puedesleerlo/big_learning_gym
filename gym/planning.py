@@ -155,6 +155,65 @@ def revise_task(store, ident, changes):
         return result
 
 
+def close_coursework_task(store, c, ident, reference_id, reason):
+    """Close an obligation without manufacturing a measured completion interval."""
+    task = store.get(c, "task", ident)
+    if task["status"] == "complete":
+        return task
+    result = store.put(
+        c,
+        "task",
+        ident,
+        {
+            **task,
+            "status": "complete",
+            "completion_kind": reason,
+            "completion_reference_id": reference_id,
+        },
+    )
+    store.emit(
+        c,
+        "task.completed",
+        ident,
+        {
+            "before": task,
+            "after": result,
+            "actual_active_minutes": None,
+            "reason": reason,
+        },
+    )
+    return result
+
+
+def revise_coursework_task(store, c, before, after):
+    if after["purpose"] == "self_study" or after["status"] == "completed":
+        return close_coursework_task(
+            store,
+            c,
+            before["task_id"],
+            after["id"],
+            "self_study_reclassification" if after["purpose"] == "self_study" else "external_completion",
+        )
+    task = store.get(c, "task", before["task_id"])
+    changed = {k: after[k] for k in ("title", "deadline", "effort_minutes") if before[k] != after[k]}
+    if not changed:
+        return task
+    scope = "effort_minutes" in changed
+    result = store.put(
+        c, "task", task["id"], {**task, **changed, "scope_version": task["scope_version"] + int(scope)}
+    )
+    if scope:
+        store.invalidate(c, "task:" + task["id"], "Coursework remaining effort changed")
+        estimate(store, c, result)
+    store.emit(
+        c,
+        "task.scope_changed" if scope else "task.deadline_changed",
+        task["id"],
+        {"before": task, "after": result},
+    )
+    return result
+
+
 def propose_schedule(store, settings):
     tz = settings.get("timezone", "America/New_York")
     zone = ZoneInfo(tz)

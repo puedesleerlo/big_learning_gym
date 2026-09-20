@@ -83,6 +83,11 @@ def seed(store):
         items = []
         for pool in ("practice", "transfer"):
             for kind in ("mcq", "matching", "open", "case", "counterfactual", "coding"):
+                # D-013: one six-format practice journey now covers both banks.
+                # Keep one item per format so the fixture exercises every renderer,
+                # independently of random practice selection order.
+                if (kind in {"counterfactual", "coding"}) != (pool == "transfer"):
+                    continue
                 item = {
                     "course_id": "demo-course",
                     "module": "reasoning",
@@ -197,7 +202,7 @@ def seed(store):
     return {
         "labs": list_labs(store),
         "lab": get_lab(store, "demo-lab"),
-        "items": [public_item(i) for i in items if i["pool"] == "practice"],
+        "items": [public_item(i) for i in items],
         "registry": activity_types(),
     }
 

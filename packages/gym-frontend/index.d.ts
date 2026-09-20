@@ -213,6 +213,7 @@ export interface PracticeSpec {
   module: string;
   mode: "practice" | "transfer";
   count: number;
+  blueprint_id?: string | null;
 }
 export interface Overview {
   courses: { id: string; title: string; [key: string]: unknown }[];

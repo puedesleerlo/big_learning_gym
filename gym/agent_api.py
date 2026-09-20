@@ -5,7 +5,14 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
 from . import authoring
-from .contracts import AssignmentInput, RubricInput
+from .contracts import (
+    AssignmentInput,
+    CourseworkOutcomeInput,
+    GenerationRerunInput,
+    ProfileInput,
+    ProfileRerunInput,
+    RubricInput,
+)
 from .sessions import public_item
 
 
@@ -87,7 +94,14 @@ def register_agent_api(app, store):
                 },
                 "assignment": {
                     "create": "POST /api/assignments",
+                    "revise": "PUT /api/assignments/{id}; expected_revision required",
                     "schema": AssignmentInput.model_json_schema(),
+                    "meaning": "Actual obligations use purpose=coursework; teaching exercises use self_study. A missing rubric stays null. Completed historical coursework creates no open task.",
+                },
+                "coursework_outcome": {
+                    "route": "POST /api/assignments/{id}/outcomes",
+                    "schema": CourseworkOutcomeInput.model_json_schema(),
+                    "meaning": "Record actual instructor feedback or grades before local learner work is uploaded. Keep original attribution, dates and provenance. Never fabricate a submission. Explicit reclassify_artifact moves a misplaced feedback record out of research while preserving its original version.",
                 },
                 "draft": {
                     "route": "POST /api/assignments/{id}/draft",
@@ -135,7 +149,20 @@ def register_agent_api(app, store):
                 },
                 "profile_request": {
                     "route": "POST /api/profiles",
-                    "json": {"course_id": "ID", "source_ids": ["confirmed assessment/rubric version IDs"]},
+                    "schema": ProfileInput.model_json_schema(),
+                    "intent": "target describes the specific assessment goal; target_assignment_id optionally identifies the intended future coursework. assignment_ids are prior coursework, source_ids are prior assessment/rubric examples, material_source_ids are prior instruction, and emergent_source_ids are newly available instruction/assessment/rubric evidence. Exclude grades, feedback and learner responses.",
+                    "meaning": "Creates a model-backed proposal, or a manual needs_review proposal when profile is supplied. Targeted proposals require an explicit derived practice_rubric and rubric_basis. Confirm after reviewing the goal, evidence and rubric.",
+                },
+                "profile_rerun": {
+                    "route": "POST /api/profiles/{id}/rerun",
+                    "schema": ProfileRerunInput.model_json_schema(),
+                    "history": "GET /api/profiles/{id}/versions",
+                    "meaning": "Refresh selected evidence and intended coursework snapshots. Omitted selections are preserved; supplied arrays replace them. New model proposal needs review. Every saved revision is immutable in history. Exact retries use the same key; changed input needs a new key.",
+                },
+                "practice_rerun": {
+                    "route": "POST /api/generations/{id}/rerun",
+                    "schema": GenerationRerunInput.model_json_schema(),
+                    "meaning": "Create a new verified question set from the latest confirmed profile (or an explicit profile_version_id), preserving original questions, forms and attempts. Optional source_ids narrow its instructional scope. counterfactual_count in a generation blueprint reserves reasoning-under-uncertainty items inside practice or simulation.",
                 },
                 "profile_revision": {
                     "route": "PUT /api/profiles/{id}",
