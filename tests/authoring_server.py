@@ -48,6 +48,10 @@ if __name__ == "__main__":
             source = ingest(store, "course", name, text.encode())
             with store.tx() as c:
                 store.put(c, "source", source["id"], {**source, "reconstruction_status": "confirmed"})
+        for i in range(20):
+            source = ingest(store, "course", f"Library reading {i:02}.md", f"Course concept {i}".encode())
+            with store.tx() as c:
+                store.put(c, "source", source["id"], {**source, "reconstruction_status": "confirmed"})
         create_assignment(
             store,
             {

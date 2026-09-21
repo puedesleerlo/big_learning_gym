@@ -4,7 +4,14 @@ import json
 
 from .assessment import judge
 from .authoring import RevisionConflict
-from .contracts import AssignmentInput, CourseworkOutcomeInput, ProfileInput, ProfileRerunInput, RubricInput
+from .contracts import (
+    AssignmentInput,
+    CourseworkOutcomeInput,
+    ProfileInput,
+    ProfileRerunInput,
+    ProfileRunInput,
+    RubricInput,
+)
 from .generation import SYSTEM
 from .ingestion import retrieve
 from .store import digest, now, uid
@@ -513,9 +520,11 @@ def _save_profile(store, c, ident, data, expected_revision=None):
 def request_profile(
     store, course_id, source_ids, _ident=None, _expected=None, _rerun_key=None, _request_hash=None, **options
 ):
-    spec = ProfileInput.model_validate(
-        {"course_id": course_id, "source_ids": source_ids, **options}
-    ).model_dump()
+    spec = (
+        (ProfileRunInput if _ident else ProfileInput)
+        .model_validate({"course_id": course_id, "source_ids": source_ids, **options})
+        .model_dump()
+    )
     with store.tx() as c:
         old = store.get(c, "assessment_profile", _ident, False) if _ident else None
         receipt_id = "profile_rerun_" + digest([_ident, _rerun_key])[:32] if _rerun_key else None
@@ -550,6 +559,20 @@ def request_profile(
             a = store.get(c, "assignment", aid)
             if a["course_id"] != course_id:
                 raise ValueError("Profile coursework belongs to another course")
+            if aid == spec["target_assignment_id"]:
+                if a.get("purpose") == "self_study":
+                    raise ValueError(
+                        "The profile target must be actual coursework, not a self-study exercise"
+                    )
+                # Validate legacy records too; a nonempty date string alone is not sufficient.
+                try:
+                    AssignmentInput.model_validate(
+                        {k: v for k, v in a.items() if k in AssignmentInput.model_fields}
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        "Update the target coursework with a valid deadline and estimated time first"
+                    ) from exc
             # An allowlist deliberately excludes deadlines, grades, submissions, feedback and learner history.
             assignments.append(
                 {
@@ -611,7 +634,7 @@ def request_profile(
             "rubric_snapshots": list(rubrics.values()),
             "status": "queued",
             "created_at": now(),
-            "contract_version": "targeted-profile-v1" if targeted else "legacy-style-v1",
+            "contract_version": "targeted-profile-v2" if targeted else "legacy-style-v1",
         }
         # Empty source lists must never expand to the entire course in retrieve().
         record["assessment_fragments"] = (
@@ -691,7 +714,7 @@ def confirm_profile(store, ident, data):
         result = data.get("profile")
         if not isinstance(result, dict) or not result.get("title"):
             raise ValueError("Profile must be a structured object with a title")
-        if old.get("contract_version") == "targeted-profile-v1":
+        if old.get("contract_version", "").startswith("targeted-profile-"):
             result["practice_rubric"] = _profile_rubric(result.get("practice_rubric"), old["course_id"])
             if not result.get("rubric_basis"):
                 raise ValueError("Explain how the practice rubric was derived, including unknowns")
@@ -740,7 +763,7 @@ def generate_profile(store, router, ident, run_version=None):
                 if profile["source_ids"]
                 else []
             )
-    targeted = profile.get("contract_version") == "targeted-profile-v1"
+    targeted = profile.get("contract_version", "").startswith("targeted-profile-")
     output, provenance = router.complete(
         "designer",
         SYSTEM,

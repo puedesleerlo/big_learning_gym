@@ -58,7 +58,7 @@ def request_generation(store, specification, _rerun=None):
                 "target_assignment_id": profile.get("target_assignment_id"),
                 "target_assignment_snapshot": profile.get("target_assignment_snapshot"),
             }
-            if profile.get("contract_version") == "targeted-profile-v1":
+            if profile.get("contract_version", "").startswith("targeted-profile-"):
                 if not set(spec["source_ids"]) <= set(
                     profile.get("generation_source_ids", profile["material_source_ids"])
                 ):
@@ -132,7 +132,7 @@ def rerun_generation(store, blueprint_id, payload):
             )
             if profile.get("profile_version_id"):
                 spec["profile_version_id"] = profile["profile_version_id"]
-            if profile.get("contract_version") == "targeted-profile-v1":
+            if profile.get("contract_version", "").startswith("targeted-profile-"):
                 if "source_ids" not in data:
                     spec["source_ids"] = profile["generation_source_ids"]
                 spec["rubric_id"] = None

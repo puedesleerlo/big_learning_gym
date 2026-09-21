@@ -509,10 +509,13 @@ uses `/api/assignments`. Teaching labs use `/api/labs`; course-assigned lab duti
 use assignments. Optional teaching exercises use `purpose=self_study`. Missing
 rubrics remain null and never block importing an actual external outcome.
 
-`POST /api/profiles` accepts the live `ProfileInput`: a specific `target`, optional
-`target_assignment_id` for the intended future duty, prior `assignment_ids`,
-prior assessment/rubric `source_ids`, prior `material_source_ids`,
-`emergent_source_ids`, and optional explicit rubric references. Source IDs are
+`POST /api/profiles` accepts the live `ProfileInput`: a specific `target`, required
+`target_assignment_id` naming existing actual coursework with a valid deadline
+and estimated time, prior `assignment_ids`, prior assessment/rubric `source_ids`,
+and prior `material_source_ids`. Coursework rubrics are included automatically;
+additional `rubric_ids` remain available for explicit agent use. All evidence
+available at creation is prior evidence; `emergent_source_ids` must be empty.
+Create or revise the actual coursework through `/api/assignments` first if needed. Source IDs are
 reviewed same-course versions. No grades, feedback or learner responses enter
 profiling. The reviewable proposal includes its content scope, explicit
 `practice_rubric` and `rubric_basis`; proposed criteria are not official criteria.
@@ -522,7 +525,9 @@ current revision using `PUT /api/profiles/{id}`.
 `GET /api/profiles/{id}/versions` returns the current profile and immutable saved
 revisions. `POST /api/profiles/{id}/rerun` requires `expected_revision` and
 `idempotency_key`, with optional input replacements using `ProfileRerunInput`.
-Omitted inputs persist; supplied arrays replace them. Each run pins refreshed
+Newly available evidence enters through `emergent_source_ids` on rerun only.
+A legacy profile must select valid dated coursework before rerunning; its saved
+versions remain readable and usable. Omitted inputs persist; supplied arrays replace them. Each run pins refreshed
 coursework/rubric snapshots and selected source versions and needs review.
 
 `POST /api/generations` pins the confirmed profile and instructional context.
