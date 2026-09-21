@@ -1,30 +1,290 @@
 import React, { useEffect, useState } from "react";
 
+// Search at the point of use; selected evidence stays visible even in a large library.
+export function EvidencePicker({
+  label,
+  options,
+  value,
+  onChange,
+  multiple = true,
+  hint,
+}) {
+  const id = React.useId();
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const ids = multiple ? value : value ? [value] : [];
+  const matches = options.filter(
+    (o) =>
+      !ids.includes(o.id) &&
+      `${o.title || o.name} ${o.description || ""}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+  );
+  const results = matches.slice(0, 8);
+  const choose = (o) => {
+    onChange(multiple ? [...ids, o.id] : o.id);
+    setQuery("");
+    setOpen(false);
+    setActive(-1);
+  };
+  return (
+    <div
+      className="evidence-picker"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+      }}
+    >
+      <label className="field" htmlFor={id}>
+        <span>{label}</span>
+      </label>
+      {hint && (
+        <p className="small muted" id={id + "-hint"}>
+          {hint}
+        </p>
+      )}
+      {ids.length > 0 && (
+        <ul className="evidence-chips" aria-label={label + " selected"}>
+          {ids.map((key) => (
+            <li key={key}>
+              <span>
+                {options.find((o) => o.id === key)?.title ||
+                  options.find((o) => o.id === key)?.name ||
+                  "Previously selected evidence"}
+              </span>
+              <button
+                type="button"
+                aria-label={
+                  "Remove " +
+                  (options.find((o) => o.id === key)?.title ||
+                    options.find((o) => o.id === key)?.name ||
+                    "evidence")
+                }
+                onClick={() =>
+                  onChange(multiple ? ids.filter((v) => v !== key) : "")
+                }
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <input
+        id={id}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={id + "-results"}
+        aria-describedby={hint ? id + "-hint" : undefined}
+        aria-activedescendant={
+          open && active >= 0 ? id + "-" + active : undefined
+        }
+        placeholder={
+          multiple ? "Type to find and add…" : "Type to find coursework…"
+        }
+        value={query}
+        onFocus={() => setOpen(true)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+          setActive(-1);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setOpen(false);
+            setActive(-1);
+          }
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            setOpen(true);
+            setActive((i) =>
+              Math.max(
+                results.length ? 0 : -1,
+                Math.min(
+                  results.length - 1,
+                  i + (e.key === "ArrowDown" ? 1 : -1),
+                ),
+              ),
+            );
+          }
+          if (e.key === "Enter" && open && results[active]) {
+            e.preventDefault();
+            choose(results[active]);
+          }
+        }}
+      />
+      {open && (
+        <div className="evidence-results">
+          <ul
+            id={id + "-results"}
+            role="listbox"
+            aria-label={label + " matches"}
+          >
+            {results.map((o, i) => (
+              <li
+                id={id + "-" + i}
+                role="option"
+                aria-selected={active === i}
+                key={o.id}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => choose(o)}
+              >
+                <strong>{o.title || o.name}{o.version ? ` · v${o.version}` : ""}</strong>
+                {o.description && <small>{o.description}</small>}
+              </li>
+            ))}
+          </ul>
+          <p className="small muted" role="status">
+            {matches.length
+              ? `${matches.length} match${matches.length === 1 ? "" : "es"}${matches.length > 8 ? "; type more to narrow the results" : ""}`
+              : "No matching evidence. Try another name or add material to this gym."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InlineCoursework({ courseId, api, act, busy, onSaved, close }) {
+  const [draft, setDraft] = useState({
+    title: "",
+    prompt: "",
+    deadline: "",
+    effort_minutes: "",
+    kind: "practice_quiz",
+  });
+  const set = (key, value) => setDraft({ ...draft, [key]: value });
+  return (
+    <div className="inline-coursework" aria-label="New coursework">
+      <h3>Add the task you’re preparing for</h3>
+      <p>
+        Use the actual assignment instructions and deadline. You can attach its
+        documents and official rubric in Coursework later.
+      </p>
+      <label className="field">
+        <span>Coursework title</span>
+        <input
+          value={draft.title}
+          onChange={(e) => set("title", e.target.value)}
+        />
+      </label>
+      <label className="field">
+        <span>Assignment instructions</span>
+        <textarea
+          value={draft.prompt}
+          onChange={(e) => set("prompt", e.target.value)}
+        />
+      </label>
+      <label className="field">
+        <span>Coursework type</span>
+        <select
+          value={draft.kind}
+          onChange={(e) => set("kind", e.target.value)}
+        >
+          {[
+            "homework",
+            "practice_quiz",
+            "worksheet",
+            "lab",
+            "essay",
+            "coding",
+            "project",
+          ].map((kind) => (
+            <option value={kind} key={kind}>
+              {kind.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="form-row">
+        <label className="field">
+          <span>Deadline (required)</span>
+          <input
+            type="datetime-local"
+            required
+            value={draft.deadline}
+            onChange={(e) => set("deadline", e.target.value)}
+          />
+        </label>
+        <label className="field">
+          <span>Estimated time in minutes (required)</span>
+          <input
+            type="number"
+            min="5"
+            max="10000"
+            required
+            value={draft.effort_minutes}
+            onChange={(e) => set("effort_minutes", e.target.value)}
+          />
+        </label>
+      </div>
+      <p className="small muted">
+        Deadline timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}.
+      </p>
+      <div className="row">
+        <button
+          className="button"
+          disabled={
+            busy ||
+            draft.title.trim().length < 2 ||
+            draft.prompt.trim().length < 10 ||
+            !draft.deadline ||
+            !Number.isInteger(+draft.effort_minutes) ||
+            +draft.effort_minutes < 5 ||
+            +draft.effort_minutes > 10000
+          }
+          onClick={() =>
+            act(async () =>
+              onSaved(
+                await api("/assignments", {
+                  ...draft,
+                  course_id: courseId,
+                  purpose: "coursework",
+                  deadline: new Date(draft.deadline).toISOString(),
+                  effort_minutes: +draft.effort_minutes,
+                }),
+              ),
+            )
+          }
+        >
+          Save coursework and select it
+        </button>
+        <button className="button secondary" onClick={close}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function ProfileBuilder({
   courseId,
   coursework,
   sources,
-  materialIds,
-  assessmentIds,
+  onCreated,
+  openLibrary,
   api,
   act,
   busy,
   reload,
 }) {
   const [assignmentIds, setAssignmentIds] = useState([]);
-  const [rubricIds, setRubricIds] = useState([]);
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("");
   const [manual, setManual] = useState(false);
   const [targetAssignmentId, setTargetAssignmentId] = useState("");
-  const [emergentIds, setEmergentIds] = useState([]);
+  const [materialIds, setMaterialIds] = useState([]);
+  const [assessmentIds, setAssessmentIds] = useState([]);
+  const [addingCoursework, setAddingCoursework] = useState(false);
   useEffect(() => {
     setAssignmentIds([]);
-    setRubricIds([]);
     setTitle("");
     setTarget("");
     setTargetAssignmentId("");
-    setEmergentIds([]);
+    setMaterialIds([]);
+    setAssessmentIds([]);
+    setAddingCoursework(false);
   }, [courseId]);
   const assignments =
     coursework?.assignment.filter((a) => a.course_id === courseId) || [];
@@ -32,9 +292,23 @@ export function ProfileBuilder({
     coursework?.rubric.filter(
       (r) => !r.course_id || r.course_id === courseId,
     ) || [];
-  const checked = (ids, setter, id) =>
-    setter(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
-  const unreviewed = [...materialIds, ...assessmentIds, ...emergentIds].some(
+  const targetAssignment = assignments.find((a) => a.id === targetAssignmentId);
+  const available = (sources || []).filter(
+    (s) =>
+      s.course_id === courseId &&
+      (s.latest || [...materialIds, ...assessmentIds].includes(s.id)) &&
+      s.reconstruction_status === "confirmed",
+  );
+  const selectTarget = (id) => {
+    setTargetAssignmentId(id);
+    setAssignmentIds((ids) => ids.filter((key) => key !== id));
+    const a = assignments.find((item) => item.id === id);
+    if (a) {
+      setTitle(a.title + " preparation");
+      setTarget(a.prompt.slice(0, 3000));
+    }
+  };
+  const unreviewed = [...materialIds, ...assessmentIds].some(
     (id) =>
       sources?.find((s) => s.id === id)?.reconstruction_status !== "confirmed",
   );
@@ -43,18 +317,16 @@ export function ProfileBuilder({
       const payload = {
         course_id: courseId,
         assignment_ids: assignmentIds,
-        source_ids: assessmentIds.filter((id) => !emergentIds.includes(id)),
-        material_source_ids: materialIds.filter(
-          (id) => !emergentIds.includes(id),
-        ),
-        emergent_source_ids: emergentIds,
+        source_ids: assessmentIds,
+        material_source_ids: materialIds,
         target_assignment_id: targetAssignmentId || null,
-        rubric_ids: rubricIds,
         title,
         target,
       };
       if (manual) {
-        const rubric = rubrics.find((r) => rubricIds.includes(r.id));
+        const rubric = rubrics.find(
+          (r) => r.id === targetAssignment?.rubric_id,
+        );
         payload.profile = {
           title: title || target,
           content_scope: target,
@@ -114,163 +386,161 @@ export function ProfileBuilder({
       }
       await api("/profiles", payload);
       await reload();
+      onCreated();
     });
   return (
-    <section className="panel section" aria-label="Create a targeted profile">
-      <h2>Create an assessment profile</h2>
+    <section className="profile-builder" aria-label="Create a targeted profile">
+      <h2>Prepare for a real task</h2>
       <p>
-        Start with the future task you intend to prepare for. Prior material
-        provides a baseline; emergent material refines it as the course
-        progresses. Grades, TA feedback and your answers are excluded.
+        A profile defines what your practice should cover and how answers will
+        be judged. Start with the coursework, then choose the material it draws
+        on.
       </p>
-      <label className="field">
-        <span>Profile title</span>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Quiz 1 · probability and sampling"
-        />
-      </label>
-      <h3>1. Intention · the future task</h3>
-      <label className="field">
-        <span>Intended coursework (optional)</span>
-        <select
-          aria-label="Intended coursework (optional)"
+      <div className="authoring-step">
+        <h3>1. Choose your coursework</h3>
+        <EvidencePicker
+          label="Coursework to prepare for"
+          multiple={false}
+          options={assignments
+            .filter((a) => a.purpose !== "self_study" && a.deadline)
+            .map((a) => ({
+              ...a,
+              description: `Due ${new Date(a.deadline).toLocaleString()} · ${a.status}`,
+            }))}
           value={targetAssignmentId}
-          onChange={(e) => {
-            setTargetAssignmentId(e.target.value);
-            setAssignmentIds((ids) =>
-              ids.filter((id) => id !== e.target.value),
-            );
-          }}
-        >
-          <option value="">
-            A specific assessment goal without a coursework entry
-          </option>
-          {assignments
-            .filter((a) => a.purpose !== "self_study")
-            .map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.title} · {a.status}
-              </option>
-            ))}
-        </select>
-      </label>
-      <label className="field">
-        <span>Specific assessment target</span>
-        <textarea
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          placeholder="What should this profile assess? Name the concepts, reasoning demands and topic boundaries."
+          onChange={selectTarget}
+          hint="Required. Choose an existing task with a deadline, or add one below."
         />
-      </label>
-      <fieldset>
-        <legend>2. Prior evidence · coursework examples</legend>
-        {assignments.length ? (
-          assignments
-            .filter((a) => a.id !== targetAssignmentId)
-            .map((a) => (
-              <label className="checkbox" key={a.id}>
-                <input
-                  type="checkbox"
-                  checked={assignmentIds.includes(a.id)}
-                  onChange={() =>
-                    checked(assignmentIds, setAssignmentIds, a.id)
-                  }
-                />
-                {a.title} ·{" "}
-                {a.purpose === "self_study" ? "self-study" : "coursework"}
-                {!a.rubric_version_id && " · rubric unavailable"}
-              </label>
-            ))
-        ) : (
-          <p>
-            No coursework yet. A profile based on instructional material will be
-            explicitly proposed.
+        {targetAssignment && (
+          <p className="small muted">
+            {targetAssignment.rubric_version_id
+              ? "The assignment’s rubric is included automatically."
+              : "No official rubric attached. The profile will propose practice criteria for your review."}
           </p>
         )}
-      </fieldset>
-      <fieldset>
-        <legend>Additional rubric references</legend>
-        {rubrics.map((r) => (
-          <label className="checkbox" key={r.id}>
+        <button
+          className="text-button"
+          onClick={() => setAddingCoursework(!addingCoursework)}
+        >
+          {addingCoursework ? "Close coursework form" : "Add coursework here"}
+        </button>
+        {assignments.some((a) => a.purpose !== "self_study" && !a.deadline) && (
+          <p className="small muted">
+            Tasks without a deadline need to be updated in Coursework before you
+            can select them.
+          </p>
+        )}
+        {addingCoursework && (
+          <InlineCoursework
+            courseId={courseId}
+            api={api}
+            act={act}
+            busy={busy}
+            close={() => setAddingCoursework(false)}
+            onSaved={async (a) => {
+              await reload();
+              setTargetAssignmentId(a.id);
+              setTitle(a.title + " preparation");
+              setTarget(a.prompt.slice(0, 3000));
+              setAddingCoursework(false);
+            }}
+          />
+        )}
+      </div>
+      <div className="authoring-step">
+        <h3>2. Choose the evidence</h3>
+        <p>
+          Find the lectures and readings that teach the content. Add earlier
+          assignments or example questions if they help show what will be
+          expected.
+        </p>
+        <EvidencePicker
+          label="Course material"
+          options={available.filter((s) =>
+            ["instruction", "research"].includes(s.role),
+          )}
+          value={materialIds}
+          onChange={setMaterialIds}
+          hint="Required. Add at least one reviewed lecture, reading or set of notes."
+        />
+        <EvidencePicker
+          label="Earlier coursework (optional)"
+          options={assignments.filter(
+            (a) => a.id !== targetAssignmentId && a.purpose !== "self_study",
+          )}
+          value={assignmentIds}
+          onChange={setAssignmentIds}
+        />
+        <EvidencePicker
+          label="Example questions or rubric documents (optional)"
+          options={available.filter((s) =>
+            ["assessment", "rubric"].includes(s.role),
+          )}
+          value={assessmentIds}
+          onChange={setAssessmentIds}
+        />
+        <button className="text-button" onClick={openLibrary}>
+          Upload or review material
+        </button>
+        <p className="small muted">
+          Only reviewed material appears here. Your answers, grades and
+          instructor feedback are excluded.
+        </p>
+      </div>
+      <div className="authoring-step">
+        <h3>3. Set the focus</h3>
+        <label className="field">
+          <span>Profile title</span>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <label className="field">
+          <span>What should your practice focus on?</span>
+          <textarea
+            aria-label="What should your practice focus on?"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+          />
+        </label>
+        <p className="small muted">
+          Starts with the assignment instructions. Narrow the topics or
+          reasoning skills if needed.
+        </p>
+        <details>
+          <summary>Prepare a proposal without a model</summary>
+          <label className="checkbox">
             <input
               type="checkbox"
-              checked={rubricIds.includes(r.id)}
-              onChange={() => checked(rubricIds, setRubricIds, r.id)}
+              checked={manual}
+              onChange={(e) => setManual(e.target.checked)}
             />
-            {r.title} · {r.authority}
+            Write and review a profile manually (no model call)
           </label>
-        ))}
-      </fieldset>
-      <p>
-        {materialIds.length} instructional sources and {assessmentIds.length}{" "}
-        assessment/rubric sources selected in the library above. Coursework
-        rubrics are included automatically.
-      </p>
-      <fieldset>
-        <legend>3. Emergent evidence · newly available material</legend>
-        <p>
-          Select task clarifications, new slides, examples or rubric updates.
-          These keep their own evidence role.
+        </details>
+        {unreviewed && (
+          <p className="error-text">
+            Review and confirm the selected material first.
+          </p>
+        )}
+        <button
+          className="button"
+          disabled={
+            busy ||
+            !targetAssignment?.deadline ||
+            !materialIds.length ||
+            target.trim().length < 5 ||
+            title.trim().length < 2 ||
+            unreviewed
+          }
+          onClick={create}
+        >
+          Create profile proposal
+        </button>
+        <p className="small muted">
+          Next: review its scope and proposed rubric before generating
+          questions. When new material arrives, update this profile with a new
+          version.
         </p>
-        {sources
-          ?.filter(
-            (s) =>
-              s.course_id === courseId &&
-              s.latest &&
-              ["instruction", "research", "assessment", "rubric"].includes(
-                s.role,
-              ),
-          )
-          .map((s) => (
-            <label className="checkbox" key={s.id}>
-              <input
-                type="checkbox"
-                checked={emergentIds.includes(s.id)}
-                onChange={() => checked(emergentIds, setEmergentIds, s.id)}
-              />
-              {s.name} · {s.role}
-            </label>
-          ))}
-      </fieldset>
-      <label className="checkbox">
-        <input
-          type="checkbox"
-          checked={manual}
-          onChange={(e) => setManual(e.target.checked)}
-        />
-        Write and review a profile manually (no model call)
-      </label>
-      {unreviewed && (
-        <p className="error-text">
-          Review and confirm the selected source reconstructions first.
-        </p>
-      )}
-      <button
-        className="button"
-        disabled={
-          busy ||
-          !(
-            materialIds.length ||
-            emergentIds.some((id) =>
-              ["instruction", "research"].includes(
-                sources?.find((s) => s.id === id)?.role,
-              ),
-            )
-          ) ||
-          target.trim().length < 5 ||
-          title.trim().length < 2 ||
-          unreviewed
-        }
-        onClick={create}
-      >
-        Create profile proposal
-      </button>
-      <p className="small muted">
-        Review the proposal below, including its explicit practice rubric,
-        before using it in a blueprint.
-      </p>
+      </div>
     </section>
   );
 }
@@ -775,31 +1045,22 @@ export function ProfileEvolution({
     sources?.filter(
       (s) =>
         s.course_id === profile.course_id &&
+        s.reconstruction_status === "confirmed" &&
+        (s.latest ||
+          [
+            ...draft.source_ids,
+            ...draft.material_source_ids,
+            ...draft.emergent_source_ids,
+          ].includes(s.id)) &&
         ["instruction", "research", "assessment", "rubric"].includes(s.role),
     ) || [];
   const pick = (label, key, options) => (
-    <label className="field">
-      <span>{label}</span>
-      <select
-        aria-label={label}
-        multiple
-        size={Math.min(6, Math.max(2, options.length))}
-        value={draft[key]}
-        onChange={(e) =>
-          set(
-            key,
-            [...e.target.selectedOptions].map((o) => o.value),
-          )
-        }
-      >
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.title || o.name}
-            {o.role ? ` · ${o.role} · ${o.reconstruction_status}` : ""}
-          </option>
-        ))}
-      </select>
-    </label>
+    <EvidencePicker
+      label={label}
+      options={options}
+      value={draft[key]}
+      onChange={(ids) => set(key, ids)}
+    />
   );
   return (
     <>
@@ -816,47 +1077,80 @@ export function ProfileEvolution({
           onChange={(e) => set("target", e.target.value)}
         />
       </label>
-      <label className="field">
-        <span>Intended future coursework</span>
-        <select
-          value={draft.target_assignment_id || ""}
-          onChange={(e) => set("target_assignment_id", e.target.value || null)}
-        >
-          <option value="">Goal without a coursework entry</option>
-          {assignments
-            .filter((a) => a.purpose !== "self_study")
-            .map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.title}
-              </option>
-            ))}
-        </select>
-      </label>
+      <EvidencePicker
+        label="Coursework to prepare for"
+        multiple={false}
+        options={assignments.filter(
+          (a) => a.purpose !== "self_study" && a.deadline,
+        )}
+        value={draft.target_assignment_id || ""}
+        onChange={(id) => {
+          setDraft((d) => ({
+            ...d,
+            target_assignment_id: id,
+            assignment_ids: d.assignment_ids.filter((a) => a !== id),
+          }));
+          setRequestKey(crypto.randomUUID());
+        }}
+      />
       <h3>Prior evidence</h3>
       {pick(
         "Prior coursework examples",
         "assignment_ids",
-        assignments.filter((a) => a.id !== draft.target_assignment_id),
+        assignments.filter(
+          (a) =>
+            a.id !== draft.target_assignment_id && a.purpose !== "self_study",
+        ),
       )}
       {pick(
         "Prior instructional material",
         "material_source_ids",
-        available.filter((s) => ["instruction", "research"].includes(s.role)),
+        available.filter(
+          (s) =>
+            ["instruction", "research"].includes(s.role) &&
+            !draft.emergent_source_ids.includes(s.id),
+        ),
       )}
       {pick(
         "Prior assessment examples or rubrics",
         "source_ids",
-        available.filter((s) => ["assessment", "rubric"].includes(s.role)),
+        available.filter(
+          (s) =>
+            ["assessment", "rubric"].includes(s.role) &&
+            !draft.emergent_source_ids.includes(s.id),
+        ),
       )}
-      <h3>Emergent evidence</h3>
-      {pick("New information about the task", "emergent_source_ids", available)}
+      <h3>What’s new since the last profile?</h3>
+      <p>
+        Add newly available slides, task clarifications, example questions or
+        rubric updates. Rerunning combines them with the existing evidence and
+        creates a new version to review.
+      </p>
+      {pick(
+        "New information about the task",
+        "emergent_source_ids",
+        available.filter(
+          (s) =>
+            !draft.source_ids.includes(s.id) &&
+            !draft.material_source_ids.includes(s.id),
+        ),
+      )}
       <p>
         Each source belongs in one evidence category. Select reviewed source
         versions; new source versions are never substituted silently.
       </p>
       <button
         className="button"
-        disabled={busy || draft.target.trim().length < 5}
+        disabled={
+          busy ||
+          draft.target.trim().length < 5 ||
+          !assignments.find(
+            (a) =>
+              a.id === draft.target_assignment_id &&
+              a.deadline &&
+              a.purpose !== "self_study",
+          )
+        }
         onClick={() =>
           act(async () => {
             await api(`/profiles/${profile.id}/rerun`, {

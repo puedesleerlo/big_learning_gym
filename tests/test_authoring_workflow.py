@@ -67,6 +67,8 @@ def profile_body():
 
 
 def target_profile(store, material, **options):
+    if "target_assignment_id" not in options:
+        options["target_assignment_id"] = assignment(store)["id"]
     proposed = request_profile(
         store,
         "course",
@@ -188,8 +190,18 @@ def test_profile_goal_prior_emergent_evidence_and_no_outcomes_in_model_input(sto
         assignment_ids=[earlier["id"]],
         target_assignment_id=future["id"],
         material_source_ids=[prior["id"]],
-        emergent_source_ids=[new["id"]],
         target="Prepare for the future quiz",
+    )
+
+    assert not p["emergent_source_ids"]
+    p = rerun_profile(
+        store,
+        p["id"],
+        {
+            "expected_revision": p["revision"],
+            "idempotency_key": "new-clarification",
+            "emergent_source_ids": [new["id"]],
+        },
     )
 
     class Designer:
@@ -201,14 +213,14 @@ def test_profile_goal_prior_emergent_evidence_and_no_outcomes_in_model_input(sto
             assert data["emergent_evidence"][0]["source_version_id"] == new["id"]
             return {"profile": profile_body()}, {"model": "fixture"}
 
-    proposed = generate_profile(store, Designer(), p["id"], run_version=1)
+    proposed = generate_profile(store, Designer(), p["id"], run_version=2)
     assert proposed["status"] == "needs_review"
     confirmed = confirm_profile(
         store, p["id"], {"expected_revision": proposed["revision"], "profile": proposed["profile"]}
     )
     assert confirmed["profile"]["practice_rubric"]["authority"] == "proposed"
     with store.tx() as c:
-        assert len(store.list(c, "assessment_profile_version")) == 3
+        assert len(store.list(c, "assessment_profile_version")) == 4
 
 
 def test_profile_versions_reruns_and_blueprints_keep_frozen_evidence(store):
@@ -268,24 +280,18 @@ def test_profile_versions_reruns_and_blueprints_keep_frozen_evidence(store):
 def test_profiles_reject_foreign_unconfirmed_and_outcome_sources(store):
     source = reviewed_source(store)
     feedback = reviewed_source(store, role="feedback", name="grade.md")
-    with pytest.raises(ValueError):
-        request_profile(
-            store,
-            "course",
-            [],
-            material_source_ids=[source["id"]],
-            emergent_source_ids=[feedback["id"]],
-            target="Future quiz goal",
-        )
-    with pytest.raises(ValueError, match="not both"):
-        request_profile(
-            store,
-            "course",
-            [],
-            material_source_ids=[source["id"]],
-            emergent_source_ids=[source["id"]],
-            target="Future quiz goal",
-        )
+    p = target_profile(store, source)
+    for new_ids in [[feedback["id"]], [source["id"]]]:
+        with pytest.raises(ValueError):
+            rerun_profile(
+                store,
+                p["id"],
+                {
+                    "expected_revision": p["revision"],
+                    "idempotency_key": "invalid-source",
+                    "emergent_source_ids": new_ids,
+                },
+            )
     with store.tx() as c:
         store.put(c, "course", "other", {"title": "Another course"})
     other = create_assignment(
@@ -473,6 +479,7 @@ def test_rest_contract_exposes_goal_versions_rerun_and_outcome(client, store):
             "course_id": "course",
             "material_source_ids": [source["id"]],
             "target": "Prepare for future quiz",
+            "target_assignment_id": assignment(store)["id"],
             "profile": profile_body(),
         },
     )
@@ -486,3 +493,72 @@ def test_rest_contract_exposes_goal_versions_rerun_and_outcome(client, store):
         ).status_code
         == 409
     )
+
+
+def test_profile_requires_real_dated_coursework_and_new_evidence_only_on_rerun(client, store):
+    source = reviewed_source(store)
+    spec = {
+        "course_id": "course",
+        "material_source_ids": [source["id"]],
+        "target": "Prepare for the actual quiz",
+    }
+    assert client.post("/api/profiles", json=spec).status_code == 422
+    task = assignment(store)
+    spec["target_assignment_id"] = task["id"]
+    assert (
+        client.post("/api/profiles", json={**spec, "emergent_source_ids": [source["id"]]}).status_code == 422
+    )
+    optional = assignment(store, purpose="self_study", deadline=None)
+    response = client.post("/api/profiles", json={**spec, "target_assignment_id": optional["id"]})
+    assert response.status_code == 400 and "actual coursework" in response.text
+    with store.tx() as c:
+        store.put(c, "assignment", task["id"], {**task, "deadline": None})
+    response = client.post("/api/profiles", json=spec)
+    assert response.status_code == 400 and "deadline" in response.text
+    with store.tx() as c:
+        assert not store.list(c, "assessment_profile")
+        store.put(c, "assignment", task["id"], task)
+    response = client.post("/api/profiles", json=spec)
+    assert response.status_code == 200
+    p = response.json()
+    assert p["contract_version"] == "targeted-profile-v2"
+    assert p["target_assignment_snapshot"]["id"] == task["id"]
+    assert p["emergent_source_ids"] == []
+    with store.tx() as c:
+        store.put(c, "assignment", task["id"], {**task, "deadline": "invalid"})
+    response = client.post(
+        f"/api/profiles/{p['id']}/rerun",
+        json={"expected_revision": p["revision"], "idempotency_key": "invalid-deadline"},
+    )
+    assert response.status_code == 400 and "deadline" in response.text
+    assert len(client.get(f"/api/profiles/{p['id']}/versions").json()["versions"]) == 1
+
+
+def test_existing_v1_profile_keeps_generation_scope_but_rerun_requires_target(store):
+    material = reviewed_source(store)
+    other = reviewed_source(
+        store, name="unselected.md", text="Unselected concepts must remain outside this profile."
+    )
+    p = target_profile(store, material)
+    with store.tx() as c:
+        legacy = store.put(
+            c,
+            "assessment_profile",
+            p["id"],
+            {**p, "contract_version": "targeted-profile-v1", "target_assignment_id": None},
+        )
+    # Historical profiles continue to enforce the same material scope.
+    spec = {
+        "course_id": "course",
+        "profile_id": p["id"],
+        "topic": "Causal reasoning",
+        "source_ids": [material["id"]],
+    }
+    assert request_generation(store, spec)["profile_snapshot"]["contract_version"] == "targeted-profile-v1"
+    with pytest.raises(ValueError, match="material scope"):
+        request_generation(store, {**spec, "source_ids": [other["id"]]})
+    payload = {"expected_revision": legacy["revision"], "idempotency_key": "upgrade-legacy"}
+    with pytest.raises(ValueError):
+        rerun_profile(store, p["id"], payload)
+    upgraded = rerun_profile(store, p["id"], {**payload, "target_assignment_id": assignment(store)["id"]})
+    assert upgraded["contract_version"] == "targeted-profile-v2"

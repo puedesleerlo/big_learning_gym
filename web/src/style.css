@@ -1924,3 +1924,41 @@ footer {
 }
 
 .experience-recovery { display: grid; justify-items: start; gap: 12px; }
+
+/* Authoring follows the task → profile → practice sequence. */
+[hidden] { display: none !important; }
+.authoring-navigation { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--line); margin: 1.5rem 0 2rem; }
+.authoring-navigation button { flex: 1 1 170px; background: transparent; color: var(--muted); border: 0; border-bottom: 3px solid transparent; padding: 1rem; text-align: left; }
+.authoring-navigation button.active { color: var(--blue); border-bottom-color: var(--blue); background: #edf2f9; }
+.authoring-navigation strong, .authoring-navigation span { display: block; }
+.authoring-navigation span { font-size: .85rem; margin-top: .35rem; }
+.authoring-content { max-width: 900px; }
+.authoring-content > p, .profile-builder > p { max-width: 70ch; }
+.authoring-step { padding: 1.8rem 0; border-top: 1px solid var(--line); }
+.authoring-step h3 { font-size: 1.25rem; }
+.authoring-step > .button { margin-top: 1.2rem; }
+.evidence-picker { position: relative; margin: 1.2rem 0; }
+.evidence-picker .field { margin-bottom: .4rem; }
+.evidence-picker > input { width: 100%; }
+.evidence-chips { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.evidence-chips li { display: flex; align-items: center; gap: .5rem; max-width: 100%; background: #e9f0f6; padding: .35rem .6rem; border-radius: 6px; }
+.evidence-chips span { overflow-wrap: anywhere; }
+.evidence-chips button { border: 0; background: transparent; color: var(--blue); min-width: 30px; min-height: 30px; font-size: 1.4rem; }
+.evidence-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--line); box-shadow: 0 8px 24px #182a4220; z-index: 6; border-radius: 6px; max-height: 320px; overflow-y: auto; }
+.evidence-results ul { list-style: none; padding: .35rem; margin: 0; }
+.evidence-results li { padding: .7rem; cursor: pointer; overflow-wrap: anywhere; }
+.evidence-results li:hover, .evidence-results li[aria-selected="true"] { background: #edf2f9; }
+.evidence-results small { display: block; color: var(--muted); margin-top: .3rem; }
+.evidence-results p { padding: .5rem 1rem; margin: 0; }
+.inline-coursework { border-left: 3px solid var(--blue); padding: 1.2rem; margin-top: 1rem; background: #edf2f9; }
+.library-upload { margin: 1.5rem 0; }
+.library-upload > summary { margin-bottom: 1rem; }
+.generation-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.authoring-content .source-row { grid-template-columns: 1fr auto; }
+.authoring-content .source-name { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .authoring-navigation button { flex-basis: 50%; padding: .7rem; }
+  .authoring-navigation span { display: none; }
+  .authoring-content .section-title { flex-wrap: wrap; }
+  .inline-coursework { padding: .8rem; }
+}

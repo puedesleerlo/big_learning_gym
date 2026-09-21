@@ -200,17 +200,38 @@ class CourseworkOutcomeInput(Strict):
         return self
 
 
-class ProfileInput(Strict):
+class ProfileRunInput(Strict):
     course_id: str
     source_ids: list[str] = Field(default_factory=list, max_length=20)
     assignment_ids: list[str] = Field(default_factory=list, max_length=10)
-    target_assignment_id: str | None = None
+    target_assignment_id: str = Field(
+        min_length=1,
+        description="Existing actual coursework in this course with a valid deadline; required for every new profile and rerun.",
+    )
     material_source_ids: list[str] = Field(default_factory=list, max_length=30)
     emergent_source_ids: list[str] = Field(default_factory=list, max_length=30)
     rubric_ids: list[str] = Field(default_factory=list, max_length=10)
     title: str = Field(default="", max_length=200)
     target: str = Field(default="", max_length=3000)
     profile: dict | None = None
+
+
+class ProfileInput(ProfileRunInput):
+    target: str = Field(
+        min_length=5,
+        max_length=3000,
+        description="Practice focus grounded in the target coursework instructions.",
+    )
+    material_source_ids: list[str] = Field(
+        min_length=1,
+        max_length=30,
+        description="Reviewed instructional source versions supplying the practice content.",
+    )
+    emergent_source_ids: list[str] = Field(
+        default_factory=list,
+        max_length=0,
+        description="Must be empty on creation. All currently available evidence is prior evidence. Add newly available evidence through the rerun endpoint.",
+    )
 
 
 class ProfileRerunInput(Strict):

@@ -169,3 +169,20 @@ Validation: API missing/invalid/null/date-only/timezone/estimate checks, partial
 ## Adding or revising a decision
 
 Append the next `D-NNN` entry with status `Proposed`, context, decision, alternatives, consequences, affected algorithm versions, migration, checks, rollback and the decisions it supersedes. Link the exact user request or maintainer review covering the revision. A request already authorizing the specific change is sufficient; do not request permission again. Only mark acceptance when that authorization exists. A JSON change record or a checked box is not proof of approval.
+
+
+## D-015 — Coursework-first profile preparation
+
+Status: Accepted by explicit user request in this task: remake authoring into an understandable sequence, require an existing coursework entry for the goal (with inline creation and a deadline), reserve emergent material for reruns, use autocomplete evidence selection, and align agent MCP behavior.
+
+Decision: every new profile and profile rerun requires a same-course actual coursework target with valid deadline and estimated time under D-014. All evidence available at creation is prior evidence. Newly available evidence enters only through rerun; creation rejects nonempty emergent selections. The task's rubric is included automatically; additional rubric references remain an explicit API capability. The human UI separates creation, review, generation and library management, uses searchable evidence selectors, and removes library checkboxes whose effect depended on another form.
+
+This supersedes D-013's optional target coursework and allowance for emergent evidence on initial creation. Existing legacy/style and v1 profile versions remain readable, confirmable and usable for generation with their existing evidence restrictions; rerunning them requires a valid target. No migration changes saved sources, coursework or profiles. D-001–D-012 and D-014 remain in force; the other D-013 evidence, review, versioning and counterfactual rules are preserved.
+
+Alternatives: optional free-text goals retain the ambiguity the user rejected; treating new material as emergent on the first run obscures what actually changed. The chosen workflow anchors intent in the user's actual obligations and gives reruns a clear purpose.
+
+Version: profile input contract `targeted-profile-v2`; existing model prompt, retrieval caps, scoring, verification and scheduling algorithms are unchanged. REST and generic MCP share the same validation. UI autocomplete filters loaded course records and bounds displayed results; it is not a new server search service.
+
+Validation: source/outcome exclusion, creation and rerun prerequisite rejection, immutable versions and generation scope checks, live REST/MCP schemas, large-library pagination/search, keyboard autocomplete, inline coursework requirements, complete browser authoring journey and narrow-screen layout. See the associated change record for results.
+
+Rollback: revert this paired frontend/API/skill change without deleting historical versions or coursework. No learner-data migration is required.

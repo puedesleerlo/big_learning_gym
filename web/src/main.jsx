@@ -1483,17 +1483,32 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
     [rubricId, setRubricId] = useState(""),
     [profileEdit, setProfileEdit] = useState(null),
     [profileEvolution, setProfileEvolution] = useState(null);
+  const [authoringView, setAuthoringView] = useState("create");
+  const [libraryQuery, setLibraryQuery] = useState("");
+  const [libraryRole, setLibraryRole] = useState("");
+  const [libraryPage, setLibraryPage] = useState(0);
   const courseSources =
-    sources?.filter((s) => s.course_id === courseId && (s.latest || selected.includes(s.id))) || [];
-  const selectedSources = courseSources.filter((s) => selected.includes(s.id));
+    sources?.filter(
+      (s) => s.course_id === courseId && s.latest,
+    ) || [];
+  const selectedSources = (sources || []).filter((s) => s.course_id === courseId && selected.includes(s.id));
   const instructionIds = selectedSources
     .filter((s) =>
       ["instruction", "research"].includes(s.role || "instruction"),
     )
     .map((s) => s.id);
-  const assessmentIds = selectedSources
-    .filter((s) => ["assessment", "rubric"].includes(s.role))
-    .map((s) => s.id);
+  const librarySources = courseSources.filter(
+    (s) =>
+      (!libraryRole || s.role === libraryRole) &&
+      s.name.toLowerCase().includes(libraryQuery.toLowerCase()),
+  );
+  useEffect(() => setLibraryPage(0), [courseId, libraryQuery, libraryRole]);
+  const chooseProfile = (p) => {
+    setProfileId(p?.id || "");
+    setRubricId("");
+    setSelected(p?.generation_source_ids || p?.material_source_ids || []);
+    setTopic(p?.target?.slice(0, 300) || "");
+  };
   useEffect(() => {
     setSelected([]);
     setProfileId("");
@@ -1530,14 +1545,10 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
       e.target.value = "";
     });
   };
-  const toggle = (id) =>
-    setSelected((s) =>
-      s.includes(id) ? s.filter((x) => x !== id) : [...s, id],
-    );
   return (
     <>
       <PageHead
-        title="Build practice from real material."
+        title="Prepare for what’s next."
         actions={
           <Action className="secondary" onClick={() => setNewCourse(true)}>
             <Plus size={17} />
@@ -1545,49 +1556,16 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
           </Action>
         }
       >
-        Course material and coursework define a reviewed assessment profile. A
-        blueprint uses that profile to generate a particular practice set or
-        mock exam.
+        Choose a coursework task, build a profile from its material, then turn
+        the reviewed profile into practice questions or a mock exam.
       </PageHead>
       <ErrorBox message={sourceError} />
-      <div className="notice stack">
-        <p>
-          <strong>Learning labs</strong> explain and explore the material.{" "}
-          <strong>Coursework</strong> holds actual duties, deadlines, instructor
-          rubrics, feedback and grades. Uploading a file adds a source; it does
-          not create an obligation.
-        </p>
-        <div className="row">
-          <Action className="secondary" onClick={() => navigate("coursework")}>
-            Add or manage coursework
-          </Action>
-          <Action
-            className="secondary"
-            onClick={() => navigate("labs", courseId)}
-          >
-            Author learning labs
-          </Action>
-        </div>
-      </div>
-      <div className="creation-steps">
-        <div>
-          <span>1</span>
-          <strong>Material & coursework</strong>
-          <small>Course concepts, actual duties and available rubrics</small>
-        </div>
-        <div>
-          <span>2</span>
-          <strong>Define the target</strong>
-          <small>Specific content scope and explicit practice rubric</small>
-        </div>
-        <div>
-          <span>3</span>
-          <strong>Generate & verify</strong>
-          <small>Practice and counterfactual reasoning in one set</small>
-        </div>
-      </div>
-      <Field label="Learning environment">
-        <select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+      <Field label="Gym">
+        <select
+          aria-label="Gym"
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+        >
           <option value="">Choose a gym</option>
           {overview.courses.map((c) => (
             <option key={c.id} value={c.id}>
@@ -1596,13 +1574,61 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
           ))}
         </select>
       </Field>
-      <div className="two-column">
-        <section className="panel">
+      <nav className="authoring-navigation" aria-label="Practice preparation">
+        {[
+          ["create", "1. Create a profile", "Choose a task and its evidence"],
+          [
+            "review",
+            "2. Review profiles",
+            "Check the scope and scoring criteria",
+          ],
+          ["generate", "3. Generate practice", "Use a confirmed profile"],
+          ["library", "Material library", "Upload, search and review files"],
+        ].map(([id, label, help]) => (
+          <button
+            key={id}
+            className={authoringView === id ? "active" : ""}
+            aria-current={authoringView === id ? "step" : undefined}
+            onClick={() => setAuthoringView(id)}
+          >
+            <strong>{label}</strong>
+            <span>{help}</span>
+          </button>
+        ))}
+      </nav>
+      <div hidden={authoringView !== "create"} className="authoring-content">
+        <ProfileBuilder
+          key={courseId}
+          courseId={courseId}
+          coursework={coursework}
+          sources={sources}
+          api={api}
+          act={act}
+          busy={busy || !courseId}
+          reload={loadCoursework}
+          onCreated={() => setAuthoringView("review")}
+          openLibrary={() => setAuthoringView("library")}
+        />
+      </div>
+      <section
+        hidden={authoringView !== "library"}
+        className="authoring-content"
+      >
+        <div className="section-title">
           <h2>Material library</h2>
-          <p>
-            Lectures supply content. Real assignments and quizzes supply the
-            assessment profile.
-          </p>
+          <button
+            className="button secondary"
+            onClick={() => setAuthoringView("create")}
+          >
+            Return to profile
+          </button>
+        </div>
+        <p>
+          Upload and review the files for this gym. Choose which files to use
+          inside a profile; uploading alone does not include them in practice.
+        </p>
+        <details className="library-upload">
+          <summary>Upload material</summary>
           <Field label="What are you uploading?">
             <select value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="instruction">
@@ -1632,16 +1658,49 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
               onChange={upload}
             />
           </label>
-          <div className="source-list">
-            {courseSources.length ? (
-              courseSources.map((s) => (
+        </details>
+        <div className="form-row">
+          <Field label="Search material">
+            <input
+              type="search"
+              value={libraryQuery}
+              onChange={(e) => setLibraryQuery(e.target.value)}
+              placeholder="Find a filename…"
+            />
+          </Field>
+          <Field label="Material type">
+            <select
+              aria-label="Material type"
+              value={libraryRole}
+              onChange={(e) => setLibraryRole(e.target.value)}
+            >
+              <option value="">All types</option>
+              {[
+                "instruction",
+                "assessment",
+                "rubric",
+                "research",
+                "submission",
+                "feedback",
+              ].map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <p className="small muted" role="status">
+          {librarySources.length} files
+          {librarySources.length > 0 &&
+            ` · showing ${libraryPage * 8 + 1}–${Math.min((libraryPage + 1) * 8, librarySources.length)}`}
+        </p>
+        <div className="source-list">
+          {librarySources.length ? (
+            librarySources
+              .slice(libraryPage * 8, libraryPage * 8 + 8)
+              .map((s) => (
                 <div className="source-row" key={s.id}>
-                  <input
-                    aria-label={"Select " + s.name}
-                    type="checkbox"
-                    checked={selected.includes(s.id)}
-                    onChange={() => toggle(s.id)}
-                  />
                   <button
                     className="source-name"
                     onClick={() =>
@@ -1670,31 +1729,78 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
                   </Badge>
                 </div>
               ))
-            ) : (
-              <Empty title="Add your first source">
-                Keep the original files and review the extracted text before
-                deriving a profile.
-              </Empty>
-            )}
+          ) : (
+            <Empty
+              title={
+                courseSources.length
+                  ? "No matching files"
+                  : "Add your first source"
+              }
+            >
+              Upload course material or try a different search. Open a file to
+              review its extracted text.
+            </Empty>
+          )}
+        </div>
+        {librarySources.length > 8 && (
+          <div className="row">
+            <button
+              className="button secondary"
+              disabled={libraryPage === 0}
+              onClick={() => setLibraryPage((p) => p - 1)}
+            >
+              Previous files
+            </button>
+            <button
+              className="button secondary"
+              disabled={(libraryPage + 1) * 8 >= librarySources.length}
+              onClick={() => setLibraryPage((p) => p + 1)}
+            >
+              Next files
+            </button>
           </div>
-          <ProfileBuilder
-            courseId={courseId}
-            coursework={coursework}
-            sources={sources}
-            materialIds={instructionIds}
-            assessmentIds={assessmentIds}
-            api={api}
-            act={act}
-            busy={busy}
-            reload={loadCoursework}
-          />
-        </section>
-        <section className="panel">
-          <h2>Practice blueprint</h2>
-          <p>
-            Use {instructionIds.length} selected instructional source
-            {instructionIds.length === 1 ? "" : "s"} to create fresh material.
+        )}
+      </section>
+      <section
+        hidden={authoringView !== "generate"}
+        className="authoring-content"
+      >
+        <h2>Make your practice set</h2>
+        <p>
+          Choose a reviewed profile, then set the question types and length.
+          Course material and scoring criteria come from that profile.
+        </p>
+        <Field label="Reviewed assessment profile">
+          <select
+            aria-label="Reviewed assessment profile"
+            value={profileId}
+            onChange={(e) => {
+              const p = coursework?.assessment_profile.find(
+                (p) => p.id === e.target.value,
+              );
+              chooseProfile(p);
+            }}
+          >
+            <option value="">Create and confirm a profile first</option>
+            {coursework?.assessment_profile
+              .filter(
+                (p) => p.course_id === courseId && p.status === "confirmed",
+              )
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.profile.title}
+                </option>
+              ))}
+          </select>
+        </Field>
+
+        {!profileId && (
+          <p className="notice">
+            Confirm a profile in “Review profiles” to unlock question
+            generation.
           </p>
+        )}
+        <fieldset disabled={!profileId} className="generation-fields">
           <Field label="Topic or capability to practice">
             <input
               value={topic}
@@ -1796,52 +1902,26 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
               </Field>
             ))}
           </details>
-          <Field label="Reviewed assessment profile">
-            <select
-              aria-label="Reviewed assessment profile"
-              value={profileId}
-              onChange={(e) => {
-                const p = coursework?.assessment_profile.find(
-                  (p) => p.id === e.target.value,
-                );
-                setProfileId(e.target.value);
-                setRubricId("");
-                if (p?.generation_source_ids?.length)
-                  setSelected(p.generation_source_ids);
-                else if (p?.material_source_ids?.length)
-                  setSelected(p.material_source_ids);
-                if (p?.target) setTopic(p.target.slice(0, 300));
-              }}
-            >
-              <option value="">Create and confirm a profile first</option>
-              {coursework?.assessment_profile
-                .filter(
-                  (p) => p.course_id === courseId && p.status === "confirmed",
-                )
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.profile.title}
-                  </option>
-                ))}
-            </select>
-          </Field>
-          <Field label="Required rubric for open tasks (optional)">
-            <select
-              value={rubricId}
-              onChange={(e) => setRubricId(e.target.value)}
-            >
-              <option value="">
-                Use the reviewed profile's practice rubric
-              </option>
-              {coursework?.rubric
-                .filter((r) => !r.course_id || r.course_id === courseId)
-                .map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.title} · v{r.version}
-                  </option>
-                ))}
-            </select>
-          </Field>
+          <details>
+            <summary>Use another scoring rubric (optional)</summary>
+            <Field label="Scoring rubric">
+              <select
+                value={rubricId}
+                onChange={(e) => setRubricId(e.target.value)}
+              >
+                <option value="">
+                  Use the reviewed profile's practice rubric
+                </option>
+                {coursework?.rubric
+                  .filter((r) => !r.course_id || r.course_id === courseId)
+                  .map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.title} · v{r.version}
+                    </option>
+                  ))}
+              </select>
+            </Field>
+          </details>
           <Field label="Assessment instructions or constraints">
             <textarea
               value={instructions}
@@ -1893,18 +1973,24 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
             Selected source excerpts go to your configured design and
             verification models. Original files remain in this workspace.
           </p>
-        </section>
-      </div>
-      <section className="section">
-        <h2>Assessment profiles</h2>
+        </fieldset>
+      </section>
+      <section
+        hidden={authoringView !== "review"}
+        className="authoring-content"
+      >
+        <h2>Review your profiles</h2>
+        <p>
+          Check what each profile covers and how practice will be scored.
+          Confirm it to generate questions. Use “Update evidence” when new
+          course material arrives.
+        </p>
         {coursework?.assessment_profile
           .filter((p) => p.course_id === courseId)
           .map((p) => (
             <div className="list-row" key={p.id}>
               <div>
-                <strong>
-                  {p.profile?.title || "Inferring an assessment archetype…"}
-                </strong>
+                <strong>{p.profile?.title || "Preparing your profile…"}</strong>
                 <p>
                   {p.target ||
                     p.profile?.difficulty_anchor ||
@@ -1923,8 +2009,18 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
                 className="secondary"
                 onClick={() => setProfileEvolution(p)}
               >
-                Evidence, versions & rerun
+                Update evidence
               </Action>
+              {p.status === "confirmed" && (
+                <Action
+                  onClick={() => {
+                    chooseProfile(p);
+                    setAuthoringView("generate");
+                  }}
+                >
+                  Use for practice
+                </Action>
+              )}
               {p.error && <p className="error-text">{p.error}</p>}
               {p.profile && (
                 <Action className="secondary" onClick={() => setProfileEdit(p)}>
@@ -1933,16 +2029,21 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
               )}
             </div>
           ))}
-        {!coursework?.assessment_profile.length && (
+        {!coursework?.assessment_profile.some(
+          (p) => p.course_id === courseId,
+        ) && (
           <p className="muted">
-            A profile can describe an essay, a lab, a problem set or an exam.
-            Multiple-choice rules are only one archetype.
+            No profiles for this gym yet. Start with “Create a profile” and
+            choose your coursework.
           </p>
         )}
       </section>
-      <section className="section">
+      <section
+        hidden={authoringView !== "generate"}
+        className="authoring-content section"
+      >
         <div className="section-title">
-          <h2>Generation runs</h2>
+          <h2>Your question sets</h2>
           <button className="text-button" onClick={loadGenerations}>
             <RefreshCw size={15} />
             Refresh
@@ -2121,7 +2222,7 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
       )}
       {profileEvolution && (
         <Modal
-          title="Evolve the assessment profile"
+          title="Update evidence and rerun"
           close={() => setProfileEvolution(null)}
         >
           <ProfileEvolution
@@ -2138,10 +2239,7 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
         </Modal>
       )}
       {profileEdit && (
-        <Modal
-          title="Edit the assessment archetype"
-          close={() => setProfileEdit(null)}
-        >
+        <Modal title="Review the profile" close={() => setProfileEdit(null)}>
           <ProfileReview
             key={profileEdit.id}
             value={profileEdit}
@@ -2153,8 +2251,10 @@ function CreateGym({ overview, act, busy, refresh, start, navigate }) {
                   { profile, expected_revision: profileEdit.revision },
                   "PUT",
                 );
+                await loadCoursework();
                 setProfileEdit(null);
-                loadCoursework();
+                chooseProfile({ ...profileEdit, profile });
+                setAuthoringView("generate");
               })
             }
           />

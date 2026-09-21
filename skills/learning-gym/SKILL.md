@@ -61,7 +61,8 @@ learner's platform and existing evidence intact.
 
 For profile creation/reruns, practice regeneration or coursework feedback, read
 [profiles-and-coursework.md](references/profiles-and-coursework.md). It explains
-future-task intention, prior and emergent evidence, reviewed proposed rubrics,
+required dated coursework targets, prior evidence at creation, newly available
+evidence on rerun, reviewed proposed rubrics,
 immutable profile history, exact-key reruns, and actual instructor outcomes
 without fabricated local submissions. Discover the corresponding live REST
 schemas and use the same routes through MCP. Teaching labs, actual obligations

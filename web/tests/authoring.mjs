@@ -51,19 +51,98 @@ try {
   });
   await page.goto(url);
   await page.getByRole("button", { name: "Authoring", exact: true }).click();
-  await page.getByLabel("Select Prior lecture.md", { exact: true }).check();
+  const pick = async (label, query, name) => {
+    await page.getByRole("combobox", { name: label, exact: true }).fill(query);
+    await page.getByRole("option", { name, exact: false }).click();
+  };
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Create profile proposal", exact: true })
+      .isEnabled(),
+    false,
+  );
+  assert.equal(
+    await page.getByText("Emergent evidence", { exact: true }).count(),
+    0,
+  );
+  // Large libraries are searchable and bounded, with no ambiguous selection checkboxes.
+  await page.getByRole("button", { name: /Material library Upload/ }).click();
+  assert.equal(await page.locator(".source-list .source-row").count(), 8);
+  assert.equal(
+    await page.locator(".source-list input[type=checkbox]").count(),
+    0,
+  );
+  await page.getByRole("button", { name: "Next files", exact: true }).click();
+  await page
+    .getByLabel("Search material", { exact: true })
+    .fill("Prior lecture");
+  assert.equal(await page.locator(".source-list .source-row").count(), 1);
+  await page
+    .getByRole("button", { name: "Return to profile", exact: true })
+    .click();
+  await pick("Coursework to prepare for", "Future Quiz", "Future Quiz 2");
+  // Keyboard selection works and file selection lives in the profile.
+  const material = page.getByRole("combobox", {
+    name: "Course material",
+    exact: true,
+  });
+  await material.fill("Prior lecture");
+  await material.press("ArrowDown");
+  await material.press("Enter");
+  await pick("Earlier coursework (optional)", "Prior Quiz", "Prior Quiz 1");
+  // Creating coursework here requires a deadline and time estimate.
+  await page
+    .getByRole("button", { name: "Add coursework here", exact: true })
+    .click();
+  await page
+    .getByLabel("Coursework title", { exact: true })
+    .fill("Inline Quiz 3");
+  await page
+    .getByLabel("Assignment instructions", { exact: true })
+    .fill("Explain causal inference and uncertainty.");
+  const saveInline = page.getByRole("button", {
+    name: "Save coursework and select it",
+    exact: true,
+  });
+  assert.equal(await saveInline.isEnabled(), false);
+  await page
+    .getByLabel("Deadline (required)", { exact: true })
+    .fill("2026-10-03T17:00");
+  assert.equal(await saveInline.isEnabled(), false);
+  await page
+    .getByLabel("Estimated time in minutes (required)", { exact: true })
+    .fill("45");
+  await saveInline.click();
+  await saveInline.waitFor({ state: "hidden" });
+  await page
+    .getByRole("button", { name: "Remove Inline Quiz 3", exact: true })
+    .click();
+  await pick("Coursework to prepare for", "Future Quiz", "Future Quiz 2");
   await page
     .getByLabel("Profile title", { exact: true })
     .fill("Future Quiz 2 preparation");
   await page
-    .getByLabel("Specific assessment target", { exact: true })
+    .getByLabel("What should your practice focus on?", { exact: true })
     .fill("Prepare for Quiz 2 causal inference and uncertainty");
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    ),
+    false,
+  );
+  await page.screenshot({
+    path: "/tmp/gym-guided-authoring-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1450, height: 1000 });
+  await page.screenshot({
+    path: "/tmp/gym-guided-authoring-desktop.png",
+    fullPage: true,
+  });
   await page
-    .getByLabel("Intended coursework (optional)", { exact: true })
-    .selectOption({ label: "Future Quiz 2 · open" });
-  await page
-    .getByRole("checkbox", { name: /Prior Quiz 1 · coursework/ })
-    .check();
+    .getByText("Prepare a proposal without a model", { exact: true })
+    .click();
   await page
     .getByRole("checkbox", { name: /Write and review a profile manually/ })
     .check();
@@ -76,23 +155,27 @@ try {
   await page
     .getByRole("button", { name: "Confirm this profile", exact: true })
     .click();
+  await page.getByRole("heading", { name: "Make your practice set", exact: true }).waitFor();
   const get = async (path) => (await fetch(url + "/api" + path)).json();
   let cw = await get("/coursework");
   const original = cw.assessment_profile[0];
   assert.equal(original.status, "confirmed");
   assert.equal(original.assignment_ids.length, 1);
   assert.ok(original.target_assignment_id);
+  await page.getByRole("button", { name: /2. Review profiles/ }).click();
   await page
     .getByText(`Run 1 · r${original.revision} · confirmed`, { exact: true })
     .waitFor();
   await page
-    .getByRole("button", { name: "Evidence, versions & rerun", exact: true })
+    .getByRole("button", { name: "Update evidence", exact: true })
     .click();
   const sources = await get("/sources");
   const newSource = sources.find((s) => s.name === "New clarification.md");
-  await page
-    .getByLabel("New information about the task", { exact: true })
-    .selectOption([newSource.id]);
+  await pick(
+    "New information about the task",
+    "New clarification",
+    "New clarification.md",
+  );
   await page
     .getByRole("button", {
       name: "Rerun profile with updated evidence",
@@ -165,7 +248,9 @@ try {
     1,
   );
   assert.equal(
-    await page.getByRole("heading", { name: "Reusable rubrics", exact: true }).count(),
+    await page
+      .getByRole("heading", { name: "Reusable rubrics", exact: true })
+      .count(),
     0,
   );
   await page.getByLabel("Filter by gym", { exact: true }).selectOption("");
@@ -313,9 +398,14 @@ try {
     .click();
   await page.getByText(/Supporting assignment documents \(optional\)/).click();
   const modal = page.locator(".modal");
-  const rubricOptions = await modal.getByLabel("Rubric", { exact: true }).locator("option").allTextContents();
+  const rubricOptions = await modal
+    .getByLabel("Rubric", { exact: true })
+    .locator("option")
+    .allTextContents();
   assert.ok(rubricOptions.some((name) => name.startsWith("Statistics rubric")));
-  assert.ok(rubricOptions.some((name) => name.startsWith("Shared reasoning rubric")));
+  assert.ok(
+    rubricOptions.some((name) => name.startsWith("Shared reasoning rubric")),
+  );
   assert.ok(!rubricOptions.some((name) => name.startsWith("Writing rubric")));
   const due = page.getByLabel("Coursework deadline", { exact: true });
   const originalDeadline = await due.inputValue();

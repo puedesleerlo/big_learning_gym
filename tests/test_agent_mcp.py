@@ -144,6 +144,10 @@ async def test_mcp_targeted_profile_history_rerun_and_external_outcome(store):
 
         manifest = body(await session.call_tool("gym_capabilities", {}))
         assert "profile_rerun" in manifest["existing_workflows"]
+        create_schema = body(await session.call_tool("gym_schema", {"path": "/api/profiles"}))
+        input_schema = create_schema["components"]["schemas"]["ProfileInput"]
+        assert "target_assignment_id" in input_schema["required"]
+        assert input_schema["properties"]["emergent_source_ids"]["maxItems"] == 0
         schema = body(await session.call_tool("gym_schema", {"path": "/api/profiles/{ident}/rerun"}))
         assert "ProfileRerunInput" in schema["components"]["schemas"]
         assignment = await write(

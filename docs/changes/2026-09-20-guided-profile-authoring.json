@@ -1,0 +1,39 @@
+{
+  "summary": "Guide authoring from dated coursework through searchable prior evidence, profile review and practice generation; reserve newly available evidence for reruns and make large libraries searchable and paginated.",
+  "type": "revision",
+  "paths": [
+    "DECISIONS.md",
+    "docs/AGENT_API.md",
+    "docs/ALGORITHMS.md",
+    "docs/ARCHITECTURE.md",
+    "gym/agent_api.py",
+    "gym/assignments.py",
+    "gym/contracts.py",
+    "gym/generation.py",
+    "gym/mcp_server.py",
+    "skills/learning-gym/SKILL.md",
+    "skills/learning-gym/references/profiles-and-coursework.md",
+    "tests/authoring_server.py",
+    "tests/test_agent_mcp.py",
+    "tests/test_authoring_workflow.py",
+    "tests/test_coursework.py",
+    "web/src/AuthoringControls.jsx",
+    "web/src/main.jsx",
+    "web/src/style.css",
+    "web/tests/authoring.mjs"
+  ],
+  "decisions": [
+    "D-002",
+    "D-005",
+    "D-009",
+    "D-013",
+    "D-014",
+    "D-015"
+  ],
+  "architecture": "updated",
+  "algorithms": "updated",
+  "rationale": "D-015 supersedes optional coursework targets and emergent evidence at initial creation. Profile history, original sources, scoring and verifier thresholds remain unchanged; v1 generation scope stays enforced.",
+  "authorization": "Explicit user browser comments and \u201cDo them\u201d: require existing coursework with a deadline, inline creation, emergent material only at rerun, autocomplete evidence selection, clearer sequence and matching agent MCP behavior.",
+  "validation": "159 backend tests including REST/MCP and v1 compatibility; authoring browser journey with 22-file library, keyboard search, inline coursework prerequisites and narrow-screen screenshots; frontend build, rich-labs and experience browser journeys, Ruff, skill validation and architecture checks. No real learner records or model calls used for tests.",
+  "rollback": "Revert paired frontend/domain/schema/docs/skill changes. No data migration; preserve existing coursework, profile versions and generated sets. Restart the local API and rebuild the frontend."
+}

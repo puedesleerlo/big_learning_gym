@@ -81,11 +81,29 @@ def test_team_grade_does_not_become_individual_mastery(store):
 
 def test_profile_requires_reviewed_assessment_source(store):
     source = ingest(store, "course", "quiz.md", b"# Quiz\nA real question with rubric.", role="assessment")
+    material = ingest(store, "course", "lecture.md", b"Course context about the question.")
+    with store.tx() as c:
+        store.put(c, "source", material["id"], {**material, "reconstruction_status": "confirmed"})
+    task = create_assignment(
+        store,
+        {
+            "course_id": "course",
+            "title": "Future quiz",
+            "prompt": "Explain and defend the method.",
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
+        },
+    )
+    options = {
+        "target_assignment_id": task["id"],
+        "material_source_ids": [material["id"]],
+        "target": "Prepare for the future quiz",
+    }
     with pytest.raises(ValueError, match="confirm"):
-        request_profile(store, "course", [source["id"]])
+        request_profile(store, "course", [source["id"]], **options)
     with store.tx() as c:
         store.put(c, "source", source["id"], {**source, "reconstruction_status": "confirmed"})
-    assert request_profile(store, "course", [source["id"]])["status"] == "queued"
+    assert request_profile(store, "course", [source["id"]], **options)["status"] == "queued"
 
 
 def test_pinned_rubric_does_not_change(store):

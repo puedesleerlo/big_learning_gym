@@ -37,16 +37,23 @@ using them. Use `POST /api/profiles` with the live `ProfileInput` schema:
   "assignment_ids": ["prior-quiz-coursework-id"],
   "source_ids": ["confirmed-prior-assessment-source-version"],
   "material_source_ids": ["confirmed-prior-lecture-source-version"],
-  "emergent_source_ids": ["confirmed-new-task-clarification-source-version"],
   "rubric_ids": []
 }
 ```
 
-These IDs are placeholders; select existing same-course references. The future
-coursework field is optional when the user has a specific goal without a task
-entry. Prior coursework must not include the intended task itself. Prior and
-emergent source selections are disjoint. Emergent material may be instruction,
-research, assessment or rubric material. Grades, feedback sources, learner
+These IDs are placeholders; select existing same-course references. The target
+coursework is required and must be an actual duty with a valid deadline and
+estimated time. If it does not exist, create it with verified instructions,
+deadline and an explicit time estimate through `/api/assignments`; ask for any
+missing facts rather than inventing them. Self-study labs cannot be the target.
+Use its prompt to ground `target`; the target's attached rubric is included
+automatically. Extra rubric IDs are optional and need a specific reason.
+
+All evidence available when creating a profile belongs in the prior inputs.
+Do not populate `emergent_source_ids` on creation. Newly available instruction,
+research, assessment or rubric material belongs on a later rerun. Prior
+coursework must not include the intended task itself. Prior and emergent source
+selections must be disjoint. Grades, feedback sources, learner
 submissions and attempts are never profile inputs. Course-assignment points are
 format information, not an observed learner grade.
 
@@ -77,7 +84,9 @@ After reviewing newly available source versions or updated coursework, call
 }
 ```
 
-Omitted input selections are preserved. Supplied arrays replace selections;
+Reruns also require a valid dated actual coursework target. When updating a
+legacy profile without one, select or create the target first; do not rewrite its
+historical versions. Omitted input selections are preserved. Supplied arrays replace selections;
 include all evidence you intend to retain. Rerunning refreshes the selected
 coursework and rubric snapshots, queues a new model proposal, and requires
 review/confirmation again. It does not automatically replace material with the

@@ -150,14 +150,14 @@ def register_agent_api(app, store):
                 "profile_request": {
                     "route": "POST /api/profiles",
                     "schema": ProfileInput.model_json_schema(),
-                    "intent": "target describes the specific assessment goal; target_assignment_id optionally identifies the intended future coursework. assignment_ids are prior coursework, source_ids are prior assessment/rubric examples, material_source_ids are prior instruction, and emergent_source_ids are newly available instruction/assessment/rubric evidence. Exclude grades, feedback and learner responses.",
+                    "intent": "target describes the specific assessment goal; target_assignment_id is required and identifies existing actual coursework with a valid deadline and estimated time. Create or revise that coursework first if missing. assignment_ids are prior coursework, source_ids are prior assessment/rubric examples, material_source_ids are prior instruction, and all currently available evidence belongs in these prior inputs. emergent_source_ids must be empty on creation; use rerun for newly available evidence. Exclude grades, feedback and learner responses.",
                     "meaning": "Creates a model-backed proposal, or a manual needs_review proposal when profile is supplied. Targeted proposals require an explicit derived practice_rubric and rubric_basis. Confirm after reviewing the goal, evidence and rubric.",
                 },
                 "profile_rerun": {
                     "route": "POST /api/profiles/{id}/rerun",
                     "schema": ProfileRerunInput.model_json_schema(),
                     "history": "GET /api/profiles/{id}/versions",
-                    "meaning": "Refresh selected evidence and intended coursework snapshots. Omitted selections are preserved; supplied arrays replace them. New model proposal needs review. Every saved revision is immutable in history. Exact retries use the same key; changed input needs a new key.",
+                    "meaning": "Add newly available instruction/assessment/rubric versions through emergent_source_ids. A valid dated coursework target is required, including when upgrading a legacy profile. Refresh selected evidence and intended coursework snapshots. Omitted selections are preserved; supplied arrays replace them. New model proposal needs review. Every saved revision is immutable in history. Exact retries use the same key; changed input needs a new key.",
                 },
                 "practice_rerun": {
                     "route": "POST /api/generations/{id}/rerun",
