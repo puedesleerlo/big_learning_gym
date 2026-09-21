@@ -1,0 +1,21 @@
+{
+  "summary": "Remove the standalone rubric catalog from the coursework overview; retain gym-scoped rubric selection in coursework details.",
+  "type": "preserving",
+  "paths": [
+    "web/src/main.jsx",
+    "web/tests/authoring.mjs",
+    "docs/ARCHITECTURE.md"
+  ],
+  "decisions": [
+    "D-002",
+    "D-005",
+    "D-013",
+    "D-014"
+  ],
+  "architecture": "updated",
+  "algorithms": "unchanged",
+  "rationale": "Presentation refinement preserves rubric storage, versions, authority and gym-scoped selection.",
+  "authorization": "User browser comment: This section is not useful here; in coursework we can select the rubric, here is only noise.",
+  "validation": "Frontend build, authoring browser flow, full backend suite and architecture checks.",
+  "rollback": "Revert this UI and documentation change; no data migration."
+}

@@ -2513,36 +2513,6 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
           </Empty>
         )}
       </section>
-      <section className="section">
-        <h2>Reusable rubrics</h2>
-        <p className="muted">
-          Use one rubric across related assignments, or give a task its own
-          rubric. Official criteria remain yours to edit.
-        </p>
-        {data?.rubric
-          .filter(
-            (r) => !gymFilter || !r.course_id || r.course_id === gymFilter,
-          )
-          .map((r) => (
-            <div className="list-row" key={r.id}>
-              <div>
-                <strong>{r.title}</strong>
-                <p className="small muted">
-                  {r.course_id
-                    ? overview.courses.find((c) => c.id === r.course_id)?.title
-                    : "Shared across all gyms"}
-                </p>
-                <p>{r.criteria.map((c) => c.name).join(" · ")}</p>
-              </div>
-              <Badge>
-                {r.authority} · v{r.version}
-              </Badge>
-              <Action className="secondary" onClick={() => setRubricEdit(r)}>
-                Edit rubric
-              </Action>
-            </div>
-          ))}
-      </section>
       {data?.assignment.some(
         (a) =>
           a.purpose === "self_study" &&
@@ -2722,6 +2692,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
           </details>
           <Field label="Rubric">
             <select
+              aria-label="Rubric"
               value={draft.rubric_id}
               onChange={(e) => set("rubric_id", e.target.value)}
             >

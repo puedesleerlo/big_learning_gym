@@ -165,16 +165,8 @@ try {
     1,
   );
   assert.equal(
-    await page.getByText("Statistics rubric", { exact: true }).count(),
+    await page.getByRole("heading", { name: "Reusable rubrics", exact: true }).count(),
     0,
-  );
-  assert.equal(
-    await page.getByText("Writing rubric", { exact: true }).count(),
-    1,
-  );
-  assert.equal(
-    await page.getByText("Shared reasoning rubric", { exact: true }).count(),
-    1,
   );
   await page.getByLabel("Filter by gym", { exact: true }).selectOption("");
   await page.getByRole("button", { name: /Prior Quiz 1.*completed/ }).waitFor();
@@ -321,6 +313,10 @@ try {
     .click();
   await page.getByText(/Supporting assignment documents \(optional\)/).click();
   const modal = page.locator(".modal");
+  const rubricOptions = await modal.getByLabel("Rubric", { exact: true }).locator("option").allTextContents();
+  assert.ok(rubricOptions.some((name) => name.startsWith("Statistics rubric")));
+  assert.ok(rubricOptions.some((name) => name.startsWith("Shared reasoning rubric")));
+  assert.ok(!rubricOptions.some((name) => name.startsWith("Writing rubric")));
   const due = page.getByLabel("Coursework deadline", { exact: true });
   const originalDeadline = await due.inputValue();
   assert.ok(originalDeadline);
