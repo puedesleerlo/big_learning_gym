@@ -151,6 +151,8 @@ async def test_mcp_targeted_profile_history_rerun_and_external_outcome(store):
             {
                 "course_id": "course",
                 "title": "Future Quiz",
+                "deadline": "2026-10-01T17:00:00-04:00",
+                "effort_minutes": 60,
                 "prompt": "Prepare to explain a randomized comparison.",
             },
         )

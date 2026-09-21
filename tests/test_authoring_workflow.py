@@ -85,6 +85,8 @@ def assignment(store, title="Actual coursework", **options):
     return create_assignment(
         store,
         {
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
             "course_id": "course",
             "title": title,
             "prompt": "State and defend the causal assumptions for this task.",
@@ -287,7 +289,14 @@ def test_profiles_reject_foreign_unconfirmed_and_outcome_sources(store):
     with store.tx() as c:
         store.put(c, "course", "other", {"title": "Another course"})
     other = create_assignment(
-        store, {"course_id": "other", "title": "Foreign target", "prompt": "A target in another course"}
+        store,
+        {
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
+            "course_id": "other",
+            "title": "Foreign target",
+            "prompt": "A target in another course",
+        },
     )
     with pytest.raises(ValueError, match="another course"):
         request_profile(

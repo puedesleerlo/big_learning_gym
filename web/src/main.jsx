@@ -2190,13 +2190,20 @@ const initialCriteria = [
     ],
   },
 ];
-function RubricEditor({ value, onSave, close, busy, courses }) {
+function RubricEditor({
+  value,
+  onSave,
+  close,
+  busy,
+  courses,
+  defaultCourseId,
+}) {
   const [rubric, setRubric] = useState(
     value || {
       title: "",
       criteria: initialCriteria,
       authority: "learner",
-      course_id: null,
+      course_id: defaultCourseId || null,
       permitted_assistance: "Follow the course policy",
       capabilities: [],
     },
@@ -2354,10 +2361,11 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
     [rubricEdit, setRubricEdit] = useState(undefined),
     [newAssignment, setNewAssignment] = useState(false),
     [editingAssignment, setEditingAssignment] = useState(null),
-    [active, setActive] = useState(initialAssignmentId || null);
+    [active, setActive] = useState(initialAssignmentId || null),
+    [gymFilter, setGymFilter] = useState("");
   const [draft, setDraft] = useState({
     title: "",
-    course_id: overview.courses[0]?.id || "",
+    course_id: gymFilter || overview.courses[0]?.id || "",
     kind: "homework",
     prompt: "",
     rubric_id: "",
@@ -2368,7 +2376,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
     individual: true,
     purpose: "coursework",
     status: "open",
-    effort_minutes: 60,
+    effort_minutes: "",
   });
   const set = (k, v) => setDraft({ ...draft, [k]: v });
   if (active && data && data.assignment.some((x) => x.id === active)) {
@@ -2411,7 +2419,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
                 setEditingAssignment(null);
                 setDraft({
                   title: "",
-                  course_id: overview.courses[0]?.id || "",
+                  course_id: gymFilter || overview.courses[0]?.id || "",
                   kind: "homework",
                   prompt: "",
                   rubric_id: "",
@@ -2422,7 +2430,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
                   individual: true,
                   purpose: "coursework",
                   status: "open",
-                  effort_minutes: 60,
+                  effort_minutes: "",
                 });
                 setNewAssignment(true);
               }}
@@ -2437,12 +2445,34 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
         here. A course-assigned lab is an obligation; learning labs are teaching
         activities. Feedback can be recorded before your own work is uploaded.
       </PageHead>
+      <Field label="Filter by gym">
+        <select
+          aria-label="Filter by gym"
+          value={gymFilter}
+          onChange={(e) => setGymFilter(e.target.value)}
+        >
+          <option value="">All gyms</option>
+          {overview.courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+      </Field>
       <ErrorBox message={error} />
       <section className="section">
         <h2>Coursework</h2>
-        {data?.assignment.length ? (
+        {data?.assignment.some(
+          (a) =>
+            a.purpose !== "self_study" &&
+            (!gymFilter || a.course_id === gymFilter),
+        ) ? (
           data.assignment
-            .filter((a) => a.purpose !== "self_study")
+            .filter(
+              (a) =>
+                a.purpose !== "self_study" &&
+                (!gymFilter || a.course_id === gymFilter),
+            )
             .map((a) => (
               <button
                 className="assignment-row"
@@ -2453,8 +2483,13 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
                 <div>
                   <h3>{a.title}</h3>
                   <p>
-                    {a.kind.replace("_", " ")} · {a.status} · {a.points} points
-                    · {fmtDate(a.deadline)}
+                    {overview.courses.find((c) => c.id === a.course_id)?.title}{" "}
+                    · {a.kind.replace("_", " ")} · {a.status} · {a.points}{" "}
+                    points ·{" "}
+                    {a.deadline ? fmtDate(a.deadline) : "Deadline required"} ·{" "}
+                    {a.effort_minutes
+                      ? `${a.effort_minutes} min estimated`
+                      : "Estimate required"}
                   </p>
                 </div>
                 <Badge>
@@ -2484,22 +2519,35 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
           Use one rubric across related assignments, or give a task its own
           rubric. Official criteria remain yours to edit.
         </p>
-        {data?.rubric.map((r) => (
-          <div className="list-row" key={r.id}>
-            <div>
-              <strong>{r.title}</strong>
-              <p>{r.criteria.map((c) => c.name).join(" · ")}</p>
+        {data?.rubric
+          .filter(
+            (r) => !gymFilter || !r.course_id || r.course_id === gymFilter,
+          )
+          .map((r) => (
+            <div className="list-row" key={r.id}>
+              <div>
+                <strong>{r.title}</strong>
+                <p className="small muted">
+                  {r.course_id
+                    ? overview.courses.find((c) => c.id === r.course_id)?.title
+                    : "Shared across all gyms"}
+                </p>
+                <p>{r.criteria.map((c) => c.name).join(" · ")}</p>
+              </div>
+              <Badge>
+                {r.authority} · v{r.version}
+              </Badge>
+              <Action className="secondary" onClick={() => setRubricEdit(r)}>
+                Edit rubric
+              </Action>
             </div>
-            <Badge>
-              {r.authority} · v{r.version}
-            </Badge>
-            <Action className="secondary" onClick={() => setRubricEdit(r)}>
-              Edit rubric
-            </Action>
-          </div>
-        ))}
+          ))}
       </section>
-      {data?.assignment.some((a) => a.purpose === "self_study") && (
+      {data?.assignment.some(
+        (a) =>
+          a.purpose === "self_study" &&
+          (!gymFilter || a.course_id === gymFilter),
+      ) && (
         <details className="section">
           <summary>Self-study exercises linked from learning labs</summary>
           <p>
@@ -2507,7 +2555,11 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
             obligations.
           </p>
           {data.assignment
-            .filter((a) => a.purpose === "self_study")
+            .filter(
+              (a) =>
+                a.purpose === "self_study" &&
+                (!gymFilter || a.course_id === gymFilter),
+            )
             .map((a) => (
               <button
                 className="assignment-row"
@@ -2525,6 +2577,7 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
           close={() => setRubricEdit(undefined)}
           busy={busy}
           courses={overview.courses}
+          defaultCourseId={gymFilter}
           onSave={(r) =>
             act(async () => {
               const payload = {
@@ -2691,9 +2744,27 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
             Follow future revisions of this shared rubric
           </label>
           <div className="form-row">
-            <Field label="Due date (optional)">
+            <Field
+              label={
+                draft.purpose === "coursework"
+                  ? "Deadline (required)"
+                  : "Deadline (optional)"
+              }
+            >
               <input
                 type="datetime-local"
+                aria-label="Coursework deadline"
+                required={draft.purpose === "coursework"}
+                value={
+                  draft.deadline
+                    ? new Date(
+                        new Date(draft.deadline).getTime() -
+                          new Date(draft.deadline).getTimezoneOffset() * 60000,
+                      )
+                        .toISOString()
+                        .slice(0, 16)
+                    : ""
+                }
                 onChange={(e) =>
                   set(
                     "deadline",
@@ -2711,11 +2782,20 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
                 onChange={(e) => set("points", +e.target.value)}
               />
             </Field>
-            <Field label="Initial effort (min)">
+            <Field label="Estimated time (minutes, required)">
               <input
                 type="number"
+                required
+                min="5"
+                max="10000"
+                step="1"
                 value={draft.effort_minutes}
-                onChange={(e) => set("effort_minutes", +e.target.value)}
+                onChange={(e) =>
+                  set(
+                    "effort_minutes",
+                    e.target.value === "" ? "" : Number(e.target.value),
+                  )
+                }
               />
             </Field>
           </div>
@@ -2728,7 +2808,14 @@ function Coursework({ overview, act, busy, initialAssignmentId }) {
             Individual work (a team grade is not individual capability evidence)
           </label>
           <Action
-            disabled={busy || draft.prompt.length < 10}
+            disabled={
+              busy ||
+              draft.prompt.length < 10 ||
+              (draft.purpose === "coursework" && !draft.deadline) ||
+              !Number.isInteger(draft.effort_minutes) ||
+              draft.effort_minutes < 5 ||
+              draft.effort_minutes > 10000
+            }
             onClick={() =>
               act(async () => {
                 const a = await api(

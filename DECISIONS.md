@@ -152,6 +152,20 @@ Validation: goal/prior/emergent input separation, same-course and source-review 
 
 Rollback: use preserved confirmed profile revisions and existing generated sets; revert implementation and UI together. Retain all profile history, outcome records, original artifacts, sources and attempts. Restore a rubric/profile by a new attributed revision, never by overwriting old evidence. Reopen actual obligations only through an explicit new duty, not by undoing recorded historical outcomes.
 
+## D-014 — Required coursework planning inputs and gym scope
+
+Status: Accepted by the user's explicit browser comment in this task: separate coursework and rubrics by gym with an All option; deadlines and estimated time are required, including existing coursework.
+
+Decision: new actual coursework and revisions of its details require a valid timezone-aware deadline and an explicit integer estimated duration (5–10,000 minutes). Remove the implicit 60-minute assignment estimate. These requirements apply to completed coursework too. Optional self-study exercises remain outside actual obligations and may omit deadlines, but still require an estimate. The same AssignmentInput validation applies through REST and generic MCP; the UI prevents incomplete saves and pre-fills existing dates in local time. A gym filter scopes coursework and rubrics together; globally shared rubrics remain visible and labeled in each gym.
+
+This tightens D-013's optional planning inputs while preserving D-002 source fidelity, D-003 scheduling authority and D-004's distinction between estimates and observed work. Older incomplete records remain readable and visibly flagged, but must be completed before their details can be revised. Backfill only from verified sources or explicit learner clarification; a requirement never authorizes invented institutional dates. Existing estimates remain estimates. Grades, submissions and other historical evidence do not require rewriting. Original source text and uncertainty remain preserved.
+
+Alternatives: UI-only validation would allow agent/API bypass; arbitrary dates or automatic 60-minute values would conceal missing information. Rejecting all reads of historical incomplete records would prevent feedback access. The chosen contract enforces future writes while exposing gaps for sourced repair.
+
+Algorithms: A-001–A-007 and their versions are unchanged. Planning receives explicit inputs through existing workflows; no scheduling heuristic, measured time or active-schedule acceptance changes. The teaching-lab installer explicitly creates self-study exercises under D-013.
+
+Validation: API missing/invalid/null/date-only/timezone/estimate checks, partial revisions retaining planning fields, optional self-study isolation, MCP workflow fixtures, browser gym/shared-rubric filtering, existing date editing, full backend suite and frontend build. Rollback: revert paired validation/UI changes and rebuild/restart; keep verified backfilled dates and all historical records. No destructive database migration.
+
 ## Adding or revising a decision
 
 Append the next `D-NNN` entry with status `Proposed`, context, decision, alternatives, consequences, affected algorithm versions, migration, checks, rollback and the decisions it supersedes. Link the exact user request or maintainer review covering the revision. A request already authorizing the specific change is sufficient; do not request permission again. Only mark acceptance when that authorization exists. A JSON change record or a checked box is not proof of approval.

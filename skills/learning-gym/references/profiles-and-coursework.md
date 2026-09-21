@@ -12,7 +12,11 @@ course/gym identity consistent across the entire workflow.
 - `/api/assignments` records actual coursework (including a real course-assigned
   lab), deadlines, available rubrics and point scales. Use `purpose=self_study`
   for optional generated exercises; they create no scheduling obligation.
-  Missing official rubrics stay `rubric_id=null`. Do not invent one to import a
+  Actual coursework requires a verified timezone-aware ISO `deadline` and an
+  explicit `effort_minutes` integer (5–10,000), even for completed work. There is
+  no default time estimate. Existing values can be retained on partial revisions;
+  missing dates require source lookup or learner clarification, never fabrication.
+  Optional self-study may omit its deadline. Missing official rubrics stay `rubric_id=null`. Do not invent one to import a
   historical grade. `status=completed` records an already completed external duty.
 - Research artifacts are the learner's arguments, drafts or experiments.
   Instructor/TA feedback is an attributed coursework outcome, not an artifact

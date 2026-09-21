@@ -520,7 +520,13 @@ def install(client, bundle, readings_dir=None):
         assignment = previous or request(
             "POST",
             "/api/assignments",
-            json={**task, "course_id": ident, "rubric_id": rubric["id"], "follow_shared_rubric": True},
+            json={
+                **task,
+                "course_id": ident,
+                "rubric_id": rubric["id"],
+                "follow_shared_rubric": True,
+                "purpose": "self_study",
+            },
         )
         created_assignments.append(assignment["id"])
     return {

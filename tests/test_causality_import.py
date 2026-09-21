@@ -26,6 +26,7 @@ def test_causality_import_is_repeatable_and_uses_existing_workflows(client, stor
     coursework = client.get("/api/coursework").json()
     own_tasks = [a for a in coursework["assignment"] if a["course_id"] == ident]
     assert len(own_tasks) == 4
+    assert all(a["purpose"] == "self_study" and not a.get("task_id") for a in own_tasks)
     assert all(a["rubric_id"] == first["rubric_id"] for a in own_tasks)
     with store.tx() as c:
         assert store.get(c, "course", "course")["title"] == "Test gym"

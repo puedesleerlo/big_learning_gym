@@ -29,6 +29,8 @@ def test_submission_and_draft_keep_their_rubric_version(store):
     a = create_assignment(
         store,
         {
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
             "title": "Write a case",
             "course_id": "course",
             "prompt": "Write a defensible answer to the case",
@@ -60,6 +62,8 @@ def test_team_grade_does_not_become_individual_mastery(store):
     a = create_assignment(
         store,
         {
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
             "title": "Team lab",
             "course_id": "course",
             "prompt": "Implement and test this shared lab",
@@ -89,6 +93,8 @@ def test_pinned_rubric_does_not_change(store):
     a = create_assignment(
         store,
         {
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
             "title": "Essay",
             "course_id": "course",
             "prompt": "Defend your argument in a concise essay",
@@ -107,6 +113,8 @@ def test_uploaded_homework_is_preserved_and_assessed(store):
     a = create_assignment(
         store,
         {
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
             "title": "File submission",
             "course_id": "course",
             "prompt": "Defend the comparison in the attached response",
@@ -161,6 +169,8 @@ def test_autosave_keeps_attachment_and_assistance_history(store):
     a = create_assignment(
         store,
         {
+            "deadline": "2026-10-01T17:00:00-04:00",
+            "effort_minutes": 60,
             "title": "Persistent draft",
             "course_id": "course",
             "prompt": "Defend a causal interpretation",
@@ -182,3 +192,44 @@ def test_autosave_keeps_attachment_and_assistance_history(store):
     later = save_draft(store, a["id"], {"body": "My edited draft.", "assistance": []})
     assert later["assistance"] == ["substantive"]
     assert later["file_source_ids"] == [source["id"]]
+
+
+def test_coursework_requires_explicit_planning_fields(client):
+    schema = client.get("/openapi.json").json()["paths"]["/api/assignments"]["post"]["requestBody"][
+        "content"
+    ]["application/json"]["schema"]
+    assert "effort_minutes" in schema["required"]
+    assert "Required for coursework" in schema["properties"]["deadline"]["description"]
+    body = {
+        "course_id": "course",
+        "title": "Deadline contract",
+        "prompt": "Explain the supplied course problem.",
+        "deadline": "2026-10-01T17:00:00-04:00",
+        "effort_minutes": 45,
+    }
+    for missing in ("deadline", "effort_minutes"):
+        invalid = {k: v for k, v in body.items() if k != missing}
+        assert client.post("/api/assignments", json=invalid).status_code == 400
+    for value in (None, "", "not a date", "2026-10-01", "2026-10-01T17:00:00"):
+        assert client.post("/api/assignments", json={**body, "deadline": value}).status_code == 400
+    for value in (None, 0, -1, 1.5):
+        assert client.post("/api/assignments", json={**body, "effort_minutes": value}).status_code == 400
+    created = client.post("/api/assignments", json=body).json()
+    assert created["deadline"] == body["deadline"]
+    assert created["effort_minutes"] == 45
+    revised = client.put(
+        f"/api/assignments/{created['id']}",
+        json={"expected_revision": created["revision"], "title": "Updated coursework"},
+    )
+    assert revised.status_code == 200
+    assert revised.json()["deadline"] == body["deadline"]
+    assert (
+        client.put(
+            f"/api/assignments/{created['id']}",
+            json={"expected_revision": revised.json()["revision"], "deadline": None},
+        ).status_code
+        == 400
+    )
+    optional = client.post("/api/assignments", json={**body, "purpose": "self_study", "deadline": None})
+    assert optional.status_code == 200
+    assert not optional.json().get("task_id")

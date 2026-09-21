@@ -245,7 +245,7 @@ def test_coursework_requires_same_course_and_matching_rubric_version(catalog_cli
     rubric = save_rubric(store, {"title": "Explain reasoning", "course_id": "math-course", "criteria": [
         {"name": "Reasoning", "weight": 1, "anchors": ["Unsupported", "Mechanism and evidence explained"]},
     ]})
-    assignment = create_assignment(store, {"title": "Model critique", "course_id": "math-course",
+    assignment = create_assignment(store, {"deadline": "2026-10-01T17:00:00-04:00", "effort_minutes": 60, "title": "Model critique", "course_id": "math-course",
                                           "prompt": "Explain and critique the assumptions in your model.", "rubric_id": rubric["id"]})
     payload = bundle()
     payload["lessons"][0]["activities"].append({"type": "coursework", "id": "essay", "title": "Write your critique", "assignment_id": assignment["id"]})

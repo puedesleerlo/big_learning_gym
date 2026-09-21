@@ -152,6 +152,43 @@ try {
   await page
     .getByRole("button", { name: "Coursework & rubrics", exact: true })
     .click();
+  await page
+    .getByLabel("Filter by gym", { exact: true })
+    .selectOption("other-course");
+  await page.getByRole("button", { name: /Writing task/ }).waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: /Prior Quiz 1.*completed/ }).count(),
+    0,
+  );
+  assert.equal(
+    await page.getByRole("button", { name: /Writing task/ }).count(),
+    1,
+  );
+  assert.equal(
+    await page.getByText("Statistics rubric", { exact: true }).count(),
+    0,
+  );
+  assert.equal(
+    await page.getByText("Writing rubric", { exact: true }).count(),
+    1,
+  );
+  assert.equal(
+    await page.getByText("Shared reasoning rubric", { exact: true }).count(),
+    1,
+  );
+  await page.getByLabel("Filter by gym", { exact: true }).selectOption("");
+  await page.getByRole("button", { name: /Prior Quiz 1.*completed/ }).waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: /Prior Quiz 1.*completed/ }).count(),
+    1,
+  );
+  assert.equal(
+    await page.getByRole("button", { name: /Writing task/ }).count(),
+    1,
+  );
+  await page
+    .getByLabel("Filter by gym", { exact: true })
+    .selectOption("course");
   await page.getByRole("button", { name: /Prior Quiz 1.*completed/ }).click();
   assert.equal(
     await page.getByLabel("Assignment draft", { exact: true }).isVisible(),
@@ -284,6 +321,29 @@ try {
     .click();
   await page.getByText(/Supporting assignment documents \(optional\)/).click();
   const modal = page.locator(".modal");
+  const due = page.getByLabel("Coursework deadline", { exact: true });
+  const originalDeadline = await due.inputValue();
+  assert.ok(originalDeadline);
+  await due.fill("");
+  assert.equal(
+    await modal
+      .getByRole("button", { name: "Save coursework revision", exact: true })
+      .isEnabled(),
+    false,
+  );
+  await due.fill(originalDeadline);
+  const estimate = page.getByLabel("Estimated time (minutes, required)", {
+    exact: true,
+  });
+  await estimate.fill("");
+  assert.equal(
+    await modal
+      .getByRole("button", { name: "Save coursework revision", exact: true })
+      .isEnabled(),
+    false,
+  );
+  await estimate.fill("75");
+
   assert.equal(
     await modal.getByText(feedbackSource.name, { exact: true }).count(),
     0,

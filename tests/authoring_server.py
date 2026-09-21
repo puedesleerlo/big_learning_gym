@@ -10,7 +10,7 @@ import uvicorn
 from test_authoring_workflow import PracticeDesigner, profile_body
 
 from gym.api import create_app
-from gym.assignments import create_assignment
+from gym.assignments import create_assignment, save_rubric
 from gym.ingestion import ingest
 from gym.store import Store
 
@@ -51,6 +51,8 @@ if __name__ == "__main__":
         create_assignment(
             store,
             {
+                "deadline": "2026-10-01T17:00:00-04:00",
+                "effort_minutes": 60,
                 "title": "Future Quiz 2",
                 "course_id": "course",
                 "prompt": "Defend an inference and its uncertainty under changed assumptions.",
@@ -59,12 +61,44 @@ if __name__ == "__main__":
         create_assignment(
             store,
             {
+                "deadline": "2026-10-01T17:00:00-04:00",
+                "effort_minutes": 60,
                 "title": "Prior Quiz 1",
                 "course_id": "course",
                 "prompt": "Explain the original assignment comparison and selection assumptions.",
                 "status": "completed",
             },
         )
+        with store.tx() as c:
+            store.put(
+                c,
+                "course",
+                "other-course",
+                {"title": "Synthetic writing gym", "description": "Filter fixture", "modules": []},
+            )
+        create_assignment(
+            store,
+            {
+                "course_id": "other-course",
+                "title": "Writing task",
+                "prompt": "Explain the structure of an argument.",
+                "deadline": "2026-10-02T17:00:00-04:00",
+                "effort_minutes": 30,
+            },
+        )
+        for title, course_id in [
+            ("Statistics rubric", "course"),
+            ("Writing rubric", "other-course"),
+            ("Shared reasoning rubric", None),
+        ]:
+            save_rubric(
+                store,
+                {
+                    "title": title,
+                    "course_id": course_id,
+                    "criteria": [{"name": "Reasoning", "weight": 1, "anchors": ["Unsupported", "Explained"]}],
+                },
+            )
         app = create_app(store, FixtureAuthor(), embedded_worker=True)
         sock = socket.socket()
         sock.bind(("127.0.0.1", 0))

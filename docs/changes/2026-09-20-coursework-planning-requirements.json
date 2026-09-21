@@ -1,0 +1,35 @@
+{
+  "summary": "Filter coursework and rubrics by gym with All gyms, show estimated duration and missing-deadline flags, and require explicit planning fields for actual coursework across UI/REST/MCP.",
+  "type": "revision",
+  "paths": [
+    "DECISIONS.md",
+    "docs/AGENT_API.md",
+    "docs/ARCHITECTURE.md",
+    "gym/api.py",
+    "gym/contracts.py",
+    "scripts/install_causality.py",
+    "skills/learning-gym/references/profiles-and-coursework.md",
+    "tests/authoring_server.py",
+    "tests/test_agent_mcp.py",
+    "tests/test_authoring_workflow.py",
+    "tests/test_causality_import.py",
+    "tests/test_coursework.py",
+    "tests/test_lab_catalog.py",
+    "web/src/main.jsx",
+    "web/tests/authoring.mjs"
+  ],
+  "decisions": [
+    "D-002",
+    "D-003",
+    "D-004",
+    "D-009",
+    "D-013",
+    "D-014"
+  ],
+  "architecture": "updated",
+  "algorithms": "unchanged",
+  "rationale": "The user explicitly requires deadlines and estimates. Validation now rejects missing or invalid coursework dates and implicit estimates, while preserving legacy reads and allowing deadline-free optional self-study. Existing synthetic fixtures now supply explicit planning inputs; teaching-lab imports correctly declare self-study. Shared rubrics remain labeled and available within a selected gym.",
+  "authorization": "User browser comment: separation of coursework and rubrics by gyms with an option of all; deadline should be required and existing coursework should have one; estimated time is required too. D-014 records this explicit authorization, preserving source truth and scheduling authority.",
+  "validation": "157 backend tests passed, including missing/null/invalid/timezone-naive deadlines, invalid/missing estimates, partial revisions, MCP authoring and self-study isolation. Frontend build and authoring browser journey passed, including two-gym/shared-rubric filtering, All gyms, prefilled editable deadline and disabled saves for missing planning fields. Live browser filtering verified; default API restarted with validation. Architecture and skill validation passed; committed-diff coverage checked against 9132a64. Historical deadline backfill remains pending missing source information/learner clarification; no dates fabricated.",
+  "rollback": "Revert this commit and rebuild/restart the default server. Retain all coursework, dates, estimates, source records and grades; no destructive data migration is introduced. Older clients must supply explicit planning inputs while the new validation is active."
+}

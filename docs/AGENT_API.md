@@ -409,7 +409,13 @@ rubric versions. Assignments may explicitly follow the shared rubric; submitted
 work retains the version captured at submission. Authored open response items
 can pin a `rubric_version_id`; the supplied criteria must exactly match it.
 
-Use `POST /api/assignments` with the manifest's `AssignmentInput` schema. Save an
+Use `POST /api/assignments` with the manifest's `AssignmentInput` schema.
+Actual coursework requires `deadline` as an ISO timestamp with timezone offset
+and explicit `effort_minutes` (integer, 5–10,000). Completed coursework has the
+same requirements. Self-study exercises may omit the deadline. A revision may
+retain existing values, but cannot leave actual coursework without a deadline
+or estimate. Obtain missing dates from source records or the learner; never
+invent dates to satisfy validation. Estimates are not observed work time. Save an
 authorized draft with `POST /api/assignments/{id}/draft`, including `body`,
 `assistance`, optional `file_source_ids`, and the existing draft's revision.
 Agent composition uses `active_seconds_delta: 0`. When the user requests a

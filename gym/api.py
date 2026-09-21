@@ -27,6 +27,7 @@ from . import (
 )
 from .contracts import (
     AnswerInput,
+    AssignmentInput,
     CourseInput,
     CourseworkOutcomeInput,
     GenerationInput,
@@ -269,7 +270,12 @@ def create_app(store=None, router=None, embedded_worker=None, workspace=None):
     def edit_rubric(ident: str, data: dict):
         return assignments.save_rubric(store, data, ident)
 
-    @app.post("/api/assignments")
+    @app.post(
+        "/api/assignments",
+        openapi_extra={
+            "requestBody": {"content": {"application/json": {"schema": AssignmentInput.model_json_schema()}}}
+        },
+    )
     def create_assignment(data: dict):
         return assignments.create_assignment(store, data)
 

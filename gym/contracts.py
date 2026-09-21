@@ -139,10 +139,30 @@ class AssignmentInput(Strict):
     purpose: Literal["coursework", "self_study"] = "coursework"
     status: Literal["open", "completed"] = "open"
     follow_shared_rubric: bool = False
-    deadline: str | None = None
+    deadline: str | None = Field(
+        default=None,
+        description="Required for coursework: ISO 8601 due date and time with timezone offset. Optional for self_study.",
+    )
     points: float = Field(default=100, gt=0, le=10000)
     individual: bool = True
-    effort_minutes: int = Field(default=60, ge=5, le=10000)
+    effort_minutes: int = Field(
+        ge=5, le=10000, description="Required estimated work time in minutes; not measured learner time."
+    )
+
+    @model_validator(mode="after")
+    def required_planning_metadata(self):
+        from datetime import datetime
+
+        if self.purpose == "coursework" and not self.deadline:
+            raise ValueError("Coursework requires a deadline")
+        if self.deadline is not None:
+            try:
+                date = datetime.fromisoformat(self.deadline.replace("Z", "+00:00"))
+            except ValueError as exc:
+                raise ValueError("Deadline must be an ISO 8601 date and time") from exc
+            if date.tzinfo is None or date.utcoffset() is None:
+                raise ValueError("Deadline must include a timezone offset")
+        return self
 
 
 class CourseworkOutcomeInput(Strict):
